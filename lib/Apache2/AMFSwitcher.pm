@@ -26,15 +26,22 @@ package Apache2::AMFSwitcher;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.00";
+  $VERSION= "3.01";
   #
   # Define the global environment
   #
   my $CommonLib = new Apache2::AMFCommonLib ();
   my $mobileversionurl="none";
   my $fullbrowserurl="none";
-  my $redirecttranscoder="true";
   my $redirecttranscoderurl="none";
+  my $redirecttranscoder="false";
+  my $wildcardredirect="false";
+  my $mobileversionurl_ck="/";
+  my $fullbrowserurl_ck="/";
+  my $redirecttranscoderurl_ck="/";
+  my @IncludeString;
+  my @ExcludeString;
+  
   my %ArrayPath;
   $ArrayPath{1}='none';
   $ArrayPath{2}='none';
@@ -73,23 +80,39 @@ sub loadConfigFile {
 		$mobileversionurl=$ENV{MobileVersionUrl};
 		$ArrayPath{1}=$ENV{MobileVersionUrl};
 		$CommonLib->printLog("MobileVersionUrl is: $mobileversionurl");
+		$mobileversionurl_ck=$ENV{MobileVersionUrl};
 	}	
 	if ($ENV{FullBrowserUrl}) {
 		$fullbrowserurl=$ENV{FullBrowserUrl};
 		$ArrayPath{2}=$ENV{FullBrowserUrl};
 		$CommonLib->printLog("FullBrowserUrl is: $fullbrowserurl");
+		$fullbrowserurl_ck=$ENV{FullBrowserUrl};
 	}		
 	if ($ENV{RedirectTranscoderUrl}) {
 		$redirecttranscoderurl=$ENV{RedirectTranscoderUrl};
 		$ArrayPath{3}=$ENV{RedirectTranscoderUrl};
 		$redirecttranscoder="true";
+		$redirecttranscoderurl_ck=$ENV{RedirectTranscoderUrl};
 		$CommonLib->printLog("RedirectTranscoderUrl is: $redirecttranscoderurl");		
+	}
+	if ($ENV{"AMFSwitcherExclude"}){
+		@ExcludeString=split(/,/, $ENV{AMFSwitcherExclude});
+		$CommonLib->printLog("SwitcherExclude is: $ENV{AMFSwitcherExclude}");						
+	}
+	if ($ENV{WildCardRedirect}) {
+		if ($ENV{WildCardRedirect} eq 'true') {
+			$wildcardredirect="true";
+		} else {
+			$wildcardredirect="false";
+		}
+		$CommonLib->printLog("WildCardRedirect is: $wildcardredirect");		
 	}	
 	$CommonLib->printLog("Finish loading  parameter");
 }
 sub handler    {
     my $f = shift;
     my $capability2;
+    my $query_string=$f->args;
     my $device_claims_web_support="null";
     my $is_wireless_device="null";
     my $is_transcoder="null";
@@ -97,7 +120,9 @@ sub handler    {
     my $return_value=Apache2::Const::DECLINED;
     my $device_type=1;
     my $no_redirect=1;
-    my $uri=$f->uri();
+    my $uri=$f->unparsed_uri();
+    my $uriAppend="";
+    my $filter="true";
     if ($f->pnotes('device_claims_web_support')) {      
     	$device_claims_web_support=$f->pnotes('device_claims_web_support')
     }
@@ -107,39 +132,66 @@ sub handler    {
     if ($f->pnotes('is_transcoder')) {
     	$is_transcoder=$f->pnotes('is_transcoder');
     }
-	if ($device_claims_web_support eq 'true' && $is_wireless_device eq 'false') {
-		if ($fullbrowserurl ne 'none') {
-			$location=$fullbrowserurl;
-		} 
-		$device_type=2;     		
-	} else {
-		if ($mobileversionurl ne 'none') {
-			$location=$mobileversionurl;
-		}
-		$device_type=1;     		
-	}
-    if ($is_transcoder eq 'true') {
-		if ($redirecttranscoderurl ne 'none') {
-			$location=$redirecttranscoderurl;
-		}
-		$device_type=3;
+    foreach my $string (@ExcludeString) {
+        if (index($uri,$string) > 0) {
+           $filter="false";
+        } 
     }
-    if ($ArrayPath{$device_type} eq substr($uri,0,length($ArrayPath{$device_type}))) {
-    	$no_redirect=0;
-    }
-	if ($location ne "none" ) {
-		    if (substr ($location,0,5) eq "http:") { 
-				$f->headers_out->set(Location => $location);
-				$f->status(Apache2::Const::REDIRECT); 
-				$return_value=Apache2::Const::REDIRECT;
-		    } else {
-		        if ($no_redirect==1) {
+    if ($filter eq "true"){
+		if ($device_claims_web_support eq 'true' && $is_wireless_device eq 'false') {
+			if ($fullbrowserurl ne 'none') {
+				if ($wildcardredirect eq 'true'){
+				$location=$uri;
+					if ($location =~ /$mobileversionurl_ck/o) { 
+		            	$location =~ s/$mobileversionurl_ck/$fullbrowserurl/;
+					} else {
+		            	$location = $fullbrowserurl;            
+		            }
+				}
+			} 
+			$device_type=2;     		
+		} else {
+				if ($wildcardredirect eq 'true'){
+				$location=$uri;
+					if ($location =~ /$fullbrowserurl_ck/o) { 
+		            	$location =~ s/$fullbrowserurl_ck/$mobileversionurl/;
+					} else {
+		            	$location = $mobileversionurl;            
+		            }
+				}
+			$device_type=1;     		
+		}
+	    if ($is_transcoder eq 'true') {
+			if ($redirecttranscoderurl ne 'none') {
+				if ($wildcardredirect eq 'true'){
+				$location=$uri;
+					if ($location =~ /$fullbrowserurl_ck/o) { 
+		            	$location =~ s/$fullbrowserurl_ck/$redirecttranscoderurl/;
+					} else {
+		            	$location = $redirecttranscoderurl;            
+		            }
+				}
+			}
+			$device_type=3;
+	    }
+	    if ($ArrayPath{$device_type} eq substr($uri,0,length($ArrayPath{$device_type}))) {
+	    	$no_redirect=0;
+	    }
+		if ($location ne "none" ) {
+			    if (substr ($location,0,5) eq "http:") { 
 					$f->headers_out->set(Location => $location);
 					$f->status(Apache2::Const::REDIRECT); 
-					$return_value=Apache2::Const::REDIRECT;		        
-		        }
-		    }
-	} 
+					$return_value=Apache2::Const::REDIRECT;
+			    } else {
+			        if ($no_redirect==1) {
+						$f->headers_out->set(Location => $location);
+						$f->status(Apache2::Const::REDIRECT); 
+						$return_value=Apache2::Const::REDIRECT;		        
+			        }
+			    }
+		} 
+	    
+    }
 	return $return_value;
 } 
 

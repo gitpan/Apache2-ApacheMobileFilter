@@ -15,7 +15,7 @@ package Apache2::AMFCommonLib;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use Cache::Memcached;
   use CGI;
-  $VERSION= "3.00";
+  $VERSION= "3.01";
 
 sub new {
   my $package = shift;
@@ -80,8 +80,34 @@ sub GetMultipleUa {
 	     	my @pairs2 = split(/\//, $pair);
     	  	foreach $pairs3 (@pairs2) {
 			     if ($ind==0) {
-			       $ind=$ind+1;
-			       $ArrayUAparse{$ind}=$pairs3;
+			                if ($pairs3 =~ /\-/o){
+				       	     	my @pairs4 = split(/\-/, $pairs3);
+				       	     	my $last="";
+					    	  	foreach my $pairs5 (@pairs4) {
+								     if ($ind==0) {
+								       $ind=$ind+1;
+								       $ArrayUAparse{$ind}=$pairs5;
+							 	     } else {
+							 	       $ind=$ind+1;
+							    	   $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\-$pairs5";
+							    	 }
+							    	 $last=$pairs5;
+					     	 	}
+					     	 	my $lengthString=length($last);
+					     	 	my $count=0;
+					     	 	if ($ind > 1) {
+						     	 	$ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}-";
+						     	 	while($lengthString > $count) {
+							     	 	    my $partString=substr($last,$count,1);
+							     	 	    $count=$count+1;
+							     	 	    $ind=$ind + 1;
+								    	    $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}$partString";					     	 	    
+						     	 	}
+					     	 	}
+			                } else {
+						       $ind=$ind+1;
+						       $ArrayUAparse{$ind}=$pairs3;			                
+			                }
 		 	     } else {
 		 	       $ind=$ind+1;
 		    	   $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\/$pairs3";

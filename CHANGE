@@ -1,6 +1,12 @@
+WURFLFilter 3.01
+Fixed Bug in AMFCommonLib. Thanks to Amit
+AMFSwitcher.pm: New Parameter called WildCardRedirect that passed the parameter end the url to another site. Thanks to Amit
+AMFSwitcher.pm: New Parameter called SwitcherExclude excludes the url that contains one or more strings that is been specified into the parameter.
+AMFSwitcher.pm: New Parameter called SwitcherInclude excludes the url that contains one or more strings that is been specified into the parameter.
+
 WURFLFilter 3.00
 Change name of the package Apache2-WURFLFilter to Apache2-ApacheMobileFilter
-Change name of module WURFFilter.pm in AMFWURFL.pm
+Change name of module WURFFilter.pm in AMFWURFLFilter.pm
 Change name of module ImageRenderFilter.pm in AMFImageRendering.pm
 Create new module called AMFWURFLFilterMemcached.pm to use memcached (http://memcached.org) as shared memory in cluster mode.
 Create new module called AMFMobileCacheMemcached.pm to use memcached (http://memcached.org) as shared memory in cluster mode. This module cash the content for id device

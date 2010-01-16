@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.00";
+  $VERSION= "3.01";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -154,6 +154,7 @@ sub loadConfigFile {
 				}
 			 } else {
 				$listall="true";
+				$CommonLib->printLog('CapabilityList not setted so the default value is "all"');
 			 }	
 	             
 	      	 if ($ENV{LoadWebPatch}) {
