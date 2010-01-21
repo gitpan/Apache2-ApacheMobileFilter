@@ -26,7 +26,7 @@ package Apache2::AMFSwitcher;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.01";
+  $VERSION= "3.02";
   #
   # Define the global environment
   #
@@ -147,6 +147,8 @@ sub handler    {
 					} else {
 		            	$location = $fullbrowserurl;            
 		            }
+				} else {
+					$location = $fullbrowserurl;            
 				}
 			} 
 			$device_type=2;     		
@@ -158,6 +160,8 @@ sub handler    {
 					} else {
 		            	$location = $mobileversionurl;            
 		            }
+				} else {
+		            	$location = $mobileversionurl;            
 				}
 			$device_type=1;     		
 		}
@@ -174,9 +178,11 @@ sub handler    {
 			}
 			$device_type=3;
 	    }
+	    $f->log->warn("$no_redirect,$location");
 	    if ($ArrayPath{$device_type} eq substr($uri,0,length($ArrayPath{$device_type}))) {
 	    	$no_redirect=0;
 	    }
+	    $f->log->warn("$no_redirect,$location");
 		if ($location ne "none" ) {
 			    if (substr ($location,0,5) eq "http:") { 
 					$f->headers_out->set(Location => $location);

@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.01";
+  $VERSION= "3.02";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -51,6 +51,7 @@ package Apache2::AMFWURFLFilterMemcached;
   $MobileArray{'google'}='mobile';
   $MobileArray{'novarra'}='mobile';
   $MobileArray{'smartphone'}='mobile';
+  $MobileArray{'htc'}='mobile';
   my $mobileversionurl="none";
   my $fullbrowserurl="none";
   my $redirecttranscoder="true";

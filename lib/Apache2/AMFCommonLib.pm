@@ -15,7 +15,7 @@ package Apache2::AMFCommonLib;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use Cache::Memcached;
   use CGI;
-  $VERSION= "3.01";
+  $VERSION= "3.02";
 
 sub new {
   my $package = shift;
@@ -75,6 +75,7 @@ sub GetMultipleUa {
   my @pairs = split(/\ /, $UserAgent);
   foreach $pair (@pairs)
   { 
+
      if ($ind==0) {
 	     if ($pair =~ /\//o) {     	
 	     	my @pairs2 = split(/\//, $pair);

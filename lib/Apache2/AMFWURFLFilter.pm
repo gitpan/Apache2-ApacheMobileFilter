@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.01";
+  $VERSION= "3.02";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -52,9 +52,7 @@ package Apache2::AMFWURFLFilter;
   $MobileArray{'google'}='mobile';
   $MobileArray{'novarra'}='mobile';
   $MobileArray{'smartphone'}='mobile';
-
-
-  
+  $MobileArray{'htc'}='mobile';
   my $mobileversionurl="none";
   my $fullbrowserurl="none";
   my $redirecttranscoder="true";
@@ -69,6 +67,7 @@ package Apache2::AMFWURFLFilter;
   my $cookiecachesystem="false";
   my $WURFLVersion="unknown";  
   my $cachedirectorystore="/tmp";
+  my $capabilitylist="none";
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
@@ -145,6 +144,7 @@ sub loadConfigFile {
 			 }	
 	      	 if ($ENV{CapabilityList}) {
 				my @dummycapability = split(/,/, $ENV{CapabilityList});
+				$capabilitylist=$ENV{CapabilityList};
 				foreach $dummy (@dummycapability) {
 				      if ($dummy eq "all") {
 				         $listall="true";
@@ -292,12 +292,12 @@ sub loadConfigFile {
 		     ModPerl::Util::exit();
 		}
         $CommonLib->printLog("WURFL version: $WURFLVersion");
-        if ($cacheSystem->restore('wurfl-conf', 'ResizeImageDirectory') ne $resizeimagedirectory||$cacheSystem->restore('wurfl-conf', 'DownloadWurflURL') ne $downloadwurflurl||$cacheSystem->restore('wurfl-conf', 'FullBrowserUrl') ne $fullbrowserurl||$cacheSystem->restore('wurfl-conf', 'RedirectTranscoderUrl') ne $redirecttranscoderurl || $cacheSystem->restore('wurfl-conf', 'ver') ne $WURFLVersion || $cacheSystem->restore('wurfl-conf', 'caplist') ne $ENV{CapabilityList}||$cacheSystem->restore('wurfl-conf', 'listall') ne $listall) {
+        if ($cacheSystem->restore('wurfl-conf', 'ResizeImageDirectory') ne $resizeimagedirectory||$cacheSystem->restore('wurfl-conf', 'DownloadWurflURL') ne $downloadwurflurl||$cacheSystem->restore('wurfl-conf', 'FullBrowserUrl') ne $fullbrowserurl||$cacheSystem->restore('wurfl-conf', 'RedirectTranscoderUrl') ne $redirecttranscoderurl || $cacheSystem->restore('wurfl-conf', 'ver') ne $WURFLVersion || $cacheSystem->restore('wurfl-conf', 'caplist') ne $capabilitylist||$cacheSystem->restore('wurfl-conf', 'listall') ne $listall) {
             $CommonLib->printLog("********************************************************************************************************");
             $CommonLib->printLog("* This is a new version of WURFL or you change some parameter value, now the old cache must be deleted *");
             $CommonLib->printLog("********************************************************************************************************");
 	        $cacheSystem->store('wurfl-conf', 'ver', $WURFLVersion);
-	        $cacheSystem->store('wurfl-conf', 'caplist', $ENV{CapabilityList});
+	        $cacheSystem->store('wurfl-conf', 'caplist', $capabilitylist);
 	        $cacheSystem->store('wurfl-conf', 'listall', $listall);
 	        $cacheSystem->store('wurfl-conf', 'RedirectTranscoderUrl', $redirecttranscoderurl);
 	        $cacheSystem->store('wurfl-conf', 'FullBrowserUrl', $fullbrowserurl);

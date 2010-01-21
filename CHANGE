@@ -1,8 +1,11 @@
+WURFLFilter 3.02
+Fixed Bug in AMFWURFLFilter. If  CapabilityList was not setted, caused an "uninitialized value".
+Fixed Bug in AMFSwitcher. (the bug is it only in 3.01) Thanks to Richard W.
+
 WURFLFilter 3.01
 Fixed Bug in AMFCommonLib. Thanks to Amit
 AMFSwitcher.pm: New Parameter called WildCardRedirect that passed the parameter end the url to another site. Thanks to Amit
 AMFSwitcher.pm: New Parameter called SwitcherExclude excludes the url that contains one or more strings that is been specified into the parameter.
-AMFSwitcher.pm: New Parameter called SwitcherInclude excludes the url that contains one or more strings that is been specified into the parameter.
 
 WURFLFilter 3.00
 Change name of the package Apache2-WURFLFilter to Apache2-ApacheMobileFilter
