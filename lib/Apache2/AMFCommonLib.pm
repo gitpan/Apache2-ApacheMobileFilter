@@ -15,7 +15,7 @@ package Apache2::AMFCommonLib;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use Cache::Memcached;
   use CGI;
-  $VERSION= "3.02";
+  $VERSION= "3.02a";
 
 sub new {
   my $package = shift;

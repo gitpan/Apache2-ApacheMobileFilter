@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.02";
+  $VERSION= "3.02a";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -372,11 +372,12 @@ sub IdentifyPCUAMethod {
   my $ind=0;
   my $id_find="";
   my $pair;
+  my $length=0;
 
   foreach $pair (%PatchArray_id)
-  {
-       if (index($UserAgent,$pair) > 0) {
-           $id_find=$PatchArray_id{$pair};
+  {  
+       if (index($UserAgent,$pair) > -1) {
+           	$id_find=$PatchArray_id{$pair};
        }
   }
   return $id_find;
@@ -486,6 +487,7 @@ sub parsePatchFile {
 			             	$PatchArray_id{$ua}=$id;
 				         #}
 			             $Array_id{$ua}=$id;
+
 				 }				 
 		 }
 		 if ($record =~ /\<capability/o) { 

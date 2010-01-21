@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.02";
+  $VERSION= "3.02a";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
