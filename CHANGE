@@ -1,3 +1,9 @@
+WURFLFilter 3.03
+Deprecated parameter MOBILE_HOME is changed in AMFMobileHome
+Fixed Bug in AMFWURFLFilter. Thanks to Allison.
+Fixed Bug for AMFImageRender (with different virtual host conflic with images with the same name). Thanks to Sergio.
+Fixed Bug for AMFImageRender (with different uri conflict with images with the same name).
+
 WURFLFilter 3.02
 Fixed Bug in AMFWURFLFilter. If  CapabilityList was not setted, caused an "uninitialized value".
 Fixed Bug in AMFSwitcher. (the bug is it only in 3.01) Thanks to Richard W.

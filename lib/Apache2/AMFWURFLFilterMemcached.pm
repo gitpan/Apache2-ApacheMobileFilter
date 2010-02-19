@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.02a";
+  $VERSION= "3.03";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -89,8 +89,8 @@ package Apache2::AMFWURFLFilterMemcached;
 
 
   #
-  # Check if MOBILE_HOME and CacheDirectoryStore is setting in apache httpd.conf file for example:
-  # PerlSetEnv MOBILE_HOME <apache_directory>/MobileFilter
+  # Check if AMFMobileHome and CacheDirectoryStore is setting in apache httpd.conf file for example:
+  # PerlSetEnv AMFMobileHome <apache_directory>/MobileFilter
   # 
   my @Server;
   if ($ENV{ServerMemCached}) {
@@ -117,10 +117,10 @@ package Apache2::AMFWURFLFilterMemcached;
 	   ModPerl::Util::exit();      
    }
   $memd->set('device_not_found', "id=device_not_found&device=false&device_claims_web_support=true&is_wireless_device=false");
-  if ($ENV{MOBILE_HOME}) {
-	  &loadConfigFile("$ENV{MOBILE_HOME}/wurfl.xml");
-  } else {
-	  $CommonLib->printLog("MOBILE_HOME not exist.	Please set the variable MOBILE_HOME into httpd.conf");
+  if ($ENV{AMFMobileHome}) {
+	  &loadConfigFile("$ENV{AMFMobileHome}/wurfl.xml");
+  }  else {
+	  $CommonLib->printLog("AMFMobileHome not exist (AMFMobileHome is deprecated).	Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
   
@@ -198,7 +198,7 @@ sub loadConfigFile {
 				  my @dummypairs = split(/\//, $downloadwurflurl);
 				  my ($ext_zip) = $downloadwurflurl =~ /\.(\w+)$/;
 				  my $filezip=$dummypairs[-1];
-				  my $tmp_dir=$ENV{MOBILE_HOME};
+				  my $tmp_dir=$ENV{AMFMobileHome};
 				  $filezip="$tmp_dir/$filezip";
 				  my $status = getstore ($downloadwurflurl,$filezip);
 				  my $output="$tmp_dir/tmp_wurfl.xml";
@@ -267,7 +267,7 @@ sub loadConfigFile {
 					$r_id=parsePatchFile($row,$r_id);
 				}
 	         } else {
-				my $filePatch="$ENV{MOBILE_HOME}/web_browsers_patch.xml";
+				my $filePatch="$ENV{AMFMobileHome}/web_browsers_patch.xml";
 				if (-e "$filePatch") {
 						$CommonLib->printLog("Start loading Web Patch File of WURFL");
 						if (open (IN,"$filePatch")) {
@@ -620,9 +620,7 @@ Apache2::AMFWURFLFilterMemcached - The module detects the mobile device and pass
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
-Mobile Demo page of the filter: http://apachemobilefilter.nogoogle.it (thanks Ivan alias sigmund)
-
-Demo page of the filter: http://apachemobilefilter.nogoogle.it/php_test.php (thanks Ivan alias sigmund)
+Demo page of the filter: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

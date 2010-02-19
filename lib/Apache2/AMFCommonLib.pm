@@ -15,7 +15,7 @@ package Apache2::AMFCommonLib;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use Cache::Memcached;
   use CGI;
-  $VERSION= "3.02a";
+  $VERSION= "3.03";
 
 sub new {
   my $package = shift;
@@ -256,9 +256,7 @@ Is a simple Common Library for AMF
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
-Mobile Demo page of the filter: http://apachemobilefilter.nogoogle.it (thanks Ivan alias sigmund)
-
-Demo page of the filter: http://apachemobilefilter.nogoogle.it/php_test.php (thanks Ivan alias sigmund)
+Demo page of the filter: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

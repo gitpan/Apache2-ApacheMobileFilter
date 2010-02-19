@@ -28,7 +28,7 @@ package Apache2::AMFMobileCachingMemcached;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.02Beta";
+  $VERSION= "3.03";
   #
   # Define the global environment
   #
@@ -38,10 +38,10 @@ package Apache2::AMFMobileCachingMemcached;
   my @Server;
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("AMFMobileCachingMemcached Version $VERSION");
-  if ($ENV{MOBILE_HOME}) {
+  if ($ENV{AMFMobileHome}) {
 	  &loadConfigFile();
   } else {
-	  $CommonLib->printLog("MOBILE_HOME not exist.	Please set the variable MOBILE_HOME into httpd.conf");
+	  $CommonLib->printLog("AMFMobileHome not exist.	Please set the variable AMFMobileHome into httpd.conf");
 	  $CommonLib->printLog("Pre-Requisite: WURFLFilter must be activated");
 	  ModPerl::Util::exit();
   }
@@ -118,6 +118,7 @@ sub handler    {
     my  $key="$hostname:$id:$uri:$query_string";
     my $page=$f->read(my $buf, BUFF_LEN);
     my $var=$memd->get($key);
+    $s->warn("AMF warn - $key,$content_type");
     if ($var) {
         my $hash_dummy=$var;
         my %hash=%$hash_dummy;
@@ -147,9 +148,7 @@ For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
-Mobile Demo page of the filter: http://apachemobilefilter.nogoogle.it (thanks Ivan alias sigmund)
-
-Demo page of the filter: http://apachemobilefilter.nogoogle.it/php_test.php (thanks Ivan alias sigmund)
+Demo page of the filter: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

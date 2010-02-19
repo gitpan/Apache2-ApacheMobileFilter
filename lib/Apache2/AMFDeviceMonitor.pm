@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.02a";
+  $VERSION= "3.03";
   #
   # Define the global environment
   #
@@ -185,9 +185,7 @@ NOTE: this software need carrier-data.txt you can download it directly from this
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
-Mobile Demo page of the filter: http://apachemobilefilter.nogoogle.it (thanks Ivan alias sigmund)
-
-Demo page of the filter: http://apachemobilefilter.nogoogle.it/php_test.php (thanks Ivan alias sigmund)
+Demo page of the filter: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

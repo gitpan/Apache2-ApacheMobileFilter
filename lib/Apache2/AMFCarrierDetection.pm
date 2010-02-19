@@ -27,7 +27,7 @@ package Apache2::AMFCarrierDetection;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.02a";
+  $VERSION= "3.03";
   #
   # Define the global environment
   #
@@ -36,10 +36,10 @@ package Apache2::AMFCarrierDetection;
   my %CarrierIP;
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("AMFCarrierDetection Version $VERSION");
-  if ($ENV{MOBILE_HOME}) {
+  if ($ENV{AMFMobileHome}) {
 	  &loadConfigFile();
   } else {
-	  $CommonLib->printLog("MOBILE_HOME not exist.	Please set the variable MOBILE_HOME into httpd.conf");
+	  $CommonLib->printLog("AMFMobileHome not exist.	Please set the variable AMFMobileHome into httpd.conf");
 	  $CommonLib->printLog("Pre-Requisite: WURFLFilter must be activated");
 	  ModPerl::Util::exit();
   }
@@ -135,47 +135,9 @@ sub handler    {
 
 Apache2::AMFCarrierDetection - This module has the scope to identify by ip address the carrier and the nation.
 
-
-=head1 COREQUISITES
-
-Apache2::RequestRec
-
-Apache2::RequestUtil
-
-Apache2::SubRequest
-
-Apache2::Connection
-
-Apache2::Log
-
-Apache2::Filter
-
-APR::Table
-
-LWP::Simple
-
-Apache2::Const
-
-
 =head1 DESCRIPTION
 
 This module has the scope to identify by ip address the carrier and the nation.
-
-To work AMFSwitcher has need WURFLFilter configured.
-
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
-
-An example of how to set the httpd.conf is below:
-
-=over 4
-
-=item C<PerlSetEnv MOBILE_HOME server_root/MobileFilter>
-
-This indicate to the filter where you want to redirect the specific family of devices:
-
-=item C<PerlSetEnv CarrierNetDownload true #optional>
-
-=item C<PerlSetEnv Carrier http://www.andymoore.info/carrier-data.txt>
 
 
 =back
@@ -186,9 +148,7 @@ NOTE: this software need carrier-data.txt you can download it directly from this
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
-Mobile Demo page of the filter: http://apachemobilefilter.nogoogle.it (thanks Ivan alias sigmund)
-
-Demo page of the filter: http://apachemobilefilter.nogoogle.it/php_test.php (thanks Ivan alias sigmund)
+Demo page of the filter: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

@@ -32,7 +32,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.02a";
+  $VERSION= "3.03";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -82,10 +82,10 @@ package Apache2::AMFImageRendering;
   #
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("AMFImageRendering Version $VERSION");
-  if ($ENV{MOBILE_HOME}) {
+  if ($ENV{AMFMobileHome}) {
 	  &loadConfigFile();
   } else {
-	  $CommonLib->printLog("MOBILE_HOME not exist.	Please set the variable MOBILE_HOME into httpd.conf");
+	  $CommonLib->printLog("AMFMobileHome not exist.	Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
 sub loadConfigFile {
@@ -113,10 +113,13 @@ sub handler    {
       my $s = $f->r->server;
       my $query_string=$f->r->args;
       my $uri = $f->r->uri();
+      $uri =~ s/\//_/g;
       my $content_type=$f->r->content_type();
       my @fileArray = split(/\//, $uri);
       my $file=$fileArray[-1];
       my $docroot = $f->r->document_root();
+      $docroot =~ s/\//_/g;
+      my $servername=$f->r->get_server_name();
       my $id="";
       my $method="";     
       my $location;
@@ -178,7 +181,7 @@ sub handler    {
 				       		$width=$ArrayQuery{dim} * $width / 100;
 				       }
 				  }
-				  $imagefile="$resizeimagedirectory/$width.$file";
+				  $imagefile="$resizeimagedirectory/$docroot-$uri.$width";
 				  #
 				  # control if image exist
 				  #
@@ -276,9 +279,7 @@ NOTE: this software need wurfl.xml you can download it directly from this site: 
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
-Mobile Demo page of the filter: http://apachemobilefilter.nogoogle.it (thanks Ivan alias sigmund)
-
-Demo page of the filter: http://apachemobilefilter.nogoogle.it/php_test.php (thanks Ivan alias sigmund)
+Demo page of the filter: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

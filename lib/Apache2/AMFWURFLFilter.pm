@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.02a";
+  $VERSION= "3.03";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -88,8 +88,8 @@ package Apache2::AMFWURFLFilter;
   } 
 
   #
-  # Check if MOBILE_HOME and CacheDirectoryStore is setting in apache httpd.conf file for example:
-  # PerlSetEnv MOBILE_HOME <apache_directory>/MobileFilter
+  # Check if AMFMobileHome and CacheDirectoryStore is setting in apache httpd.conf file for example:
+  # PerlSetEnv AMFMobileHome <apache_directory>/MobileFilter
   #
   if ($ENV{CacheDirectoryStore}) {
 	$cachedirectorystore=$ENV{CacheDirectoryStore};
@@ -114,10 +114,10 @@ package Apache2::AMFWURFLFilter;
 	        $cacheSystem->store('wurfl-conf', 'FullBrowserUrl','null');
 	        $cacheSystem->store('wurfl-conf', 'ResizeImageDirectory','null');
   }
-  if ($ENV{MOBILE_HOME}) {
-	  &loadConfigFile("$ENV{MOBILE_HOME}/wurfl.xml");
-  } else {
-	  $CommonLib->printLog("MOBILE_HOME not exist.	Please set the variable MOBILE_HOME into httpd.conf");
+  if ($ENV{AMFMobileHome}) {
+	  &loadConfigFile("$ENV{AMFMobileHome}/wurfl.xml");
+  }  else {
+	  $CommonLib->printLog("AMFMobileHome not exist (AMFMobileHome is deprecated).	Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
   
@@ -196,7 +196,7 @@ sub loadConfigFile {
 				  my @dummypairs = split(/\//, $downloadwurflurl);
 				  my ($ext_zip) = $downloadwurflurl =~ /\.(\w+)$/;
 				  my $filezip=$dummypairs[-1];
-				  my $tmp_dir=$ENV{MOBILE_HOME};
+				  my $tmp_dir=$ENV{AMFMobileHome};
 				  $filezip="$tmp_dir/$filezip";
 				  my $status = getstore ($downloadwurflurl,$filezip);
 				  my $output="$tmp_dir/tmp_wurfl.xml";
@@ -265,7 +265,7 @@ sub loadConfigFile {
 					$r_id=parsePatchFile($row,$r_id);
 				}
 	         } else {
-				my $filePatch="$ENV{MOBILE_HOME}/web_browsers_patch.xml";
+				my $filePatch="$ENV{AMFMobileHome}/web_browsers_patch.xml";
 				if (-e "$filePatch") {
 						$CommonLib->printLog("Start loading Web Patch File of WURFL");
 						if (open (IN,"$filePatch")) {
@@ -640,100 +640,15 @@ __END__
 
 Apache2::AMFWURFLFilter - The module detects the mobile device and passes the WURFL capabilities on to the other web application as environment variables
 
-=head1 SYNOPSYS
-
-The configuration of V2.x of B<"Apache Mobile Filter"> is very simple thane V1.x, I have deprecated the intelliswitch method because I think that the filter is faster.
-
-Add this parameter into httpd.conf file:
-
-=over 4
-=item C<PerlSetEnv CacheDirectoryStore /tmp>
-
-=item C<PerlSetEnv CapabilityList max_image_width,j2me_midp_2_0> *
-
-=item C<PerlSetEnv WurflNetDownload true>***
-
-=item C<PerlSetEnv DownloadWurflURL http://downloads.sourceforge.net/wurfl/wurfl-latest.zip>****
-
-=item C<PerlSetEnv DownloadZipFile false>
-
-=item C<PerlSetEnv ResizeImageDirectory /transform>
-
-=item C<PerlSetEnv LoadWebPatch true>
-
-=item C<PerlSetEnv PatchWurflNetDownload true>
-
-=item C<PerlSetEnv PatchWurflUrl http://wurfl.sourceforge.net/web_browsers_patch.xml>
-
-=item C<PerlSetEnv MobileVersionUrl /cgi-bin/perl.html> ** (default is "none" that mean the filter pass through)
-
-=item C<PerlSetEnv FullBrowserUrl http://www.google.com> ** (default is "none" that mean the filter pass through)
-
-=item C<PerlSetEnv RedirectTranscoderUrl /transcoderpage.html> (default is "none" that mean the filter pass through)
-
-=item C<PerlSetEnv CookieCacheSystem true> (default is false, but for production mode is suggested to set in true) 
-
-=item C<PerlModule Apache2::AMFWURFLFilter>
-
-=item C<PerlTransHandler +Apache2::AMFWURFLFilter>
-
-=back
-
-* the field separator of each capability you want to consider in your mobile site is ",". Important you now can set ALL (default value) if you want that the filter managed all wurfl capabilities
-
-**if you put a relative url (for example "/path") the filter done an internal redirect, if you put a url redirect with protocol (for example "http:") the filter done a classic redirect
-
-***if this parameter is fault the filter try to read  the wurfl.xml file from MOBILE_HOME path
-
-***if you want to download directly the last version of WURFL.xml you can set the url parameter to http://downloads.sourceforge.net/wurfl/wurfl-latest.zip
-
-****if you put to true value you can detect a little bit more device, but for strange UA the method take  a lot of time 
-
-
 =head1 DESCRIPTION
 
-For this configuration you need to set this parameter
-
-=over 4	
-=item C<PerlSetEnv CacheDirectoryStore>: set where the AMF cache is located
-
-=item C<ConvertImage> (boolean): activate/deactivate the adaptation of images to the device
-
-=item C<ResizeImageDirectory>: where the new images are saved for cache system, remember this directory must be into docroot directory and also must be writeble from the server
-
-=item C<WurflNetDownload> (boolean): if you want to download WURFL xml directly from WURFL site or from an intranet URL (good to have only single point of Wurfl access), default is set to false
-
-=item C<DownloadWurflURL>: the url of WURFL DB to download**
-
-=item C<CapabilityList> : is the capability value you want to pass to you site
-
-=item C<MobileVersionUrl>: is the URL address of mobile version site *
-
-=item C<FullBrowserUrl>: is the URL address of PC version site *
-
-=item C<RedirectTranscoderURL>: the URL where you want to redirect the transcoder*
-
-=item C<LoadWebPatch> (boolean): if you want to use a wurfl patch file
-
-=item C<PatchWurflNetDownload>(boolean): if you want download the patch file
-
-=item C<PatchWurflUrl>: the URL of the patch file (is readed ony if PatchWurflNet is setted with true)
-
-=back
-
-*if you put a relative url (for example "/path") the filter done an internal redirect, if you put a url redirect with protocol (for example "http:") the filter done a classic redirect. If the parameter is not set the filter is a passthrough 
-
-**if you want to download directly the last version of WURFL.xml you can set the url parameter to http://downloads.sourceforge.net/wurfl/wurfl-latest.zip
-
-*** for more info about transcoder problem go to http://wurfl.sourceforge.net
+Module for device detection, the cache is based on file system
 
 =head1 SEE ALSO
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
-Mobile Demo page of the filter: http://apachemobilefilter.nogoogle.it (thanks Ivan alias sigmund)
-
-Demo page of the filter: http://apachemobilefilter.nogoogle.it/php_test.php (thanks Ivan alias sigmund)
+Demo page of the filter: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 
