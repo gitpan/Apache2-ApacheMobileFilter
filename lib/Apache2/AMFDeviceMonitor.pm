@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.03";
+  $VERSION= "3.04";
   #
   # Define the global environment
   #
@@ -150,34 +150,9 @@
 
 Apache2::AMFDeviceMonitor - This module is an admin tool to control the devices access that Apache Mobile Filter has detected.
 
-
-=head1 COREQUISITES
-
-Apache2::Filter ();
-
-Apache2::RequestRec ();
-
-APR::Table ();
-
-Cache::FileBackend;
- 
-
-
 =head1 DESCRIPTION
 
 This module is an admin tool to control the devices access that Apache Mobile Filter has detected.
-
-
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
-
-An example of how to set the httpd.conf is below:
-
-=over 4
-
-=item C<PerlSetEnv CacheDirectoryStore /tmp>
-
-
-=back
 
 NOTE: this software need carrier-data.txt you can download it directly from this site: http://www.andymoore.info/carrier-data.txt or you can set the filter to download it directly.
 

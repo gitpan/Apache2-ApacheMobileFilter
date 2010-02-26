@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.03";
+  $VERSION= "3.04";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -172,10 +172,12 @@ sub loadConfigFile {
 				$CommonLib->printLog("PatchWurflUrl is: $patchwurflurl");
 			 }	
 
-			 if ($ENV{CookieCacheSystem}) {
-				$cookiecachesystem=$ENV{CookieCacheSystem};
-				$CommonLib->printLog("CookieCacheSystem is: $cookiecachesystem");
-			 }	
+			 if ($ENV{AMFProductionMode}) {
+				$cookiecachesystem=$ENV{AMFProductionMode};
+				$CommonLib->printLog("AMFProductionMode is: $cookiecachesystem");
+			 } else {
+				$CommonLib->printLog("AMFProductionMode (the CookieCacheSystem is deprecated) is not setted the default value is $cookiecachesystem");			   
+			 }		
 	
 
 	    $CommonLib->printLog("Finish loading  parameter");
@@ -332,7 +334,11 @@ sub FallBack {
         	   $dummy2="$dummy_id|$capability";
         	   $ArrayCapFoundToPass{$capability}=$Array_DDRcapability{$dummy2};
         	} else {
-	        	  $dummy_id=$Array_fb{$dummy_id};        
+        	      if ($Array_fb{$dummy_id}) {
+	        	  		$dummy_id=$Array_fb{$dummy_id};        
+        	      } else {
+        	         $dummy_id="root";
+        	      }
 	        	  if ($dummy_id eq "root" || $dummy_id eq "generic") {
 	        	    $LOOP=1;
 	        	  }
@@ -586,9 +592,6 @@ sub handler {
 					$variabile2="id=$id&$variabile2";
 					$f->subprocess_env("AMF_ID" => $id);
 					$memd->set("$id",$variabile2);
-					if ($cookiecachesystem eq "true") {
-						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
-					}		  			  
 				  }
 	              $f->pnotes('max_image_width' => $ArrayCapFound{max_image_width}); 
 				  $f->pnotes('max_image_height' => $ArrayCapFound{max_image_height});
@@ -596,6 +599,9 @@ sub handler {
 				  $f->pnotes('is_wireless_device' => $ArrayCapFound{is_wireless_device});	
 				  $f->pnotes('is_transcoder' => $ArrayCapFound{is_transcoder});
 				  $f->pnotes('id' => $id);
+				  if ($cookiecachesystem eq "true") {
+						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
+				  }		  			  
 	} else {
 	      	     #
 	      	     # unknown device 

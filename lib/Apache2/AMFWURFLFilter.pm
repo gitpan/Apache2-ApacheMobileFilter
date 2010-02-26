@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.03";
+  $VERSION= "3.04";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -170,11 +170,12 @@ sub loadConfigFile {
 				$CommonLib->printLog("PatchWurflUrl is: $patchwurflurl");
 			 }	
 
-			 if ($ENV{CookieCacheSystem}) {
-				$cookiecachesystem=$ENV{CookieCacheSystem};
-				$CommonLib->printLog("CookieCacheSystem is: $cookiecachesystem");
-			 }	
-	
+			 if ($ENV{AMFProductionMode}) {
+				$cookiecachesystem=$ENV{AMFProductionMode};
+				$CommonLib->printLog("AMFProductionMode is: $cookiecachesystem");
+			 } else {
+				$CommonLib->printLog("AMFProductionMode (the CookieCacheSystem is deprecated) is not setted the default value is $cookiecachesystem");			   
+			 }		
 
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
@@ -448,7 +449,11 @@ sub FallBack {
         	   $dummy2="$dummy_id|$capability";
         	   $ArrayCapFoundToPass{$capability}=$Array_DDRcapability{$dummy2};
         	} else {
-	        	  $dummy_id=$Array_fb{$dummy_id};        
+        	      if ($Array_fb{$dummy_id}) {
+	        	  		$dummy_id=$Array_fb{$dummy_id};        
+        	      } else {
+        	         $dummy_id="root";
+        	      }
 	        	  if ($dummy_id eq "root" || $dummy_id eq "generic") {
 	        	    $LOOP=1;
 	        	  }
@@ -558,6 +563,7 @@ sub handler {
 				$f->pnotes('device_claims_web_support' => $ArrayCapFound{device_claims_web_support});	
 				$f->pnotes('is_wireless_device' => $ArrayCapFound{is_wireless_device});	
 				$f->pnotes('is_transcoder' => $ArrayCapFound{is_transcoder});	
+				$f->pnotes('id' => $id);
 				$id=$ArrayCapFound{id};
 		  }
     } else {
@@ -610,15 +616,16 @@ sub handler {
 					$f->subprocess_env("AMF_ID" => $id);
 					$cacheSystem->store( 'wurfl-id', $id, $variabile2 );
 					$cacheSystem->store( 'wurfl-ua', $user_agent, $id);
-					if ($cookiecachesystem eq "true") {
-						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
-					}		  			  
 				  }
 	              $f->pnotes('max_image_width' => $ArrayCapFound{max_image_width}); 
 				  $f->pnotes('max_image_height' => $ArrayCapFound{max_image_height});
 				  $f->pnotes('device_claims_web_support' => $ArrayCapFound{device_claims_web_support});	
 				  $f->pnotes('is_wireless_device' => $ArrayCapFound{is_wireless_device});	
 				  $f->pnotes('is_transcoder' => $ArrayCapFound{is_transcoder});
+				  $f->pnotes('id' => $id);
+					if ($cookiecachesystem eq "true") {
+						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
+					}		  			  
 	      	 } else {
 	      	     #
 	      	     # unknown device 

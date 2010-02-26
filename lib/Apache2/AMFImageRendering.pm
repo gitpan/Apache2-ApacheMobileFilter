@@ -32,7 +32,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.03";
+  $VERSION= "3.04";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -244,34 +244,10 @@ Apache2::AMFImageRendering - Used to resize images on the fly to adapt to the sc
 
 =head1 DESCRIPTION
 
-This module have the scope to manage with WURFLFilter.pm module the images for mobile devices. 
+This module have the scope to manage with WURFLFilter.pm or WURFLFilterMemcached.pm module the images for mobile devices. 
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
 
-An example of how to set the httpd.conf is below:
-
-=over 4
-
-=item C<PerlSetEnv MOBILE_HOME server_root/MobileFilter>
-
-This indicate to the filter where put the transformated images (cache directory) this directory must be writeable
-
-=item C<PerlSetEnv ResizeImageDirectory /transform>
-
-=item C<PerlModule Apache2::WURFLFilter>
-=item C<PerlTransHandler +Apache2::WURFLFilter>
-
-This is indicate to the filter were are stored the high definition images
-
-=item C<<Location /mobile/*>>
-
-=item C<    SetHandler modperl>
-
-=item C<    PerlInputFilterHandler Apache2::AMFImageRendering >
-
-=item C<</Location>> 
-
-=back
 
 NOTE: this software need wurfl.xml you can download it directly from this site: http://wurfl.sourceforge.net or you can set the filter to download it directly.
 

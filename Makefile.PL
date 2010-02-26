@@ -3,8 +3,9 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
   print << 'EOT1';
   
-Mobile Apache Filter (idel@idelfuschini.it)
+Apache Mobile Filter (idel@idelfuschini.it)
 Documentation: http://www.idelfuschini.it/en/apache-mobile-filter-v2x.html
+DemoSite: http://www.apachemobilefilter.org
 Support: http://amfticket.idelfuschini.it
 
 Note:

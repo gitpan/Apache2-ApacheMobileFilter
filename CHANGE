@@ -1,19 +1,25 @@
-WURFLFilter 3.03
+ApacheMobileFilter 3.04
+Deprecated parameter CookieCacheSystem is changed in AMFProductionMode
+Change Makefile.PL
+Fixed bugs. Thanks to Ivancho.
+Fixed bugs for CookieCacheSystem (now AMFProductionMode)
+
+ApacheMobileFilter 3.03
 Deprecated parameter MOBILE_HOME is changed in AMFMobileHome
 Fixed Bug in AMFWURFLFilter. Thanks to Allison.
 Fixed Bug for AMFImageRender (with different virtual host conflic with images with the same name). Thanks to Sergio.
 Fixed Bug for AMFImageRender (with different uri conflict with images with the same name).
 
-WURFLFilter 3.02
+ApacheMobileFilter 3.02
 Fixed Bug in AMFWURFLFilter. If  CapabilityList was not setted, caused an "uninitialized value".
 Fixed Bug in AMFSwitcher. (the bug is it only in 3.01) Thanks to Richard W.
 
-WURFLFilter 3.01
+ApacheMobileFilter 3.01
 Fixed Bug in AMFCommonLib. Thanks to Amit
 AMFSwitcher.pm: New Parameter called WildCardRedirect that passed the parameter end the url to another site. Thanks to Amit
 AMFSwitcher.pm: New Parameter called SwitcherExclude excludes the url that contains one or more strings that is been specified into the parameter.
 
-WURFLFilter 3.00
+ApacheMobileFilter 3.00
 Change name of the package Apache2-WURFLFilter to Apache2-ApacheMobileFilter
 Change name of module WURFFilter.pm in AMFWURFLFilter.pm
 Change name of module ImageRenderFilter.pm in AMFImageRendering.pm

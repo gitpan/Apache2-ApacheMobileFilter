@@ -26,7 +26,7 @@ package Apache2::AMFSwitcher;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.03";
+  $VERSION= "3.04";
   #
   # Define the global environment
   #
@@ -212,24 +212,6 @@ This module has the scope to manage with WURFLFilter.pm module the group of devi
 To work AMFSwitcher has need WURFLFilter configured.
 
 For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
-
-An example of how to set the httpd.conf is below:
-
-=over 4
-
-=item C<PerlSetEnv MOBILE_HOME server_root/MobileFilter>
-
-This indicate to the filter where you want to redirect the specific family of devices:
-
-=item C<PerlSetEnv FullBrowserUrl http://www.versionforpc.com>
-
-=item C<PerlSetEnv MobileVersionUrl http://www.versionformobile.com>
-
-=item C<PerlSetEnv PerlSetEnv RedirectTranscoderUrl http://www.versionfortrasncoder.com>
-
-=item C<PerlTransHandler +Apache2::AMFSwitcher>
-
-=back
 
 NOTE: this software need wurfl.xml you can download it directly from this site: http://wurfl.sourceforge.net or you can set the filter to download it directly.
 
