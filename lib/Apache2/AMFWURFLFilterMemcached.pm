@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.04";
+  $VERSION= "3.05";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -46,11 +46,10 @@ package Apache2::AMFWURFLFilterMemcached;
   $MobileArray{'symbian'}='mobile';
   $MobileArray{'midp'}='mobile';
   $MobileArray{'android'}='mobile';
-  $MobileArray{'iphone'}='mobile';
+  $MobileArray{'phone'}='mobile';
   $MobileArray{'ipod'}='mobile';
   $MobileArray{'google'}='mobile';
   $MobileArray{'novarra'}='mobile';
-  $MobileArray{'smartphone'}='mobile';
   $MobileArray{'htc'}='mobile';
   my $mobileversionurl="none";
   my $fullbrowserurl="none";
@@ -158,6 +157,13 @@ sub loadConfigFile {
 				$listall="true";
 				$CommonLib->printLog('CapabilityList not setted so the default value is "all"');
 			 }	
+	      	 if ($ENV{AMFMobileKeys}) {
+				my @dummyMobileKeys = split(/,/, $ENV{AMFMobileKeys});
+				foreach $dummy (@dummyMobileKeys) {
+				      $MobileArray{$dummy}='mobile';
+				}
+				      $CommonLib->printLog("AMFMobileKeys is: $ENV{AMFMobileKeys}");
+		} 	
 	             
 	      	 if ($ENV{LoadWebPatch}) {
 				$loadwebpatch=$ENV{LoadWebPatch};
@@ -580,28 +586,25 @@ sub handler {
 						$ArrayCapFound{$string_tofound}=$dummy;
 						my $upper2=uc($string_tofound);
 						$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
+						$f->pnotes("$string_tofound" => $ArrayCapFound{$string_tofound});
 					}
 					$id=$ArrayCapFound{id};								   
-				  } else {
+			} else {
 					%ArrayCapFound=FallBack($id);         
 					foreach $capability2 (sort keys %ArrayCapFound) {
 						$variabile2="$variabile2$capability2=$ArrayCapFound{$capability2}&";
 						my $upper=uc($capability2);
 						$f->subprocess_env("AMF_$upper" => $ArrayCapFound{$capability2});
+						$f->pnotes("$capability2" => $ArrayCapFound{$capability2});
 					}
 					$variabile2="id=$id&$variabile2";
 					$f->subprocess_env("AMF_ID" => $id);
+					$f->pnotes('id' => $id);
 					$memd->set("$id",$variabile2);
-				  }
-	              $f->pnotes('max_image_width' => $ArrayCapFound{max_image_width}); 
-				  $f->pnotes('max_image_height' => $ArrayCapFound{max_image_height});
-				  $f->pnotes('device_claims_web_support' => $ArrayCapFound{device_claims_web_support});	
-				  $f->pnotes('is_wireless_device' => $ArrayCapFound{is_wireless_device});	
-				  $f->pnotes('is_transcoder' => $ArrayCapFound{is_transcoder});
-				  $f->pnotes('id' => $id);
-				  if ($cookiecachesystem eq "true") {
+			}
+			if ($cookiecachesystem eq "true") {
 						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
-				  }		  			  
+			}		  			  
 	} else {
 	      	     #
 	      	     # unknown device 

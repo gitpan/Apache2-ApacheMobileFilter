@@ -28,7 +28,7 @@ package Apache2::AMFMobileCachingMemcached;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.04";
+  $VERSION= "3.05";
   #
   # Define the global environment
   #
@@ -118,7 +118,6 @@ sub handler    {
     my  $key="$hostname:$id:$uri:$query_string";
     my $page=$f->read(my $buf, BUFF_LEN);
     my $var=$memd->get($key);
-    $s->warn("AMF warn - $key,$content_type");
     if ($var) {
         my $hash_dummy=$var;
         my %hash=%$hash_dummy;

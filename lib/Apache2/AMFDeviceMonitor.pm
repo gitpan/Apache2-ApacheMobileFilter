@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.04";
+  $VERSION= "3.05";
   #
   # Define the global environment
   #
@@ -40,7 +40,6 @@
 	  ModPerl::Util::exit();      
   }
   my $cacheSystem = new Cache::FileBackend( $cachedirectorystore, 3, 000 );
-
 
   sub handler {
       my $f = shift;

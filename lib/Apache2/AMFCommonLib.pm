@@ -13,9 +13,8 @@ package Apache2::AMFCommonLib;
   use vars qw($VERSION);
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
-  use Cache::Memcached;
   use CGI;
-  $VERSION= "3.04";
+  $VERSION= "3.05";
 
 sub new {
   my $package = shift;

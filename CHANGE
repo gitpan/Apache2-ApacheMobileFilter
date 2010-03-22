@@ -1,3 +1,11 @@
+ApacheMobileFilter 3.05
+Added parameter AMFMobileKeys for patch identify mobile useragent.
+Delete warn in AMFMobileCachingMemcached
+Add new module AMFTrace for trace.
+Added parameter AMFTraceDebug is boolean (false is the default value, and trace only new useragent, true trace the capabilitis setted in AMFTraceCapability.
+Added parameter AMFTraceCapability is the capability name you want to trace (for ex. brand, model, etc....).
+Added parameter AMFTraceFS to set the field separate between the capabilities to trace.
+
 ApacheMobileFilter 3.04
 Deprecated parameter CookieCacheSystem is changed in AMFProductionMode
 Change Makefile.PL

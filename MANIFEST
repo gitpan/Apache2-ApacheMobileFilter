@@ -7,6 +7,7 @@ lib/Apache2/AMFDeviceMonitor.pm
 lib/Apache2/AMFCommonLib.pm
 lib/Apache2/AMFWURFLFilterMemcached.pm
 lib/Apache2/AMFMobileCachingMemcached.pm
+lib/Apache2/AMFTrace.pm
 Makefile.PL
 MANIFEST
 CHANGE
