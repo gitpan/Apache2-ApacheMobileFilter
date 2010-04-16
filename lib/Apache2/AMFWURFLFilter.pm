@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.05";
+  $VERSION= "3.06";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -515,6 +515,8 @@ sub handler {
     my $variabile="";
     my $user_agent=$f->headers_in->{'User-Agent'}|| '';
     my $x_user_agent=$f->headers_in->{'X-Device-User-Agent'}|| '';
+    my $x_operamini_phone_ua=$f->headers_in->{'X-OperaMini-Phone-Ua'}|| '';
+    my $x_operamini_ua=$f->headers_in->{'X-OperaMini-Ua'}|| '';
     my $query_string=$f->args;
     my $docroot = $f->document_root();
     my $id="";
@@ -533,9 +535,11 @@ sub handler {
     my $mobile=0;
 
     if ($x_user_agent) {
-       $f->log->warn("Warn probably transcoder: $x_user_agent");
        $user_agent=$x_user_agent;
     }	  
+    if ($x_operamini_phone_ua) {
+       $user_agent=$x_operamini_phone_ua;
+    }    
 	if ($user_agent =~ m/Blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'BlackBerry'));
 		$mobile=1;
@@ -640,7 +644,13 @@ sub handler {
 	      	  }
     }		
 	$f->subprocess_env("AMF_VER" => $VERSION);
-	$f->subprocess_env("AMF_WURFLVER" => $WURFLVersion);	 
+	$f->subprocess_env("AMF_WURFLVER" => $WURFLVersion);
+	if ($x_operamini_ua) {
+	    $f->subprocess_env("AMF_MOBILE_BROWSER" => $x_operamini_ua);
+	    $f->pnotes("mobile_browser" => $x_operamini_ua);
+	    $f->subprocess_env("AMF_IS_TRANCODER" => 'true');		
+	    $f->pnotes("is_transcoder" => 'true');
+	}
 	return Apache2::Const::DECLINED;
 }
 1; 

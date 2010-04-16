@@ -1,3 +1,6 @@
+ApacheMobileFilter 3.06
+Manage the operamini browser now the filter detect correctly the device and the browser
+
 ApacheMobileFilter 3.05
 Added parameter AMFMobileKeys for patch identify mobile useragent.
 Delete warn in AMFMobileCachingMemcached
