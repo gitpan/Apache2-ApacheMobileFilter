@@ -1,3 +1,6 @@
+ApacheMobileFilter 3.07
+Fixed Bugs in AMFWURFLFilter.pm, thanks to Siemens
+
 ApacheMobileFilter 3.06
 Manage the operamini browser now the filter detect correctly the device and the browser
 

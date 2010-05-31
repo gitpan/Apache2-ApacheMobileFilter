@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.06";
+  $VERSION= "3.07";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -499,10 +499,12 @@ sub IdentifyPCUAMethod {
   my $ind=0;
   my $id_find="";
   my $pair;
+  my $length=0;
+
   foreach $pair (%PatchArray_id)
-  {
-       if (index($UserAgent,$pair) > 0) {
-           $id_find=$PatchArray_id{$pair};
+  {  
+       if (index($UserAgent,$pair) > -1) {
+           	$id_find=$PatchArray_id{$pair};
        }
   }
   return $id_find;
