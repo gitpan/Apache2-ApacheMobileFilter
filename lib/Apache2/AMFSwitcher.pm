@@ -26,7 +26,7 @@ package Apache2::AMFSwitcher;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.07";
+  $VERSION= "3.08";
   #
   # Define the global environment
   #
@@ -41,6 +41,7 @@ package Apache2::AMFSwitcher;
   my $redirecttranscoderurl_ck="/";
   my @IncludeString;
   my @ExcludeString;
+  my $mobilenable="false";
   
   my %ArrayPath;
   $ArrayPath{1}='none';
@@ -57,6 +58,7 @@ package Apache2::AMFSwitcher;
   if ($ENV{LoadWebPatch}) {
       if ($ENV{LoadWebPatch} eq 'true') {
 			  &loadConfigFile();
+			  
       } else {
 	  	$CommonLib->printLog("LoadWebPatch not exist.	Please set the variable LoadWebPatch must be set with true value");
 	  	$CommonLib->printLog("Pre-Requisite: WURFLFilter must be activated");
@@ -76,12 +78,6 @@ sub loadConfigFile {
 	my $r_id;
 	my $dummy;
 	$CommonLib->printLog("AMFSwitcher: Start read configuration from httpd.conf");
-	if ($ENV{MobileVersionUrl}) {
-		$mobileversionurl=$ENV{MobileVersionUrl};
-		$ArrayPath{1}=$ENV{MobileVersionUrl};
-		$CommonLib->printLog("MobileVersionUrl is: $mobileversionurl");
-		$mobileversionurl_ck=$ENV{MobileVersionUrl};
-	}	
 	if ($ENV{FullBrowserUrl}) {
 		$fullbrowserurl=$ENV{FullBrowserUrl};
 		$ArrayPath{2}=$ENV{FullBrowserUrl};
@@ -107,6 +103,18 @@ sub loadConfigFile {
 		}
 		$CommonLib->printLog("WildCardRedirect is: $wildcardredirect");		
 	}	
+	if ($ENV{MobileVersionUrl}) {
+		$mobileversionurl=$ENV{MobileVersionUrl};
+		$ArrayPath{1}=$ENV{MobileVersionUrl};
+		$CommonLib->printLog("MobileVersionUrl is: $mobileversionurl");
+		$mobileversionurl_ck=$ENV{MobileVersionUrl};
+		push(@ExcludeString,$ENV{MobileVersionUrl});
+	}
+	if ($ENV{FullBrowserMobileAccessKey}) {
+		$mobilenable="$ENV{FullBrowserMobileAccessKey}";
+		$CommonLib->printLog("FullBrowserMobileAccessKey is: $ENV{FullBrowserMobileAccessKey}");
+		$CommonLib->printLog("For access the device to fullbrowser set the link: <url>?$mobilenable");
+	}
 	$CommonLib->printLog("Finish loading  parameter");
 }
 sub handler    {
@@ -123,6 +131,27 @@ sub handler    {
     my $uri=$f->unparsed_uri();
     my $uriAppend="";
     my $filter="true";
+    my %ArrayQuery;
+    if ($query_string) {
+	my @vars = split(/&/, $query_string); 	  
+	foreach my $var (sort @vars){
+		if ($var) {
+			my ($v,$i) = split(/=/, $var);
+			$v =~ tr/+/ /;
+			$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+			$i =~ tr/+/ /;
+			$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+			$i =~ s/<!--(.|\n)*-->//g;
+			$ArrayQuery{$v}="ok";
+			}
+	}
+    }
+    my $cookie = $f->headers_in->{Cookie} || '';
+    my $amfFull=$CommonLib->readCookie_fullB($cookie);
+    if ($ArrayQuery{$mobilenable}) {
+	$f->err_headers_out->set('Set-Cookie' => "amfFull=false; path=/;");
+	$amfFull="ok";
+    }
     if ($f->pnotes('device_claims_web_support')) {      
     	$device_claims_web_support=$f->pnotes('device_claims_web_support')
     }
@@ -156,10 +185,10 @@ sub handler    {
 				if ($wildcardredirect eq 'true'){
 				$location=$uri;
 					if ($location =~ /$fullbrowserurl_ck/o) { 
-		            	$location =~ s/$fullbrowserurl_ck/$mobileversionurl/;
+						$location =~ s/$fullbrowserurl_ck/$mobileversionurl/;
 					} else {
-		            	$location = $mobileversionurl;            
-		            }
+						$location = $mobileversionurl;            
+					}
 				} else {
 		            	$location = $mobileversionurl;            
 				}
@@ -181,7 +210,7 @@ sub handler    {
 	    if ($ArrayPath{$device_type} eq substr($uri,0,length($ArrayPath{$device_type}))) {
 	    	$no_redirect=0;
 	    }
-		if ($location ne "none" ) {
+		if ($location ne "none" && $amfFull eq "") {
 			    if (substr ($location,0,5) eq "http:") { 
 					$f->headers_out->set(Location => $location);
 					$f->status(Apache2::Const::REDIRECT); 

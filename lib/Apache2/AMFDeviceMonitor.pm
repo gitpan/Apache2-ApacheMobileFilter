@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.07";
+  $VERSION= "3.08";
   #
   # Define the global environment
   #
@@ -70,10 +70,10 @@
           $f->ctx(1);
       }
 
-      $f->r->content_type('text/html');
-      $f->print("<title>Apache Mobile Filter - Device Monitor System V$VERSION</title>");
-      $f->print('<style type="text/css">body {font: normal 11px auto "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;color: #4f6b72;background: #E6EAE9}a {color: #c75f3e}caption {padding: 0 0 5px 0;width: 700px;	 font: italic 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;text-align: right;}th {font: bold 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;color: #4f6b72;border-right: 1px solid #C1DAD7;border-bottom: 1px solid #C1DAD7;border-top: 1px solid #C1DAD7;letter-spacing: 2px;text-transform: uppercase;text-align: left;padding: 6px 6px 6px 12px;background: #CAE8EA url(images/bg_header.jpg) no-repeat;}th.nobg {border-top: 0;border-left: 0;border-right: 1px solid #C1DAD7;background: none;}td {border-right: 1px solid #C1DAD7;border-bottom: 1px solid #C1DAD7;background: #fff;padding: 6px 6px 6px 12px;color: #4f6b72;}td.alt {background: #F5FAFA;color: #797268;}th.spec {border-left: 1px solid #C1DAD7;border-top: 0;background: #fff url(images/bullet1.gif) no-repeat;font: bold 10px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;}th.specalt {border-left: 1px solid #C1DAD7;border-top: 0;background: #f5fafa url(images/bullet2.gif) no-repeat;font: bold 10px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;color: #797268;}</style>');
-      $f->print("<b>Apache Mobile Filter</b><br>Device Monitor System V$VERSION<HR><a href=\"?\">home</a>&nbsp;|&nbsp;<a href=\"?form=1\">detected devices</a>&nbsp;|&nbsp;<a href=\"?form=2\">devices not found</a><hr>");
+      
+      my $page_html="<title>Apache Mobile Filter - Device Monitor System V$VERSION</title>";
+      $page_html=$page_html.'<style type="text/css">body {font: normal 11px auto "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;color: #4f6b72;background: #E6EAE9}a {color: #c75f3e}caption {padding: 0 0 5px 0;width: 700px;	 font: italic 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;text-align: right;}th {font: bold 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;color: #4f6b72;border-right: 1px solid #C1DAD7;border-bottom: 1px solid #C1DAD7;border-top: 1px solid #C1DAD7;letter-spacing: 2px;text-transform: uppercase;text-align: left;padding: 6px 6px 6px 12px;background: #CAE8EA url(images/bg_header.jpg) no-repeat;}th.nobg {border-top: 0;border-left: 0;border-right: 1px solid #C1DAD7;background: none;}td {border-right: 1px solid #C1DAD7;border-bottom: 1px solid #C1DAD7;background: #fff;padding: 6px 6px 6px 12px;color: #4f6b72;}td.alt {background: #F5FAFA;color: #797268;}th.spec {border-left: 1px solid #C1DAD7;border-top: 0;background: #fff url(images/bullet1.gif) no-repeat;font: bold 10px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;}th.specalt {border-left: 1px solid #C1DAD7;border-top: 0;background: #f5fafa url(images/bullet2.gif) no-repeat;font: bold 10px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;color: #797268;}</style>';
+      $page_html=$page_html."<b>Apache Mobile Filter</b><br>Device Monitor System V$VERSION<HR><a href=\"?\">home</a>&nbsp;|&nbsp;<a href=\"?form=1\">detected devices</a>&nbsp;|&nbsp;<a href=\"?form=2\">devices not found</a><hr>";
   	  my $dummy="null";
   	  my $count=0;
 	  my $page_number=30;
@@ -87,18 +87,18 @@
 				my @pairs = split(/&/, $cacheSystem->restore( 'wurfl-id', $ArrayQuery{deviceid}));
 				my $param_tofound;
 				my $string_tofound;
-				$f->print("<table><tr><td>Parameter</td><td>Value</td></tr>");
+				$page_html=$page_html."<table><tr><td>Parameter</td><td>Value</td></tr>";
 				foreach $param_tofound (@pairs) {      	       
 					($string_tofound,$dummy)=split(/=/, $param_tofound);
-					$f->print("<tr><td>$string_tofound</td><td>$dummy</td></tr>");
+					$page_html=$page_html."<tr><td>$string_tofound</td><td>$dummy</td></tr>";
 				}
-				$f->print("</table>");
+				$page_html=$page_html."</table>";
   	      } else {
   	      if ($ArrayQuery{form} eq "1") {
-	  	      $f->print('<form action="" method=get>Search device id <input type="text" name="search"><input type="hidden" name="form" value="1"><input type=submit></form>');
+	  	      $page_html=$page_html.'<form action="" method=get>Search device id <input type="text" name="search"><input type="hidden" name="form" value="1"><input type=submit></form>';
   	      }
-	      $f->print("<table>");
-	      $f->print("<tr><td>n.</td><td>device id</td><td>User Agent</td></tr>"); 
+	      $page_html=$page_html."<table>";
+	      $page_html=$page_html."<tr><td>n.</td><td>device id</td><td>User Agent</td></tr>"; 
 	      foreach $ua ( sort $cacheSystem->get_keys( 'wurfl-ua' ) )
 	  		{
 	    			$id =$cacheSystem->restore( 'wurfl-ua', $ua );
@@ -106,7 +106,7 @@
 	    			           $count++;
 	    			    	  if ($count > $min - 1 && $count < $max + 1) {
 	    			    	      		    		 
-	    			  			$f->print("<tr><td>$count</td><td>$id</td><td>$ua</td></tr>");
+	    			  			$page_html=$page_html."<tr><td>$count</td><td>$id</td><td>$ua</td></tr>";
 	    			    	  }
 
 	    			}
@@ -115,33 +115,37 @@
 	    			    	if ($id =~ m/$ArrayQuery{search}/i) {
 	    			    	  $count++;
 	    			    	  if ($count > $min && $count < $max + 1) {
-			    			  		$f->print("<tr><td>$count</td><td><a href=\"?form=3&deviceid=$id\">$id</a></td><td>$ua</td></tr>"); 
+			    			  		$page_html=$page_html."<tr><td>$count</td><td><a href=\"?form=3&deviceid=$id\">$id</a></td><td>$ua</td></tr>"; 
 	    			    	  }
 			    			  
 	    			    	} 
 	    			    } else {
 	    			          $count++; 
 	    			    	  if ($count > $min - 1 && $count < $max + 1) {
-	    			         $f->print("<tr><td>$count</td><td><a href=\"?form=3&deviceid=$id\">$id</a></td><td>$ua</td></tr>");
+	    			         $page_html=$page_html."<tr><td>$count</td><td><a href=\"?form=3&deviceid=$id\">$id</a></td><td>$ua</td></tr>";
 	    			    	 }	    			         
 	    			    }   			    			
 	    			  		    			
 	    			}
 	  		}
   	      }
-	      $f->print("</table><center><table><tr>");
+	      $page_html=$page_html."</table><center><table><tr>";
 	      
 	      if ( $min > 0) {
-	      		$f->print("<td><a href=\"?form=$ArrayQuery{form}&page=$back\">back</a></td>");	      
+	      		$page_html=$page_html."<td><a href=\"?form=$ArrayQuery{form}&page=$back\">back</a></td>";	      
 	      }
 	      if ($forward < $count) {
-	      		$f->print("<td><a href=\"?form=$ArrayQuery{form}&page=$forward\">forward></a></td>");	      
+	      		$page_html=$page_html."<td><a href=\"?form=$ArrayQuery{form}&page=$forward\">forward></a></td>";	      
 	      }
-	      $f->print("</tr></table></center>");
+	      $page_html=$page_html."</tr></table></center>";
   	  } else {
-  	  		$f->print('<br><br><br><br><center><table><tr><td><H1>Apache Mobile Filter</H1>Open Source Project: <a href="http://www.idelfuschini.it/en/apache-mobile-filter-v2x.html">http://www.idelfuschini.it/en/apache-mobile-filter-v2x.html</a></td></tr></table>');  
+  	  		$page_html=$page_html.'<br><br><br><br><center><table><tr><td><H1>Apache Mobile Filter</H1>Open Source Project: <a href="http://www.idelfuschini.it/en/apache-mobile-filter-v2x.html">http://www.idelfuschini.it/en/apache-mobile-filter-v2x.html</a></td></tr></table>';  
   	  }
-
+      my $len_bytes=length $page_html;
+      $f->r->headers_out->set("Content-Length"=>$len_bytes);
+      $f->r->headers_out->set("Last-Modified" => time());
+      $f->r->content_type('text/html');
+      $f->print($page_html);
       return Apache2::Const::OK;
   }
   1;
@@ -152,8 +156,6 @@ Apache2::AMFDeviceMonitor - This module is an admin tool to control the devices 
 =head1 DESCRIPTION
 
 This module is an admin tool to control the devices access that Apache Mobile Filter has detected.
-
-NOTE: this software need carrier-data.txt you can download it directly from this site: http://www.andymoore.info/carrier-data.txt or you can set the filter to download it directly.
 
 =head1 SEE ALSO
 

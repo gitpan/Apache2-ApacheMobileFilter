@@ -8,6 +8,7 @@ lib/Apache2/AMFCommonLib.pm
 lib/Apache2/AMFWURFLFilterMemcached.pm
 lib/Apache2/AMFMobileCachingMemcached.pm
 lib/Apache2/AMFTrace.pm
+lib/Apache2/AMFWebService.pm
 Makefile.PL
 MANIFEST
 CHANGE

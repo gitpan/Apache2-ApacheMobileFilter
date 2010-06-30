@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.07";
+  $VERSION= "3.08";
 
 sub new {
   my $package = shift;
@@ -141,6 +141,7 @@ sub GetMultipleUa {
   return %ArrayUAparse;
 
 }
+
 sub readCookie {
     my $self = shift;
     my $cookie_search;
@@ -161,6 +162,27 @@ sub readCookie {
     }   
     return $id_return;
 }
+sub readCookie_fullB {
+    my $self = shift;
+    my $cookie_search;
+	if (@_) {
+		    $cookie_search = shift;
+	}
+    my $param_tofound;
+    my $string_tofound;
+    my $value="";
+    my $id_return="";
+    my @pairs = split(/;/, $cookie_search);
+    my $name;
+    foreach $param_tofound (@pairs) {
+       ($string_tofound,$value)=split(/=/, $param_tofound);
+       if ($string_tofound eq "amfFull") {
+           $id_return=$value;
+       }
+    }   
+    return $id_return;
+}
+
 sub extValueTag {
    my $self = shift;
    my ($tag,$string);

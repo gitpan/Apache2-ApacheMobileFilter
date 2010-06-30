@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.07";
+  $VERSION= "3.08";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -43,6 +43,7 @@ package Apache2::AMFWURFLFilter;
 
   my %PatchArray_id;
   my %MobileArray;
+  my %PCArray;
   $MobileArray{'mobile'}='mobile';
   $MobileArray{'symbian'}='mobile';
   $MobileArray{'midp'}='mobile';
@@ -52,6 +53,16 @@ package Apache2::AMFWURFLFilter;
   $MobileArray{'google'}='mobile';
   $MobileArray{'novarra'}='mobile';
   $MobileArray{'htc'}='mobile';
+  $MobileArray{'windows ce'}='mobile';
+  $MobileArray{'palm'}='mobile';
+  $MobileArray{'lge'}='mobile';
+  $MobileArray{'brew'}='mobile';
+  $MobileArray{'webos'}='mobile';
+  $PCArray{'MSIE'}='msie';
+  $PCArray{'MSIE 5'}='msie_5';
+  $PCArray{'MSIE 6'}='msie_6';
+  $PCArray{'MSIE 7'}='msie_7';
+  $PCArray{'MSIE 8'}='msie_8';
   my $mobileversionurl="none";
   my $fullbrowserurl="none";
   my $redirecttranscoder="true";
@@ -67,6 +78,7 @@ package Apache2::AMFWURFLFilter;
   my $WURFLVersion="unknown";  
   my $cachedirectorystore="/tmp";
   my $capabilitylist="none";
+  my $restmode='false';
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
@@ -136,7 +148,7 @@ sub loadConfigFile {
 	      	 if ($ENV{WurflNetDownload}) {
 				$wurflnetdownload=$ENV{WurflNetDownload};
 				$CommonLib->printLog("WurflNetDownload is: $wurflnetdownload");
-			 }	
+		}	
 	      	 if ($ENV{DownloadWurflURL}) {
 				$downloadwurflurl=$ENV{DownloadWurflURL};
 				$CommonLib->printLog("DownloadWurflURL is: $downloadwurflurl");
@@ -316,6 +328,11 @@ sub loadConfigFile {
         }
         $CommonLib->printLog("This version of WURFL has $arrLen UserAgent");
         $CommonLib->printLog("End loading  WURFL.xml");
+	if ($ENV{RestMode}) {
+		$restmode=$ENV{RestMode};
+		$CommonLib->printLog("RestMode is: $restmode");
+	}
+
 }
 sub callparseWURFLFile {
 	 my ($output) = @_;
@@ -501,11 +518,18 @@ sub IdentifyPCUAMethod {
   my $pair;
   my $length=0;
 
-  foreach $pair (%PatchArray_id)
-  {  
-       if (index($UserAgent,$pair) > -1) {
-           	$id_find=$PatchArray_id{$pair};
-       }
+  foreach $pair (sort %PCArray) {
+	if ($UserAgent =~ m/$pair/) {
+		$id_find=$PCArray{$pair};
+	}
+  }
+  if ($id_find eq "") { 
+	foreach $pair (%PatchArray_id)
+	{  
+	     if (index($UserAgent,$pair) > -1) {
+		      $id_find=$PatchArray_id{$pair};
+	     }
+	}
   }
   return $id_find;
 }
@@ -541,7 +565,26 @@ sub handler {
     }	  
     if ($x_operamini_phone_ua) {
        $user_agent=$x_operamini_phone_ua;
-    }    
+    }
+    if (($query_string) && $restmode eq 'true') {
+    		  my @vars = split(/&/, $query_string); 	  
+    		  foreach $var (sort @vars){
+    				   if ($var) {
+    						my ($v,$i) = split(/=/, $var);
+    						$v =~ tr/+/ /;
+    						$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+    						$i =~ tr/+/ /;
+    						$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+    						$i =~ s/<!--(.|\n)*-->//g;
+    						$ArrayQuery{$v}=$i;
+    					}
+    		  }
+    	  if ($ArrayQuery{amf}) {
+    				$user_agent=$ArrayQuery{amf};
+    	  }
+
+    }
+
 	if ($user_agent =~ m/Blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'BlackBerry'));
 		$mobile=1;
@@ -585,6 +628,7 @@ sub handler {
 					my $lcuser_agent=lc($user_agent);
 	  			    if ($mobile==0) {
 						foreach $pair (%MobileArray) {		
+							$f->log->warn("IDEL - $pair");
 							if ($user_agent =~ m/$pair/i) {
 								$mobile=1;
 							}

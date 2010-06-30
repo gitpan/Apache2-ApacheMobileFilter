@@ -23,6 +23,7 @@ package Apache2::AMFImageRendering;
   use APR::Table (); 
   use LWP::Simple;
   use Image::Resize;
+  use File::Copy;
   use Apache2::Const -compile => qw(OK REDIRECT DECLINED HTTP_MOVED_TEMPORARILY);
   use constant BUFF_LEN => 1024;
 
@@ -32,7 +33,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.07";
+  $VERSION= "3.08";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -70,6 +71,10 @@ package Apache2::AMFImageRendering;
   my $redirecttranscoderurl="";
   my $detectaccuracy="false";
   my $listall="false";
+  my $resizeimagesmall="false";
+  my $par_height='height';
+  my $par_width='width';
+  my $par_perc='dim';
   
   $ImageType{'image/png'}="png";
   $ImageType{'image/gif'}="gif";
@@ -104,7 +109,24 @@ sub loadConfigFile {
 			 } else {
 			    $CommonLib->printLog("ERROR: ResizeImageDirectory parameter must be setted");
 			    ModPerl::Util::exit();
-			 }
+		}
+		if ($ENV{ResizeSmallImage}) {
+			$resizeimagesmall=$ENV{ResizeSmallImage};
+			$CommonLib->printLog("ResizeSmallImage is: $resizeimagesmall. The image smallest of device screensize is also resized (low quality)");
+		}
+	      	if ($ENV{ImageParamWidth}) {
+				$par_width=$ENV{ImageParamWidth};
+				$CommonLib->printLog("ImageParamWidth is: $par_width. To force the width of image the url must be <url image>?$par_width=<width>");
+		} 
+	      	if ($ENV{ImageParamHeight}) {
+				$par_height=$ENV{ImageParamHeight};
+				$CommonLib->printLog("ImageParamHeight is: $par_height. To force the height of image the url must be <url image>?$par_width=<height>");
+		} 
+	      	if ($ENV{ImageParamPerc}) {
+				$par_perc=$ENV{ImageParamPerc};
+				$CommonLib->printLog("ImageParamPerc is: $par_perc. To force the percentage of image the url must be <url image>?$par_perc=<percentage>");
+		} 
+
 	    $CommonLib->printLog("Finish loading  parameter");
 }
 sub handler    {
@@ -165,20 +187,20 @@ sub handler    {
 	  if ($ImageType{$content_type}) {
 	          my $imageToConvert;
 	          my $imagefile="";
-				  if ($ArrayQuery{height}) {
-				       if ( $ArrayQuery{height} =~ /^-?\d/) {
-				       		$height=$ArrayQuery{height};
+				  if ($ArrayQuery{par_height}) {
+				       if ( $ArrayQuery{$par_height} =~ /^-?\d/) {
+				       		$height=$ArrayQuery{par_height};
 				       }
 				  }
-				  if ($ArrayQuery{width}) {
-				       if ( $ArrayQuery{width} =~ /^-?\d/) {
-				       		$width=$ArrayQuery{width};
+				  if ($ArrayQuery{$par_width}) {
+				       if ( $ArrayQuery{$par_width} =~ /^-?\d/) {
+				       		$width=$ArrayQuery{$par_width};
 				       }
 				  }
 
-				  if ($ArrayQuery{dim}) {
-				       if ( $ArrayQuery{dim} =~ /^-?\d/) {
-				       		$width=$ArrayQuery{dim} * $width / 100;
+				  if ($ArrayQuery{$par_perc}) {
+				       if ( $ArrayQuery{$par_perc} =~ /^-?\d/) {
+				       		$width=$ArrayQuery{$par_perc} * $width / 100;
 				       }
 				  }
 				  $imagefile="$resizeimagedirectory/$docroot-$uri.$width";
@@ -193,6 +215,9 @@ sub handler    {
 					  if ( -e "$imagefile") {
 					  } else { 
 						  my $image = Image::Resize->new("$imageToConvert");
+						  if ($image->width() < $width && $resizeimagesmall eq 'false') {
+							copy($imageToConvert, $imagefile);
+     					          } else {
 						  my $gd = $image->resize($width, $height);
 						  
 						  if (open(FH, ">$imagefile")) {
@@ -211,7 +236,8 @@ sub handler    {
 						  close(FH);
 						  } else {
 					         $s->warn("Can not create $imagefile");
-					      }
+						 }
+						 }
 					  }
 					     unless( $f->ctx ) { 
 					       $f->r->headers_out->unset('Content-Length'); 
@@ -229,7 +255,7 @@ sub handler    {
  							read (FH,$image2,$filesize) ;
  					  close FH;
 
-    				  $f->print($image2);				  
+					  $f->print($image2);				  
 					  $return_value=Apache2::Const::OK;
 				  }
 	  }
