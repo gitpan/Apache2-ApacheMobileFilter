@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.08";
+  $VERSION= "3.08a";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -228,7 +228,10 @@ sub loadConfigFile {
 
 			} else {
 				$CommonLib->printLog("The file is a xml file.");
-			    my $content = get ($downloadwurflurl);
+				my $content = get ($downloadwurflurl);
+			    	$content =~ s/\n//g;
+				$content =~ s/>/>\n/g;
+
 				my @rows = split(/\n/, $content);
 				my $row;
 				my $count=0;
@@ -242,11 +245,16 @@ sub loadConfigFile {
 			if (-e "$fileWurfl") {
 					$CommonLib->printLog("Start loading  WURFL.xml");
 					if (open (IN,"$fileWurfl")) {
-						while (<IN>) {
-							 $r_id=parseWURFLFile($_,$r_id);
-							 
-						}
+						my $filesize= -s $fileWurfl;
+						my $string_file;
+						read (IN,$string_file,$filesize);
 						close IN;
+						$string_file =~ s/\n//g;
+						$string_file =~ s/>/>\n/g;
+						my @arrayFile=split(/\n/, $string_file);
+						foreach my $line (@arrayFile) {
+							$r_id=parseWURFLFile($line,$r_id);
+						}
 					} else {
 					    $CommonLib->printLog("Error open file:$fileWurfl");
 					    ModPerl::Util::exit();
@@ -272,11 +280,13 @@ sub loadConfigFile {
 		            $CommonLib->printLog("The size of document is: $document_length bytes");	       
 		        }
 				my $content = get ($patchwurflurl);
-				$CommonLib->printLog("Finish downloading  WURFL.xml");
+				$CommonLib->printLog("Finish downloading  patch WURFL.xml");
 				if ($content eq "") {
 					$CommonLib->printLog("Couldn't get patch $patchwurflurl.");
 					ModPerl::Util::exit();
 				}
+				$content =~ s/\n//g;
+				$content =~ s/>/>\n/g;
 				my @rows = split(/\n/, $content);
 				my $row;
 				my $count=0;
@@ -288,11 +298,16 @@ sub loadConfigFile {
 				if (-e "$filePatch") {
 						$CommonLib->printLog("Start loading Web Patch File of WURFL");
 						if (open (IN,"$filePatch")) {
-							while (<IN>) {
-								 $r_id=parsePatchFile($_,$r_id);
-								 
-							}
+							my $filesize= -s $filePatch;
+							my $string_file;
+							read (IN,$string_file,$filesize);
 							close IN;
+							$string_file =~ s/\n//g;
+							$string_file =~ s/>/>\n/g;
+							my @arrayFile=split(/\n/, $string_file);
+							foreach my $line (@arrayFile) {
+								$r_id=parsePatchFile($line,$r_id);
+							}
 						} else {
 							$CommonLib->printLog("Error open file:$filePatch");
 							ModPerl::Util::exit();
@@ -338,10 +353,16 @@ sub callparseWURFLFile {
 	 my ($output) = @_;
 	 my $r_id;
 	if (open (IN,"$output")) {
-		while (<IN>) {
-			$r_id=parseWURFLFile($_,$r_id);
+		my $filesize= -s $output;
+		my $string_file;
+		read (IN,$string_file,$filesize);
+		close IN;
+		$string_file =~ s/\n//g;
+		$string_file =~ s/>/>\n/g;
+		my @arrayFile=split(/\n/, $string_file);
+		foreach my $line (@arrayFile) {
+			$r_id=parseWURFLFile($line,$r_id);
 		}
-		close IN;			  
 	} else {
 			$CommonLib->printLog("Error open file:$output");
 			ModPerl::Util::exit();
@@ -399,8 +420,8 @@ sub parseWURFLFile {
 			   $Array_DDRcapability{"$val|$name"}=$value;
 			}
 		 }
-		 if ($record =~ /\<ver/o) {
-		     $WURFLVersion=$CommonLib->extValueTag("ver",$record);
+		 if ($record =~ /\/ver>/o) {
+		     $WURFLVersion=substr($record,0,index($record,'</ver>'));
 		 }
 		 return $id;
 
