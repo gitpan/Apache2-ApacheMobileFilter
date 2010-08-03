@@ -3,7 +3,7 @@
 
 #
 # Created by Idel Fuschini 
-# Date: 01/01/10
+# Date: 01/08/10
 # Site: http://www.idelfuschini.it
 # Mail: idel.fuschini@gmail.com
 
@@ -26,7 +26,7 @@ package Apache2::AMFSwitcher;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.08a";
+  $VERSION= "3.09";
   #
   # Define the global environment
   #
@@ -139,9 +139,11 @@ sub handler    {
 			my ($v,$i) = split(/=/, $var);
 			$v =~ tr/+/ /;
 			$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-			$i =~ tr/+/ /;
-			$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-			$i =~ s/<!--(.|\n)*-->//g;
+			if ($i) {
+				$i =~ tr/+/ /;
+				$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+				$i =~ s/<!--(.|\n)*-->//g;
+			}
 			$ArrayQuery{$v}="ok";
 			}
 	}

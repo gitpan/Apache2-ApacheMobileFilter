@@ -3,7 +3,7 @@
 
 #
 # Created by Idel Fuschini 
-# Date: 01/01/10
+# Date: 01/08/10
 # Site: http://www.idelfuschini.it
 # Mail: idel.fuschini@gmail.com
 
@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.08a";
+  $VERSION= "3.09";
 
 sub new {
   my $package = shift;

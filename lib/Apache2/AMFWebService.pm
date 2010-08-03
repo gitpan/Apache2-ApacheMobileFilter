@@ -3,7 +3,7 @@
 
 #
 # Created by Idel Fuschini 
-# Date: 01/01/10
+# Date: 01/08/10
 # Site: http://www.idelfuschini.it
 # Mail: idel.fuschini@gmail.com
 
@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.08a";
+  $VERSION= "3.09";
   #
   # Define the global environment
   #
@@ -75,14 +75,17 @@
       my $Hash=$f->r->subprocess_env();
       my $html_page;
       my $content_type="text/xml";
+      if ($type ne 'json' || $type ne 'xml') {
+            $type='xml';
+      }
       if ($type eq 'json') {
             $content_type="text/plain";
       }
       if ($type eq 'xml') {
-            $html_page=$html_page.'<?xml version="1.0" encoding="UTF-8"?><AMF_DEVICE_DETECTION>';
+            $html_page='<?xml version="1.0" encoding="UTF-8"?><AMF_DEVICE_DETECTION>';
       }
       if ($type eq 'json') {
-            $html_page=$html_page.'{"AMF_DEVICE_DETECTION": {'."\n";
+            $html_page='{"AMF_DEVICE_DETECTION": {'."\n";
       }
       my $count=0;
       while ( my ($key, $value) = each(%$Hash) ) {

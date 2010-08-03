@@ -3,7 +3,7 @@
 
 #
 # Created by Idel Fuschini 
-# Date: 01/01/10
+# Date: 01/08/10
 # Site: http://www.idelfuschini.it
 # Mail: idel.fuschini@gmail.com
 
@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.08a";
+  $VERSION= "3.09";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -58,6 +58,7 @@ package Apache2::AMFWURFLFilter;
   $MobileArray{'lge'}='mobile';
   $MobileArray{'brew'}='mobile';
   $MobileArray{'webos'}='mobile';
+  $MobileArray{'kddi'}='mobile';
   $PCArray{'MSIE'}='msie';
   $PCArray{'MSIE 5'}='msie_5';
   $PCArray{'MSIE 6'}='msie_6';
@@ -326,11 +327,12 @@ sub loadConfigFile {
 		     ModPerl::Util::exit();
 		}
         $CommonLib->printLog("WURFL version: $WURFLVersion");
-        if ($cacheSystem->restore('wurfl-conf', 'ResizeImageDirectory') ne $resizeimagedirectory||$cacheSystem->restore('wurfl-conf', 'DownloadWurflURL') ne $downloadwurflurl||$cacheSystem->restore('wurfl-conf', 'FullBrowserUrl') ne $fullbrowserurl||$cacheSystem->restore('wurfl-conf', 'RedirectTranscoderUrl') ne $redirecttranscoderurl || $cacheSystem->restore('wurfl-conf', 'ver') ne $WURFLVersion || $cacheSystem->restore('wurfl-conf', 'caplist') ne $capabilitylist||$cacheSystem->restore('wurfl-conf', 'listall') ne $listall) {
+        if ($cacheSystem->restore('wurfl-conf', 'amfver') ne $VERSION||$cacheSystem->restore('wurfl-conf', 'ResizeImageDirectory') ne $resizeimagedirectory||$cacheSystem->restore('wurfl-conf', 'DownloadWurflURL') ne $downloadwurflurl||$cacheSystem->restore('wurfl-conf', 'FullBrowserUrl') ne $fullbrowserurl||$cacheSystem->restore('wurfl-conf', 'RedirectTranscoderUrl') ne $redirecttranscoderurl || $cacheSystem->restore('wurfl-conf', 'ver') ne $WURFLVersion || $cacheSystem->restore('wurfl-conf', 'caplist') ne $capabilitylist||$cacheSystem->restore('wurfl-conf', 'listall') ne $listall) {
             $CommonLib->printLog("********************************************************************************************************");
-            $CommonLib->printLog("* This is a new version of WURFL or you change some parameter value, now the old cache must be deleted *");
+            $CommonLib->printLog("* This is a new version of WURFL or you change some parameter value or it's a new version of AMF, now the old cache must be deleted *");
             $CommonLib->printLog("********************************************************************************************************");
 	        $cacheSystem->store('wurfl-conf', 'ver', $WURFLVersion);
+		$cacheSystem->store('wurfl-conf', 'amfver', $VERSION);
 	        $cacheSystem->store('wurfl-conf', 'caplist', $capabilitylist);
 	        $cacheSystem->store('wurfl-conf', 'listall', $listall);
 	        $cacheSystem->store('wurfl-conf', 'RedirectTranscoderUrl', $redirecttranscoderurl);
@@ -383,9 +385,10 @@ sub parseWURFLFile {
 		 } 
 	     if ($record =~ /\<device/o) {
 	        if (index($record,'user_agent') > 0 ) {
-	           $ua=substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12);
-			  if (index($ua,'BlackBerry') >0 ) {
-					$ua=substr($ua,index($ua,'BlackBerry'));
+	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
+
+			  if (index($ua,'blackberry') >0 ) {
+					$ua=substr($ua,index($ua,'blackberry'));
 			  }
 	        }	        
 	        if (index($record,'id') > 0 ) {
@@ -421,7 +424,7 @@ sub parseWURFLFile {
 			}
 		 }
 		 if ($record =~ /\/ver>/o) {
-		     $WURFLVersion=substr($record,0,index($record,'</ver>'));
+		     $WURFLVersion=substr($record,index($record,'<ver>') + 5,index($record,'</ver>') - 9);
 		 }
 		 return $id;
 
@@ -442,9 +445,6 @@ sub parsePatchFile {
 	     if ($record =~ /\<device/o) {
 	        if (index($record,'user_agent') > 0 ) {
 	           $ua=substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12);
-			  if (index($ua,'BlackBerry') >0 ) {
-					$ua=substr($ua,index($ua,'BlackBerry'));
-			  }
 	        }	        
 	        if (index($record,'id') > 0 ) {
 	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
@@ -518,7 +518,7 @@ sub IdentifyUAMethod {
   my $ua_toMatch;
   my $near_toFind=100;
   my $near_toMatch;
-  my %ArrayUAType=$CommonLib->GetMultipleUa($UserAgent);  
+  my %ArrayUAType=$CommonLib->GetMultipleUa(lc($UserAgent));  
   foreach $pair (reverse sort { $a <=> $b }  keys	 %ArrayUAType)
   {
       my $dummy=$ArrayUAType{$pair};
@@ -544,6 +544,7 @@ sub IdentifyPCUAMethod {
 		$id_find=$PCArray{$pair};
 	}
   }
+  if ($id_find) {}else{$id_find="";};
   if ($id_find eq "") { 
 	foreach $pair (%PatchArray_id)
 	{  
@@ -560,7 +561,7 @@ sub handler {
     my $f = shift;  
     my $capability2;
     my $variabile="";
-    my $user_agent=$f->headers_in->{'User-Agent'}|| '';
+    my $user_agent=lc($f->headers_in->{'User-Agent'}|| '');
     my $x_user_agent=$f->headers_in->{'X-Device-User-Agent'}|| '';
     my $x_operamini_phone_ua=$f->headers_in->{'X-OperaMini-Phone-Ua'}|| '';
     my $x_operamini_ua=$f->headers_in->{'X-OperaMini-Ua'}|| '';
@@ -582,10 +583,10 @@ sub handler {
     my $mobile=0;
 
     if ($x_user_agent) {
-       $user_agent=$x_user_agent;
+       $user_agent=lc($x_user_agent);
     }	  
     if ($x_operamini_phone_ua) {
-       $user_agent=$x_operamini_phone_ua;
+       $user_agent=lc($x_operamini_phone_ua);
     }
     if (($query_string) && $restmode eq 'true') {
     		  my @vars = split(/&/, $query_string); 	  
@@ -594,28 +595,31 @@ sub handler {
     						my ($v,$i) = split(/=/, $var);
     						$v =~ tr/+/ /;
     						$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-    						$i =~ tr/+/ /;
-    						$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-    						$i =~ s/<!--(.|\n)*-->//g;
-    						$ArrayQuery{$v}=$i;
+						if ($i) {
+							$i =~ tr/+/ /;
+							$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+							$i =~ s/<!--(.|\n)*-->//g;
+							$ArrayQuery{$v}=$i;
+						}
     					}
     		  }
     	  if ($ArrayQuery{amf}) {
-    				$user_agent=$ArrayQuery{amf};
+    				$user_agent=lc($ArrayQuery{amf});
     	  }
 
     }
 
-	if ($user_agent =~ m/Blackberry/i) {	 
-		$user_agent=substr($user_agent,index($user_agent,'BlackBerry'));
+	if ($user_agent =~ m/blackberry/i) {	 
+		$user_agent=substr($user_agent,index($user_agent,'blackberry'));
 		$mobile=1;
 	}
-	if ($user_agent =~ m/UP.link/i ) {
-		$user_agent=substr($user_agent,0,index($user_agent,'UP.Link') - 1);
+	if ($user_agent =~ m/up.link/i ) {
+		$user_agent=substr($user_agent,0,index($user_agent,'up.link') - 1);
 		$mobile=1;
 	}
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
+    $user_agent=lc($user_agent);
     if ($cacheSystem->restore( 'wurfl-ua', $user_agent )) {
           #
           # cookie is not empty so I try to read in memory cache on my httpd cache
@@ -649,7 +653,6 @@ sub handler {
 					my $lcuser_agent=lc($user_agent);
 	  			    if ($mobile==0) {
 						foreach $pair (%MobileArray) {		
-							$f->log->warn("IDEL - $pair");
 							if ($user_agent =~ m/$pair/i) {
 								$mobile=1;
 							}
@@ -658,60 +661,57 @@ sub handler {
 							$id=IdentifyPCUAMethod($user_agent);
 						}			            
 					}
+					if ($id) {}else{$id="";};
 					if ($id eq "") { 
 						$id=IdentifyUAMethod($user_agent);
 					}
+					if ($id eq "") { 
+							$id='generic_web_browser';
+					}
 					$cacheSystem->store( 'wurfl-ua', $user_agent, $id);
 				  }	
-              }                        
-		      if ($id ne "") {
+		}                        
+		if ($id ne "") {
 	      	     #
 	      	     #  device detected 
 	      	     #
 		         if ($cacheSystem->restore( 'wurfl-id', $id )) {
-					#
-					# I'm here only for old device looking in cache
-					#
-					my @pairs = split(/&/, $cacheSystem->restore( 'wurfl-id', $id ));
-					my $param_tofound;
-					my $string_tofound;
-					foreach $param_tofound (@pairs) {      	       
-						($string_tofound,$dummy)=split(/=/, $param_tofound);
-						$ArrayCapFound{$string_tofound}=$dummy;
-						my $upper2=uc($string_tofound);
-						$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
-						$f->pnotes("$string_tofound" => $ArrayCapFound{$string_tofound});
-					}
-					$id=$ArrayCapFound{id};								   
-				  } else {
-					%ArrayCapFound=FallBack($id);         
-					foreach $capability2 (sort keys %ArrayCapFound) {
-						$variabile2="$variabile2$capability2=$ArrayCapFound{$capability2}&";
-						my $upper=uc($capability2);
-						$f->subprocess_env("AMF_$upper" => $ArrayCapFound{$capability2});
-						$f->pnotes("$capability2" => $ArrayCapFound{$capability2});
-					}
-					$variabile2="id=$id&$variabile2";
-					$f->subprocess_env("AMF_ID" => $id);
-					$f->pnotes('id' => $id);
-					$cacheSystem->store( 'wurfl-id', $id, $variabile2 );
-					$cacheSystem->store( 'wurfl-ua', $user_agent, $id);
-				  }
-					if ($cookiecachesystem eq "true") {
-						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
-					}		  			  
-	      	 } else {
-	      	     #
-	      	     # unknown device 
-	      	     #
-				 $cacheSystem->store( 'wurfl-ua', $user_agent, "device_not_found");
-				 if ($cookiecachesystem eq "true") {
-							$f->err_headers_out->set('Set-Cookie' => "amf=device_not_found; path=/;");	
-				  }		  			  
-	      	  }
+				#
+				# I'm here only for old device looking in cache
+				#
+				my @pairs = split(/&/, $cacheSystem->restore( 'wurfl-id', $id ));
+				my $param_tofound;
+				my $string_tofound;
+				foreach $param_tofound (@pairs) {      	       
+					($string_tofound,$dummy)=split(/=/, $param_tofound);
+					$ArrayCapFound{$string_tofound}=$dummy;
+					my $upper2=uc($string_tofound);
+					$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
+					$f->pnotes("$string_tofound" => $ArrayCapFound{$string_tofound});
+				}
+				$id=$ArrayCapFound{id};								   
+			} else {
+				%ArrayCapFound=FallBack($id);         
+				foreach $capability2 (sort keys %ArrayCapFound) {
+					$variabile2="$variabile2$capability2=$ArrayCapFound{$capability2}&";
+					my $upper=uc($capability2);
+					$f->subprocess_env("AMF_$upper" => $ArrayCapFound{$capability2});
+					$f->pnotes("$capability2" => $ArrayCapFound{$capability2});
+				}
+				$variabile2="id=$id&$variabile2";
+				$f->subprocess_env("AMF_ID" => $id);
+				$f->pnotes('id' => $id);
+				$cacheSystem->store( 'wurfl-id', $id, $variabile2 );
+				$cacheSystem->store( 'wurfl-ua', $user_agent, $id);
+			}
+			if ($cookiecachesystem eq "true") {
+				$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
+			}		  			  
+	      	} 
     }		
 	$f->subprocess_env("AMF_VER" => $VERSION);
 	$f->subprocess_env("AMF_WURFLVER" => $WURFLVersion);
+	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {
 	    $f->subprocess_env("AMF_MOBILE_BROWSER" => $x_operamini_ua);
 	    $f->pnotes("mobile_browser" => $x_operamini_ua);

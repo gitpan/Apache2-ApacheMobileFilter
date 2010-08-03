@@ -3,7 +3,7 @@
 
 #
 # Created by Idel Fuschini 
-# Date: 01/01/10
+# Date: 01/08/10
 # Site: http://www.idelfuschini.it
 # Mail: idel.fuschini@gmail.com
 
@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.08a";
+  $VERSION= "3.09";
   #
   # Define the global environment
   #

@@ -1,3 +1,7 @@
+ApacheMobileFilter 3.09
+Device detection it's no more case sensitive for ua mobile devices.
+Fixed minor bugs.
+
 ApacheMobileFilter 3.08
 Added new module AMFWebService, for XML and JSON output. Thanks to Stefano L.
 Added parameter RestMode (default is false) if it's is possible to pass in query string the value of userAgent
