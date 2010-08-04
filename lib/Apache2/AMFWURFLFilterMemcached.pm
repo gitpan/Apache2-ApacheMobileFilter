@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.09";
+  $VERSION= "3.09a";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -521,7 +521,7 @@ sub parsePatchFile {
 		 } 
 	     if ($record =~ /\<device/o) {
 	        if (index($record,'user_agent') > 0 ) {
-	           $ua=substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12);
+	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
 	        }	        
 	        if (index($record,'id') > 0 ) {
 	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
