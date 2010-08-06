@@ -1,3 +1,6 @@
+ApacheMobileFilter 3.09b
+Fix bugs for chrome
+
 ApacheMobileFilter 3.09
 Device detection it's no more case sensitive for ua mobile devices.
 Fixed minor bugs.

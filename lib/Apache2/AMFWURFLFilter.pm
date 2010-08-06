@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.09a";
+  $VERSION= "3.09b";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -59,11 +59,15 @@ package Apache2::AMFWURFLFilter;
   $MobileArray{'brew'}='mobile';
   $MobileArray{'webos'}='mobile';
   $MobileArray{'kddi'}='mobile';
-  $PCArray{'MSIE'}='msie';
-  $PCArray{'MSIE 5'}='msie_5';
-  $PCArray{'MSIE 6'}='msie_6';
-  $PCArray{'MSIE 7'}='msie_7';
-  $PCArray{'MSIE 8'}='msie_8';
+  $PCArray{'msie'}='msie';
+  $PCArray{'msie 5'}='msie_5';
+  $PCArray{'msie 6'}='msie_6';
+  $PCArray{'msie 7'}='msie_7';
+  $PCArray{'msie 8'}='msie_8';
+  $PCArray{'chrome'}='google_chrome';
+  $PCArray{'chrome/0'}='google_chrome_0';
+  $PCArray{'chrome/1'}='google_chrome_1';
+  $PCArray{'chrome/2'}='google_chrome_2';
   my $mobileversionurl="none";
   my $fullbrowserurl="none";
   my $redirecttranscoder="true";
