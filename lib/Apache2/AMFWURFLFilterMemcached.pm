@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.09b";
+  $VERSION= "3.10";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -58,6 +58,20 @@ package Apache2::AMFWURFLFilterMemcached;
   $MobileArray{'brew'}='mobile';
   $MobileArray{'webos'}='mobile';
   $MobileArray{'kddi'}='mobile';
+  $MobileArray{'nokia'}='mobile';
+  $MobileArray{'sanyo'}='mobile';
+  $MobileArray{'foma'}='mobile';
+  $MobileArray{'hiptop'}='mobile';
+  $MobileArray{'kindle'}='mobile';
+  $MobileArray{'tablet'}='mobile';
+  $MobileArray{'maemo'}='mobile';
+  $MobileArray{'softbank'}='mobile';
+  $MobileArray{'netfront'}='mobile';
+  $MobileArray{'sony'}='mobile';
+  $MobileArray{'playstation'}='mobile';
+  $MobileArray{'samsung'}='mobile';
+  $MobileArray{'bolt'}='mobile';
+  $MobileArray{'nintendo'}='mobile';
   $PCArray{'msie'}='msie';
   $PCArray{'msie 5'}='msie_5';
   $PCArray{'msie 6'}='msie_6';
@@ -332,20 +346,6 @@ sub loadConfigFile {
 		     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
 		     #ModPerl::Util::exit();
 		}
-       # if ($memd->get('ResizeImageDirectory') ne $resizeimagedirectory||$memd->get('DownloadWurflURL') ne $downloadwurflurl||$memd->get('FullBrowserUrl') ne $fullbrowserurl||$memd->get('RedirectTranscoderUrl') ne $redirecttranscoderurl || $memd->get('ver') ne $WURFLVersion || $memd->get('caplist') ne $ENV{CapabilityList}||$memd->get('listall') ne $listall) {
-       #     $CommonLib->printLog("********************************************************************************************************");
-       #     $CommonLib->printLog("* This is a new version of WURFL or you change some parameter value, now the old cache must be deleted *");
-       #     $CommonLib->printLog("********************************************************************************************************");
-       #     $memd->flush_all();
-	   #     $memd->set('ver', $WURFLVersion);
-	    #    $memd->set('caplist', $ENV{CapabilityList});
-	     #   $memd->set('listall', $listall);
-	      #  $memd->set('RedirectTranscoderUrl', $redirecttranscoderurl);
-	       # $memd->set('FullBrowserUrl', $fullbrowserurl);
-	       # $memd->set('DownloadWurflURL', $downloadwurflurl);
-	       # $memd->set('ResizeImageDirectory', $resizeimagedirectory);
-        #}
-		
         $CommonLib->printLog("WURFL version: $WURFLVersion");
         $CommonLib->printLog("This version of WURFL has $arrLen UserAgent");
         $CommonLib->printLog("End loading  WURFL.xml");
@@ -427,7 +427,9 @@ sub IdentifyPCUAMethod {
 	foreach $pair (%PatchArray_id)
 	{  
 	     if (index($UserAgent,$pair) > -1) {
-		      $id_find=$PatchArray_id{$pair};
+		      if ($PatchArray_id{$pair}) {
+			      $id_find=$PatchArray_id{$pair};
+		      }
 	     }
 	}
   }
@@ -630,7 +632,7 @@ sub handler {
 								$mobile=1;
 							}
 						}
-						if ($mobile==0) {						
+						if ($mobile==0) {
 							$id=IdentifyPCUAMethod($user_agent);
 						}			            
 					}

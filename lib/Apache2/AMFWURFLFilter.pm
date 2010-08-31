@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.09b";
+  $VERSION= "3.10";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -59,6 +59,43 @@ package Apache2::AMFWURFLFilter;
   $MobileArray{'brew'}='mobile';
   $MobileArray{'webos'}='mobile';
   $MobileArray{'kddi'}='mobile';
+  $MobileArray{'nokia'}='mobile';
+  $MobileArray{'sanyo'}='mobile';
+  $MobileArray{'foma'}='mobile';
+  $MobileArray{'hiptop'}='mobile';
+  $MobileArray{'kindle'}='mobile';
+  $MobileArray{'tablet'}='mobile';
+  $MobileArray{'maemo'}='mobile';
+  $MobileArray{'softbank'}='mobile';
+  $MobileArray{'mobile'}='mobile';
+  $MobileArray{'symbian'}='mobile';
+  $MobileArray{'midp'}='mobile';
+  $MobileArray{'android'}='mobile';
+  $MobileArray{'phone'}='mobile';
+  $MobileArray{'ipod'}='mobile';
+  $MobileArray{'google'}='mobile';
+  $MobileArray{'novarra'}='mobile';
+  $MobileArray{'htc'}='mobile';
+  $MobileArray{'windows ce'}='mobile';
+  $MobileArray{'palm'}='mobile';
+  $MobileArray{'lge'}='mobile';
+  $MobileArray{'brew'}='mobile';
+  $MobileArray{'webos'}='mobile';
+  $MobileArray{'kddi'}='mobile';
+  $MobileArray{'nokia'}='mobile';
+  $MobileArray{'sanyo'}='mobile';
+  $MobileArray{'foma'}='mobile';
+  $MobileArray{'hiptop'}='mobile';
+  $MobileArray{'kindle'}='mobile';
+  $MobileArray{'tablet'}='mobile';
+  $MobileArray{'maemo'}='mobile';
+  $MobileArray{'softbank'}='mobile';
+  $MobileArray{'netfront'}='mobile';
+  $MobileArray{'sony'}='mobile';
+  $MobileArray{'playstation'}='mobile';
+  $MobileArray{'samsung'}='mobile';
+  $MobileArray{'bolt'}='mobile';
+  $MobileArray{'nintendo'}='mobile';
   $PCArray{'msie'}='msie';
   $PCArray{'msie 5'}='msie_5';
   $PCArray{'msie 6'}='msie_6';
@@ -136,8 +173,6 @@ package Apache2::AMFWURFLFilter;
 	  $CommonLib->printLog("AMFMobileHome not exist (AMFMobileHome is deprecated).	Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
-  
-
 sub loadConfigFile {
 	my ($fileWurfl) = @_;
 	my $null="";
@@ -551,9 +586,13 @@ sub IdentifyPCUAMethod {
   if ($id_find) {}else{$id_find="";};
   if ($id_find eq "") { 
 	foreach $pair (%PatchArray_id)
-	{  
+	{
+	     my $value=index($UserAgent,$pair);
+	     
 	     if (index($UserAgent,$pair) > -1) {
-		      $id_find=$PatchArray_id{$pair};
+		      if ($PatchArray_id{$pair}) {
+			$id_find=$PatchArray_id{$pair};
+		      }
 	     }
 	}
   }
