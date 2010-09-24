@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.10";
+  $VERSION= "3.11";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -96,6 +96,7 @@ package Apache2::AMFWURFLFilter;
   $MobileArray{'samsung'}='mobile';
   $MobileArray{'bolt'}='mobile';
   $MobileArray{'nintendo'}='mobile';
+  $MobileArray{'xv6875.1'}='mobile';
   $PCArray{'msie'}='msie';
   $PCArray{'msie 5'}='msie_5';
   $PCArray{'msie 6'}='msie_6';
@@ -117,7 +118,8 @@ package Apache2::AMFWURFLFilter;
   my $patchwurflurl="";
   my $listall="false";
   my $cookiecachesystem="false";
-  my $WURFLVersion="unknown";  
+  my $WURFLVersion="unknown";
+  my $WURFLPatchVersion="unknown";
   my $cachedirectorystore="/tmp";
   my $capabilitylist="none";
   my $restmode='false';
@@ -366,6 +368,9 @@ sub loadConfigFile {
 		     ModPerl::Util::exit();
 		}
         $CommonLib->printLog("WURFL version: $WURFLVersion");
+	if ($WURFLVersion ne 'unknown'){
+		$CommonLib->printLog("Patch File version: $WURFLPatchVersion");		
+	}
         if ($cacheSystem->restore('wurfl-conf', 'amfver') ne $VERSION||$cacheSystem->restore('wurfl-conf', 'ResizeImageDirectory') ne $resizeimagedirectory||$cacheSystem->restore('wurfl-conf', 'DownloadWurflURL') ne $downloadwurflurl||$cacheSystem->restore('wurfl-conf', 'FullBrowserUrl') ne $fullbrowserurl||$cacheSystem->restore('wurfl-conf', 'RedirectTranscoderUrl') ne $redirecttranscoderurl || $cacheSystem->restore('wurfl-conf', 'ver') ne $WURFLVersion || $cacheSystem->restore('wurfl-conf', 'caplist') ne $capabilitylist||$cacheSystem->restore('wurfl-conf', 'listall') ne $listall) {
             $CommonLib->printLog("********************************************************************************************************");
             $CommonLib->printLog("* This is a new version of WURFL or you change some parameter value or it's a new version of AMF, now the old cache must be deleted *");
@@ -509,6 +514,9 @@ sub parsePatchFile {
 			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
 			   $Array_DDRcapability{"$val|$name"}=$value;
 			}
+		 }
+		 if ($record =~ /\/last_updated>/o) {
+		     $WURFLPatchVersion=substr($record,0,index($record,"</last_updated>"));
 		 }
 		 return $id;
 
@@ -680,13 +688,8 @@ sub handler {
 					$ArrayCapFound{$string_tofound}=$dummy;
 					my $upper2=uc($string_tofound);
 					$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
+					$f->pnotes($string_tofound => $ArrayCapFound{$string_tofound});
 				}
-				$f->pnotes('max_image_height' => $ArrayCapFound{max_image_height});	
-				$f->pnotes('max_image_width' => $ArrayCapFound{max_image_width});	
-				$f->pnotes('device_claims_web_support' => $ArrayCapFound{device_claims_web_support});	
-				$f->pnotes('is_wireless_device' => $ArrayCapFound{is_wireless_device});	
-				$f->pnotes('is_transcoder' => $ArrayCapFound{is_transcoder});	
-				$f->pnotes('id' => $id);
 				$id=$ArrayCapFound{id};
 		  }
     } else {
@@ -754,6 +757,7 @@ sub handler {
     }		
 	$f->subprocess_env("AMF_VER" => $VERSION);
 	$f->subprocess_env("AMF_WURFLVER" => $WURFLVersion);
+	$f->subprocess_env("AMF_PATCHFILEVER" => $WURFLPatchVersion);
 	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {
 	    $f->subprocess_env("AMF_MOBILE_BROWSER" => $x_operamini_ua);

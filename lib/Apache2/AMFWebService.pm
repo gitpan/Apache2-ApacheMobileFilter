@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.10";
+  $VERSION= "3.11";
   #
   # Define the global environment
   #
@@ -75,7 +75,7 @@
       my $Hash=$f->r->subprocess_env();
       my $html_page;
       my $content_type="text/xml";
-      if ($type ne 'json' || $type ne 'xml') {
+      if ($type ne 'json' && $type ne 'xml') {
             $type='xml';
       }
       if ($type eq 'json') {

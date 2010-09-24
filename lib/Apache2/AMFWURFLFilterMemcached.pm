@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.10";
+  $VERSION= "3.11";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -72,6 +72,7 @@ package Apache2::AMFWURFLFilterMemcached;
   $MobileArray{'samsung'}='mobile';
   $MobileArray{'bolt'}='mobile';
   $MobileArray{'nintendo'}='mobile';
+  $MobileArray{'xv6875.1'}='mobile';
   $PCArray{'msie'}='msie';
   $PCArray{'msie 5'}='msie_5';
   $PCArray{'msie 6'}='msie_6';
@@ -94,6 +95,7 @@ package Apache2::AMFWURFLFilterMemcached;
   my $listall="false";
   my $cookiecachesystem="false";
   my $WURFLVersion="unknown";  
+  my $WURFLPatchVersion="unknown";  
   my $serverMemCache;
   my $restmode='false';
   
@@ -347,6 +349,9 @@ sub loadConfigFile {
 		     #ModPerl::Util::exit();
 		}
         $CommonLib->printLog("WURFL version: $WURFLVersion");
+	if ($WURFLVersion ne 'unknown'){
+		$CommonLib->printLog("Patch File version: $WURFLPatchVersion");		
+	}
         $CommonLib->printLog("This version of WURFL has $arrLen UserAgent");
         $CommonLib->printLog("End loading  WURFL.xml");
 	if ($ENV{RestMode}) {
@@ -556,6 +561,10 @@ sub parsePatchFile {
 			   $Array_DDRcapability{"$val|$name"}=$value;
 			}
 		 }
+		 if ($record =~ /\/last_updated>/o) {
+		     $WURFLPatchVersion=substr($record,0,index($record,"</last_updated>"));
+		 }
+		 
 		 return $id;
 
 }
@@ -682,6 +691,7 @@ sub handler {
     
 	$f->subprocess_env("AMF_VER" => $VERSION);
 	$f->subprocess_env("AMF_WURFLVER" => $WURFLVersion);
+	$f->subprocess_env("AMF_PATCHFILEVER" => $WURFLPatchVersion);
 	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {
 	    $f->subprocess_env("AMF_MOBILE_BROWSER" => $x_operamini_ua);

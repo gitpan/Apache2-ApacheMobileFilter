@@ -26,7 +26,7 @@ package Apache2::AMFSwitcher;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.10";
+  $VERSION= "3.11";
   #
   # Define the global environment
   #
@@ -42,6 +42,10 @@ package Apache2::AMFSwitcher;
   my @IncludeString;
   my @ExcludeString;
   my $mobilenable="false";
+  my $mobileDomain="none";
+  my $fullbrowserDomain="none";
+  my $transcoderDomain="none";
+  my $forcetablet="false";
   
   my %ArrayPath;
   $ArrayPath{1}='none';
@@ -83,6 +87,11 @@ sub loadConfigFile {
 		$ArrayPath{2}=$ENV{FullBrowserUrl};
 		$CommonLib->printLog("FullBrowserUrl is: $fullbrowserurl");
 		$fullbrowserurl_ck=$ENV{FullBrowserUrl};
+		if (substr ($fullbrowserurl,0,5) eq "http:") {
+			my ($dummy,$dummy2,$url_domain,$dummy3)=split(/\//, $fullbrowserurl);
+			$fullbrowserDomain=$url_domain;
+			
+		}
 	}		
 	if ($ENV{RedirectTranscoderUrl}) {
 		$redirecttranscoderurl=$ENV{RedirectTranscoderUrl};
@@ -90,6 +99,11 @@ sub loadConfigFile {
 		$redirecttranscoder="true";
 		$redirecttranscoderurl_ck=$ENV{RedirectTranscoderUrl};
 		$CommonLib->printLog("RedirectTranscoderUrl is: $redirecttranscoderurl");		
+		if (substr ($redirecttranscoderurl,0,5) eq "http:") {
+			my ($dummy,$dummy2,$url_domain,$dummy3)=split(/\//, $redirecttranscoderurl);
+			$transcoderDomain=$url_domain;
+			
+		}
 	}
 	if ($ENV{"AMFSwitcherExclude"}){
 		@ExcludeString=split(/,/, $ENV{AMFSwitcherExclude});
@@ -102,13 +116,26 @@ sub loadConfigFile {
 			$wildcardredirect="false";
 		}
 		$CommonLib->printLog("WildCardRedirect is: $wildcardredirect");		
-	}	
+	}
+	if ($ENV{ForceTabletAsFullBrowser}) {
+		if ($ENV{ForceTabletAsFullBrowser} eq 'true') {
+			$forcetablet="true";
+		} else {
+			$forcetablet="false";
+		}
+		$CommonLib->printLog("ForceTabletAsFullBrowser is: $forcetablet");		
+	}
 	if ($ENV{MobileVersionUrl}) {
 		$mobileversionurl=$ENV{MobileVersionUrl};
 		$ArrayPath{1}=$ENV{MobileVersionUrl};
 		$CommonLib->printLog("MobileVersionUrl is: $mobileversionurl");
 		$mobileversionurl_ck=$ENV{MobileVersionUrl};
 		push(@ExcludeString,$ENV{MobileVersionUrl});
+		if (substr ($mobileversionurl,0,5) eq "http:") {
+			my ($dummy,$dummy2,$url_domain,$dummy3)=split(/\//, $mobileversionurl);
+			$mobileDomain=$url_domain;
+			
+		}
 	}
 	if ($ENV{FullBrowserMobileAccessKey}) {
 		$mobilenable="$ENV{FullBrowserMobileAccessKey}";
@@ -129,9 +156,11 @@ sub handler    {
     my $device_type=1;
     my $no_redirect=1;
     my $uri=$f->unparsed_uri();
+    my $servername=$f->get_server_name();
     my $uriAppend="";
     my $filter="true";
     my %ArrayQuery;
+    my $isTablet="null";
     if ($query_string) {
 	my @vars = split(/&/, $query_string); 	  
 	foreach my $var (sort @vars){
@@ -157,6 +186,9 @@ sub handler    {
     if ($f->pnotes('device_claims_web_support')) {      
     	$device_claims_web_support=$f->pnotes('device_claims_web_support')
     }
+    if ($f->pnotes('is_tablet')) {      
+    	$isTablet=$f->pnotes('is_tablet')
+    }
     if ($f->pnotes('is_wireless_device')) {
         $is_wireless_device=$f->pnotes('is_wireless_device');
     }
@@ -169,21 +201,24 @@ sub handler    {
         } 
     }
     if ($filter eq "true"){
-		if ($device_claims_web_support eq 'true' && $is_wireless_device eq 'false') {
-			if ($fullbrowserurl ne 'none') {
-				if ($wildcardredirect eq 'true'){
-				$location=$uri;
-					if ($location =~ /$mobileversionurl_ck/o) { 
-		            	$location =~ s/$mobileversionurl_ck/$fullbrowserurl/;
-					} else {
-		            	$location = $fullbrowserurl;            
-		            }
-				} else {
+		if ($device_claims_web_support eq 'true' && $is_wireless_device eq 'false' || ($isTablet eq "true" && $forcetablet eq "true")) {
+			if ($fullbrowserDomain ne $servername) {
+				if ($fullbrowserurl ne 'none') {
+					if ($wildcardredirect eq 'true'){
+					$location=$uri;
+						if ($location =~ /$mobileversionurl_ck/o) { 
+					$location =~ s/$mobileversionurl_ck/$fullbrowserurl/;
+						} else {
 					$location = $fullbrowserurl;            
-				}
-			} 
-			$device_type=2;     		
+				    }
+					} else {
+						$location = $fullbrowserurl;            
+					}
+				} 
+				$device_type=2;
+			}
 		} else {
+			if ($mobileDomain ne $servername) {
 				if ($wildcardredirect eq 'true'){
 				$location=$uri;
 					if ($location =~ /$fullbrowserurl_ck/o) { 
@@ -194,20 +229,23 @@ sub handler    {
 				} else {
 		            	$location = $mobileversionurl;            
 				}
-			$device_type=1;     		
+				$device_type=1;
+			}
 		}
 	    if ($is_transcoder eq 'true') {
-			if ($redirecttranscoderurl ne 'none') {
-				if ($wildcardredirect eq 'true'){
-				$location=$uri;
-					if ($location =~ /$fullbrowserurl_ck/o) { 
-		            	$location =~ s/$fullbrowserurl_ck/$redirecttranscoderurl/;
-					} else {
-		            	$location = $redirecttranscoderurl;            
-		            }
+			if ($transcoderDomain ne $servername) {
+				if ($redirecttranscoderurl ne 'none') {
+					if ($wildcardredirect eq 'true'){
+					$location=$uri;
+						if ($location =~ /$fullbrowserurl_ck/o) { 
+					$location =~ s/$fullbrowserurl_ck/$redirecttranscoderurl/;
+						} else {
+					$location = $redirecttranscoderurl;            
+				    }
+					}
 				}
+				$device_type=3;
 			}
-			$device_type=3;
 	    }
 	    if ($ArrayPath{$device_type} eq substr($uri,0,length($ArrayPath{$device_type}))) {
 	    	$no_redirect=0;

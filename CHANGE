@@ -1,3 +1,9 @@
+ApacheMobileFilter 3.11
+Fix bug for AMFSwticher, managed correctly 2 virtual host (one mobile and one for fullbrowser). Thanks to Sergio
+Fix bug for AMFWebService.
+Add new environment variable AMF_PATCHFILEVER
+Added parameter ForceTabletAsFullBrowser for redirect tablet (for example iPad) to the fullbrowser site
+
 ApacheMobileFilter 3.10
 Fix bugs for some browser. Thanks to Sergio
 
