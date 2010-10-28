@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.11";
+  $VERSION= "3.12";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -73,6 +73,7 @@ package Apache2::AMFWURFLFilterMemcached;
   $MobileArray{'bolt'}='mobile';
   $MobileArray{'nintendo'}='mobile';
   $MobileArray{'xv6875.1'}='mobile';
+  $MobileArray{'nokia'}='mobile';
   $PCArray{'msie'}='msie';
   $PCArray{'msie 5'}='msie_5';
   $PCArray{'msie 6'}='msie_6';
@@ -593,8 +594,9 @@ sub handler {
     my %ArrayQuery;
     my $var;
     my $mobile=0;
-    
-
+    if ($user_agent eq "") {
+	$user_agent="no usergnet found";
+    }
     if ($x_user_agent) {
        $user_agent=lc($x_user_agent);
     }	  
