@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.12";
+  $VERSION= "3.20";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -435,6 +435,7 @@ sub parseWURFLFile {
 			  if (index($ua,'blackberry') >0 ) {
 					$ua=substr($ua,index($ua,'blackberry'));
 			  }
+			  $ua=$CommonLib->androidDetection($ua);
 	        }	        
 	        if (index($record,'id') > 0 ) {
 	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
@@ -674,6 +675,9 @@ sub handler {
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
     $user_agent=lc($user_agent);
+    $user_agent=$CommonLib->androidDetection($user_agent);
+    $user_agent=$CommonLib->botDetection($user_agent);    
+
     if ($cacheSystem->restore( 'wurfl-ua', $user_agent )) {
           #
           # cookie is not empty so I try to read in memory cache on my httpd cache

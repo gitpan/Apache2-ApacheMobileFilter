@@ -1,3 +1,7 @@
+ApacheMobileFilter 3.20
+New detection for Android Device
+New detection for bot. Thanks to Cristobal.
+
 ApacheMobileFilter 3.12
 If a useragent is empty now AMF recongize as generic browser. Thanks to Alberto.
 Fix bugs

@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.12";
+  $VERSION= "3.20";
 
 sub new {
   my $package = shift;
@@ -141,7 +141,39 @@ sub GetMultipleUa {
   return %ArrayUAparse;
 
 }
+sub androidDetection {
+	my $self = shift;
+	my $ua="";
+	if (@_) {
+	    $ua = shift;
+	}
+	if (index($ua,'android') > -1 ) {
+	       my $string_to_parse=substr($ua,index($ua,'(') + 1,index($ua,')'));
+	       my ($dummy1,$dummy2,$dummy3,$lan,$dummy5)=split(/\;/,$string_to_parse);
+	        if ($lan) {
+			my $before=substr($ua,0,index($ua,$lan));
+			my $after=substr($ua,index($ua,$lan) + length($lan));
+			$ua=$before." xx-xx".$after;
+		}
+	}
+	return $ua;
 
+}
+sub botDetection {
+	my $self = shift;
+	my $ua="";
+	my @arrayBot = ('googlebot','google web preview','msnbot','google.com/bot','ia_archiver','yahoo!','webalta crawler','flickysearchbot','yanga worldsearch','stackrambler','mail.ru','yandex');
+	if (@_) {
+	    $ua = shift;
+	}
+	foreach my $pair (@arrayBot) {
+	  if (index($ua,$pair) > -1 ) {
+	    $ua='It is a bot';
+	  }
+	}
+	return $ua;
+
+}
 sub readCookie {
     my $self = shift;
     my $cookie_search;

@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.12";
+  $VERSION= "3.20";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -461,6 +461,7 @@ sub callparseWURFLFile {
 			ModPerl::Util::exit();
 	}
 }
+
 sub parseWURFLFile {
          my ($record,$val) = @_;
 		 my $null="";
@@ -471,15 +472,17 @@ sub parseWURFLFile {
 		 my $value="";
 		 my $id;
 		 my $name="";
+		 my $lan_sub="xx-xx";
 		 if ($val) {
 		    $id="$val";
 		 } 
 	     if ($record =~ /\<device/o) {
 	        if (index($record,'user_agent') > 0 ) {
 	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
-			  if (index($ua,'blackberry') >-1 ) {
+			  if (index($ua,'blackberry') > -1 ) {
 					$ua=substr($ua,index($ua,'blackberry'));
 			  }
+			  $ua=$CommonLib->androidDetection($ua);
 	        }	        
 	        if (index($record,'id') > 0 ) {
 	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);
@@ -635,6 +638,9 @@ sub handler {
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
     $user_agent=lc($user_agent);
+    
+    $user_agent=$CommonLib->androidDetection($user_agent);
+    $user_agent=$CommonLib->botDetection($user_agent);    
     if ($id eq ""){
                   if ($user_agent) {
 	  			    if ($mobile==0) {
