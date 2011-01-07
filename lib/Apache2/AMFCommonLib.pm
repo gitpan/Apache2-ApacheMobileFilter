@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.21";
+  $VERSION= "3.22";
 
 sub new {
   my $package = shift;
@@ -149,11 +149,16 @@ sub androidDetection {
 	}
 	if (index($ua,'android') > -1 ) {
 	       my $string_to_parse=substr($ua,index($ua,'(') + 1,index($ua,')'));
-	       my ($dummy1,$dummy2,$dummy3,$lan,$dummy5)=split(/\;/,$string_to_parse);
+	       my ($dummy1,$dummy2,$vers,$lan,$dummy5)=split(/\;/,$string_to_parse);
 	        if ($lan) {
 			my $before=substr($ua,0,index($ua,$lan));
 			my $after=substr($ua,index($ua,$lan) + length($lan));
 			$ua=$before." xx-xx".$after;
+		}
+	        if ($vers) {
+			my $before=substr($ua,0,index($ua,$vers));
+			my $after=substr($ua,index($ua,$vers) + length($vers));
+			$ua=$before."android xx".$after;
 		}
 	}
 	return $ua;

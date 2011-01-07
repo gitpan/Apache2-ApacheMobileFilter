@@ -23,6 +23,7 @@ package Apache2::AMFImageRendering;
   use APR::Table (); 
   use LWP::Simple;
   use Image::Resize;
+  use Image::Scale;
   use File::Copy;
   use Apache2::Const -compile => qw(OK REDIRECT DECLINED HTTP_MOVED_TEMPORARILY);
   use constant BUFF_LEN => 1024;
@@ -33,7 +34,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.21";
+  $VERSION= "3.22";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -218,26 +219,30 @@ sub handler    {
 						  if ($image->width() < $width && $resizeimagesmall eq 'false') {
 							copy($imageToConvert, $imagefile);
      					          } else {
-						  my $gd = $image->resize($width, $height);
-						  
-						  if (open(FH, ">$imagefile")) {
-							if ($content_type eq "image/gif") {
-								$image2=$gd->gif();
-								print FH $image2;								
+						  if ($content_type eq "image/gif") {
+							{
+							my $gd = $image->resize($width, $height);
+							if (open(FH, ">$imagefile")) {
+								      $image2=$gd->gif();
+								      print FH $image2;								
+							 }
+							 close(FH);
 							}
-							if ($content_type eq "image/jpeg") {
-								$image2=$gd->jpeg();
-								print FH $image2;
-							}
-							if ($content_type eq "image/png") {
-								$image2=$gd->png();
-								print FH $image2;
-							}
-						  close(FH);
-						  } else {
-					         $s->warn("Can not create $imagefile");
+							} else {
+						       $s->warn("Can not create $imagefile");
+						       }
 						 }
+						 if ($content_type eq "image/png") {
+							my $img = Image::Scale->new("$imageToConvert") ;
+							$img->resize_gd( { width => $width } );
+							$img->save_png("$imagefile");
 						 }
+						 if ($content_type eq "image/jpeg") {
+							my $img = Image::Scale->new("$imageToConvert") ;
+							$img->resize_gd( { width => $width } );
+							$img->save_jpeg("$imagefile");
+						 }
+
 					  }
 					     unless( $f->ctx ) { 
 					       $f->r->headers_out->unset('Content-Length'); 

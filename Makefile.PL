@@ -30,6 +30,7 @@ WriteMakefile(
                      'APR::Table' => 0, 
                      'Apache2::Const' => 0, 
 		     'Image::Resize' => 0,
+                     'Image::Scale' => 0,
 		     'LWP::Simple' => 0,
 		     'File::Copy' => 0,
 	       	     'IO::Uncompress::Unzip'  => 0,

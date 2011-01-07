@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.21";
+  $VERSION= "3.22";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -154,6 +154,7 @@ package Apache2::AMFWURFLFilter;
 	  $CommonLib->printLog("AMFMobileHome not exist (AMFMobileHome is deprecated).	Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
+  my %prova=FallBack('nokia_3650_ver1');
 sub loadConfigFile {
 	my ($fileWurfl) = @_;
 	my $null="";
@@ -431,8 +432,10 @@ sub parseWURFLFile {
 				         my $contaUA=0;
 				         my $Array_fullua_id=$ua;
 				         foreach $pair (reverse sort { $a <=> $b }  keys %ParseUA) {
-						 			my $dummy=$ParseUA{$pair};
-						            $Array_id{$dummy}=$id;
+						 	    my $dummy=$ParseUA{$pair};
+							    if ($Array_id{$dummy}) {} else {
+								$Array_id{$dummy}=$id;
+							    }
 				                $contaUA=$contaUA-1;
 						 }
 				 }
@@ -513,21 +516,21 @@ sub FallBack {
    foreach $capability (sort keys %Capability) {
         $dummy_id=$idToFind;
         $LOOP=0;
-   		while ($LOOP==0) {   		    
+   		while ($LOOP<2) {   		    
    		    $dummy="$dummy_id|$capability";
         	if ($Array_DDRcapability{$dummy}) {        	  
-        	   $LOOP=1;
+        	   $LOOP=2;
         	   $dummy2="$dummy_id|$capability";
         	   $ArrayCapFoundToPass{$capability}=$Array_DDRcapability{$dummy2};
         	} else {
         	      if ($Array_fb{$dummy_id}) {
-	        	  		$dummy_id=$Array_fb{$dummy_id};        
+	        	  		$dummy_id=$Array_fb{$dummy_id};
         	      } else {
         	         $dummy_id="root";
         	      }
-	        	  if ($dummy_id eq "root" || $dummy_id eq "generic") {
-	        	    $LOOP=1;
-	        	  }
+	              if ($dummy_id eq "root" || $dummy_id eq "generic") {
+	        	    $LOOP++;
+	              }
         	}   
    		}
    		
