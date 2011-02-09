@@ -1,3 +1,7 @@
+ApacheMobileFilter 3.23
+Improve sophoisticated Android Detection (check correct OS version)
+Fix minor bugs, wrong message for AMFMobileHome.
+
 ApacheMobileFilter 3.22
 Fix bugs on FallBack function
 Optimize device detection logic.
@@ -294,5 +298,5 @@ Correct README file
 WURFLFilter 0.2
 Read directly the WURFL.xml file from URL. This option is configurable into WURFLConfig.xml file.
 
-WurflFilter 0.1
+WURFLFilter 0.1
 The First Edition

@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.22";
+  $VERSION= "3.23";
 
 sub new {
   my $package = shift;
@@ -147,6 +147,8 @@ sub androidDetection {
 	if (@_) {
 	    $ua = shift;
 	}
+	my $version='nc';
+	my $os='nc';
 	if (index($ua,'android') > -1 ) {
 	       my $string_to_parse=substr($ua,index($ua,'(') + 1,index($ua,')'));
 	       my ($dummy1,$dummy2,$vers,$lan,$dummy5)=split(/\;/,$string_to_parse);
@@ -158,10 +160,15 @@ sub androidDetection {
 	        if ($vers) {
 			my $before=substr($ua,0,index($ua,$vers));
 			my $after=substr($ua,index($ua,$vers) + length($vers));
+			$vers=substr($vers,index($vers,'android'));
+			($os,$version)=split(/ /,$vers);
+			if (index($version,'.') > 0) {
+			  $version =~ s/\.//g;
+			}
 			$ua=$before."android xx".$after;
 		}
 	}
-	return $ua;
+	return ($ua,$version);
 
 }
 sub botDetection {

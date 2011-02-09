@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.22";
+  $VERSION= "3.23";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -151,10 +151,9 @@ package Apache2::AMFWURFLFilter;
   if ($ENV{AMFMobileHome}) {
 	  &loadConfigFile("$ENV{AMFMobileHome}/wurfl.xml");
   }  else {
-	  $CommonLib->printLog("AMFMobileHome not exist (AMFMobileHome is deprecated).	Please set the variable AMFMobileHome into httpd.conf");
+	  $CommonLib->printLog("AMFMobileHome not exist. Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
-  my %prova=FallBack('nokia_3650_ver1');
 sub loadConfigFile {
 	my ($fileWurfl) = @_;
 	my $null="";
@@ -404,6 +403,7 @@ sub parseWURFLFile {
 		 my $value="";
 		 my $id;
 		 my $name="";
+		 my $version="";
 		 if ($val) {
 		    $id="$val";
 		 } 
@@ -414,7 +414,7 @@ sub parseWURFLFile {
 			  if (index($ua,'blackberry') >0 ) {
 					$ua=substr($ua,index($ua,'blackberry'));
 			  }
-			  $ua=$CommonLib->androidDetection($ua);
+			  ($ua,$version)=$CommonLib->androidDetection($ua);
 	        }	        
 	        if (index($record,'id') > 0 ) {
 	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
@@ -615,6 +615,7 @@ sub handler {
     my %ArrayQuery;
     my $var;
     my $mobile=0;
+    my $version="";
     if ($user_agent eq "") {
 	$user_agent="no usergnet found";
     }
@@ -656,7 +657,7 @@ sub handler {
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
     $user_agent=lc($user_agent);
-    $user_agent=$CommonLib->androidDetection($user_agent);
+    ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
 
     if ($cacheSystem->restore( 'wurfl-ua', $user_agent )) {
           #
@@ -703,6 +704,20 @@ sub handler {
 					}
 					if ($id eq "") { 
 							$id='generic_web_browser';
+					} else {
+						#this check the correct version of Android
+						if ($version ne 'nc') {
+							my $lengthId=length($version);
+							my $count=0;
+							while($count<$lengthId) {								
+								my $idToCheck=$id."_sub".substr($version,0,length($version)-$count);
+								if ($Array_fb{$idToCheck}) {
+									$id=$idToCheck;
+									$count=$lengthId;
+								}
+								$count++;
+							}
+						}
 					}
 					$cacheSystem->store( 'wurfl-ua', $user_agent, $id);
 				  }	

@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.22";
+  $VERSION= "3.23";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -154,7 +154,7 @@ package Apache2::AMFWURFLFilterMemcached;
   if ($ENV{AMFMobileHome}) {
 	  &loadConfigFile("$ENV{AMFMobileHome}/wurfl.xml");
   }  else {
-	  $CommonLib->printLog("AMFMobileHome not exist (AMFMobileHome is deprecated).	Please set the variable AMFMobileHome into httpd.conf");
+	  $CommonLib->printLog("AMFMobileHome not exist. Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
   
@@ -473,6 +473,7 @@ sub parseWURFLFile {
 		 my $value="";
 		 my $id;
 		 my $name="";
+		 my $version="";
 		 my $lan_sub="xx-xx";
 		 if ($val) {
 		    $id="$val";
@@ -483,7 +484,7 @@ sub parseWURFLFile {
 			  if (index($ua,'blackberry') > -1 ) {
 					$ua=substr($ua,index($ua,'blackberry'));
 			  }
-			  $ua=$CommonLib->androidDetection($ua);
+			  ($ua,$version)=$CommonLib->androidDetection($ua);
 	        }	        
 	        if (index($record,'id') > 0 ) {
 	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);
@@ -600,6 +601,7 @@ sub handler {
     my %ArrayQuery;
     my $var;
     my $mobile=0;
+    my $version="";
     if ($user_agent eq "") {
 	$user_agent="no usergnet found";
     }
@@ -641,8 +643,7 @@ sub handler {
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
     $user_agent=lc($user_agent);
-    
-    $user_agent=$CommonLib->androidDetection($user_agent);
+    ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
     if ($id eq ""){
                   if ($user_agent) {
 	  			    if ($mobile==0) {
@@ -663,6 +664,21 @@ sub handler {
 					}
 					if ($id eq "") { 
 							$id='generic_web_browser';
+					} else {
+						#this check the correct version of Android
+						
+						if ($version ne 'nc') {
+							my $lengthId=length($version);
+							my $count=0;
+							while($count<$lengthId) {								
+								my $idToCheck=$id."_sub".substr($version,0,length($version)-$count);
+								if ($Array_fb{$idToCheck}) {
+									$id=$idToCheck;
+									$count=$lengthId;
+								}
+								$count++;
+							}
+						}
 					}
 				  }	
      }                        
