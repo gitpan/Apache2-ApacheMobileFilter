@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Apache2-ApacheMobileFilter
-version:            3.23
+version:            3.24
 abstract:           ~
 author:
     - Idel Fuschini (idel@idelfuschini.it)

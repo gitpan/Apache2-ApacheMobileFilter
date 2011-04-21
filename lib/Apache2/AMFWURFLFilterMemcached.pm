@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.23";
+  $VERSION= "3.24";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -97,7 +97,8 @@ package Apache2::AMFWURFLFilterMemcached;
   my $listall="false";
   my $cookiecachesystem="false";
   my $WURFLVersion="unknown";  
-  my $WURFLPatchVersion="unknown";  
+  my $WURFLPatchVersion="unknown";
+  my $personalwurflurl='unknown';
   my $serverMemCache;
   my $restmode='false';
   
@@ -172,8 +173,13 @@ sub loadConfigFile {
 	      	$CommonLib->printLog("Start read configuration from httpd.conf");
 	
 	      	 if ($ENV{WurflNetDownload}) {
-				$wurflnetdownload=$ENV{WurflNetDownload};
-				$CommonLib->printLog("WurflNetDownload is: $wurflnetdownload");
+				if ($ENV{WurflNetDownload} eq 'true' || $ENV{WurflNetDownload} eq 'false') {
+					$wurflnetdownload=$ENV{WurflNetDownload};
+					$CommonLib->printLog("WurflNetDownload is: $wurflnetdownload");
+				} else {
+					$CommonLib->printLog("Error WurflNetDownload parmeter must set to true or false");					
+					ModPerl::Util::exit();
+				}
 			 }	
 	      	 if ($ENV{DownloadWurflURL}) {
 				$downloadwurflurl=$ENV{DownloadWurflURL};
@@ -205,9 +211,14 @@ sub loadConfigFile {
 				$CommonLib->printLog("LoadWebPatch is: $loadwebpatch");
 			 }	
 	      	 if ($ENV{PatchWurflNetDownload}) {
-				$patchwurflnetdownload=$ENV{PatchWurflNetDownload};
-				$CommonLib->printLog("PatchWurflNetDownload is: $patchwurflnetdownload");
-			 }	
+				if ($ENV{PatchWurflNetDownload} eq 'true' || $ENV{PatchWurflNetDownload} eq 'false') {
+					$patchwurflnetdownload=$ENV{PatchWurflNetDownload};
+					$CommonLib->printLog("PatchWurflNetDownload is: $patchwurflnetdownload");
+				} else {
+					$CommonLib->printLog("Error PatchWurflNetDownload parmeter must set to true or false");					
+					ModPerl::Util::exit();
+				}
+		 }	
 	      	 if ($ENV{PatchWurflUrl}) {
 				$patchwurflurl=$ENV{PatchWurflUrl};
 				$CommonLib->printLog("PatchWurflUrl is: $patchwurflurl");
@@ -220,7 +231,15 @@ sub loadConfigFile {
 				$CommonLib->printLog("AMFProductionMode (the CookieCacheSystem is deprecated) is not setted the default value is $cookiecachesystem");			   
 			 }		
 	
+		if ($ENV{PersonalWurflFileName}) {
+			$personalwurflurl=$ENV{AMFMobileHome}."/".$ENV{PersonalWurflFileName};
+			$CommonLib->printLog("PersonalWurflFileName is: $ENV{PersonalWurflFileName}");
+		}
 
+		if ($ENV{RestMode}) {
+			$restmode=$ENV{RestMode};
+			$CommonLib->printLog("RestMode is: $restmode");
+		}
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
 	    if ($wurflnetdownload eq "true") {
@@ -341,7 +360,7 @@ sub loadConfigFile {
 			}
 		}
 
-
+			close IN;
 
 		my $arrLen = scalar %Array_fb;
 		($arrLen,$dummy)= split(/\//, $arrLen);
@@ -356,10 +375,35 @@ sub loadConfigFile {
 	}
         $CommonLib->printLog("This version of WURFL has $arrLen UserAgent");
         $CommonLib->printLog("End loading  WURFL.xml");
-	if ($ENV{RestMode}) {
-		$restmode=$ENV{RestMode};
-		$CommonLib->printLog("RestMode is: $restmode");
+	if ($personalwurflurl ne 'unknown') {
+		$CommonLib->printLog("---------------------------------------------------------------------------"); 
+		if (-e "$personalwurflurl") {
+					$CommonLib->printLog("Start loading  $ENV{PersonalWurflFileName}");
+					if (open (IN,"$personalwurflurl")) {
+						my $filesize= -s $personalwurflurl;
+						my $string_file;
+						read (IN,$string_file,$filesize);
+						close IN;
+						$string_file =~ s/\n//g;
+						$string_file =~ s/>/>\n/g;
+						my @arrayFile=split(/\n/, $string_file);
+						foreach my $line (@arrayFile) {
+						#print "$line\n";
+							$r_id=parseWURFLFile($line,$r_id);
+						}
+					} else {
+					    $CommonLib->printLog("Error open file:$personalwurflurl");
+					    ModPerl::Util::exit();
+					}
+					$CommonLib->printLog("END loading  $ENV{PersonalWurflFileName}");
+					close IN;
+		
+		} else {
+			  $CommonLib->printLog("File $personalwurflurl not found");
+			  ModPerl::Util::exit();
+		}
 	}
+	
 }
 sub FallBack {
   my ($idToFind) = @_;

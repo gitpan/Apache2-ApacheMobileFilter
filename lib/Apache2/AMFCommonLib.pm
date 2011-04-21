@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.23";
+  $VERSION= "3.24";
 
 sub new {
   my $package = shift;
@@ -70,7 +70,12 @@ sub GetMultipleUa {
   my $pair;
   my $ind=0;
   my $pairs3;
-  my %ArrayUAparse;  
+  my %ArrayUAparse;
+  my $length=length($UserAgent);
+  if (substr($UserAgent,$length-1,1) eq ')') {
+    $UserAgent=substr($UserAgent,0,$length-1);
+  } 
+
   my @pairs = split(/\ /, $UserAgent);
   foreach $pair (@pairs)
   { 
