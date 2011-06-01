@@ -1,19 +1,23 @@
+ApacheMobileFilter 3.25
+Fixed bugs in AMFSwitcher. Thanks to Christofer.
+Optimize detection logic for iPhone and Apple. Thanks to Dave
+
 ApacheMobileFilter 3.24
 Optimize detection logic
 Introduce new configuration parameter PersonalWurflFileName
 
 ApacheMobileFilter 3.23
 Improve sophoisticated Android Detection (check correct OS version)
-Fix minor bugs, wrong message for AMFMobileHome.
+Fixed minor bugs, wrong message for AMFMobileHome.
 
 ApacheMobileFilter 3.22
-Fix bugs on FallBack function
+Fixed bugs on FallBack function
 Optimize device detection logic.
 Change resize mechanism for jpg and png file, now it's faster and managed transparency images.
 Improve sophisticated Android Detection
 
 ApacheMobileFilter 3.21
-Fix bugs for mobile bot
+Fixed bugs for mobile bot
 
 ApacheMobileFilter 3.20
 New detection for Android Device
@@ -21,19 +25,19 @@ New detection for bot. Thanks to Cristobal.
 
 ApacheMobileFilter 3.12
 If a useragent is empty now AMF recongize as generic browser. Thanks to Alberto.
-Fix bugs
+Fixed bugs
 
 ApacheMobileFilter 3.11
-Fix bug for AMFSwticher, managed correctly 2 virtual host (one mobile and one for fullbrowser). Thanks to Sergio
-Fix bug for AMFWebService.
+Fixed bug for AMFSwticher, managed correctly 2 virtual host (one mobile and one for fullbrowser). Thanks to Sergio
+Fixed bug for AMFWebService.
 Add new environment variable AMF_PATCHFILEVER
 Added parameter ForceTabletAsFullBrowser for redirect tablet (for example iPad) to the fullbrowser site
 
 ApacheMobileFilter 3.10
-Fix bugs for some browser. Thanks to Sergio
+Fixed bugs for some browser. Thanks to Sergio
 
 ApacheMobileFilter 3.09b
-Fix bugs for chrome
+Fixed bugs for chrome
 
 ApacheMobileFilter 3.09
 Device detection it's no more case sensitive for ua mobile devices.

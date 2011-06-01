@@ -2,12 +2,16 @@ Apache Mobile Filter: is an implementation of the Apache filter in Perl, The mod
 A good point to start is: <http://wurfl.sourceforge.net>
 I don't try to install in Win32 platform, but I suppose it's run well.
 
+To test the Apache Mobile Filte:
+
+http://www.apachemobilefilter.org
 
 Follow the Instructions the URL is:
 
 http://www.idelfuschini.it/it/apache-mobile-filter-v2x.html
 
 Support:
+
 http://amfticket.idelfuschini.it
 
 AVAILABILITY

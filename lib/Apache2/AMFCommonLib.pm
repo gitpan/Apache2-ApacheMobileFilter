@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.24";
+  $VERSION= "3.25";
 
 sub new {
   my $package = shift;
@@ -72,14 +72,14 @@ sub GetMultipleUa {
   my $pairs3;
   my %ArrayUAparse;
   my $length=length($UserAgent);
+  my $count_iphone=0;
   if (substr($UserAgent,$length-1,1) eq ')') {
     $UserAgent=substr($UserAgent,0,$length-1);
   } 
-
   my @pairs = split(/\ /, $UserAgent);
   foreach $pair (@pairs)
-  { 
-
+  {
+     
      if ($ind==0) {
 	     if ($pair =~ /\//o) {     	
 	     	my @pairs2 = split(/\//, $pair);
@@ -89,10 +89,10 @@ sub GetMultipleUa {
 				       	     	my @pairs4 = split(/\-/, $pairs3);
 				       	     	my $last="";
 					    	  	foreach my $pairs5 (@pairs4) {
-								     if ($ind==0) {
+								 if ($ind==0) {
 								       $ind=$ind+1;
 								       $ArrayUAparse{$ind}=$pairs5;
-							 	     } else {
+							 	 } else {
 							 	       $ind=$ind+1;
 							    	   $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\-$pairs5";
 							    	 }
@@ -115,7 +115,7 @@ sub GetMultipleUa {
 			                }
 		 	     } else {
 		 	       $ind=$ind+1;
-		    	   $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\/$pairs3";
+		    	       $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\/$pairs3";
 		    	 }
      	 	}
      	} else {
@@ -140,6 +140,36 @@ sub GetMultipleUa {
 	    	$ind=$ind+1;
      		$ArrayUAparse{$ind}="$ArrayUAparse{$ind-1} $pair";
      	}
+     }
+     my %arrayApple;
+     $arrayApple{'iphone'}="iphone os";
+     $arrayApple{'cpu os'}="cpu os";
+     #my $valueApple='iphone';
+     foreach my $valueApple (keys %arrayApple) {
+      if ($UserAgent =~ /$valueApple/o) {
+	 if ($count_iphone==1){
+
+	   my $value=substr($ArrayUAparse{$ind},index($ArrayUAparse{$ind},$arrayApple{$valueApple}) + length($arrayApple{$valueApple}) + 1);
+	   my $dummy="";
+	   my @underscore=split(/\_/, $value);
+	   my $first=0;
+	   foreach my $char (@underscore) {
+	     if ($first==0) {
+	       $dummy=$char;
+	       $first=1;
+	     } else {
+	       $dummy=$dummy."_".$char;	      
+	     }
+	     my $value2=substr($ArrayUAparse{$ind},0, index($ArrayUAparse{$ind},$arrayApple{$valueApple}) +length($arrayApple{$valueApple}) + 1).$dummy;
+	     $ind++;
+	     $ArrayUAparse{$ind}=$value2;
+	   }
+	   $count_iphone=0;
+	 }
+	 if (substr($ArrayUAparse{$ind},length($ArrayUAparse{$ind})-length($arrayApple{$valueApple})) eq $arrayApple{$valueApple}) {
+	   $count_iphone=1;
+	 }
+      }
      }
   }
 
@@ -167,8 +197,10 @@ sub androidDetection {
 			my $after=substr($ua,index($ua,$vers) + length($vers));
 			$vers=substr($vers,index($vers,'android'));
 			($os,$version)=split(/ /,$vers);
-			if (index($version,'.') > 0) {
-			  $version =~ s/\.//g;
+			if ($version) {
+			  if (index($version,'.') > -1) {
+			    $version =~ s/\.//g;
+			  }
 			}
 			$ua=$before."android xx".$after;
 		}

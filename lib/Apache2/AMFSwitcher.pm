@@ -26,7 +26,7 @@ package Apache2::AMFSwitcher;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.24";
+  $VERSION= "3.25";
   #
   # Define the global environment
   #
@@ -196,7 +196,7 @@ sub handler    {
     	$is_transcoder=$f->pnotes('is_transcoder');
     }
     foreach my $string (@ExcludeString) {
-        if (index($uri,$string) > 0) {
+        if (index($uri,$string) > -1) {
            $filter="false";
         } 
     }

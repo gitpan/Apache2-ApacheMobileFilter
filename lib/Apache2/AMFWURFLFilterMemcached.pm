@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.24";
+  $VERSION= "3.25";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -448,7 +448,7 @@ sub IdentifyUAMethod {
   my $ua_toMatch;
   my $near_toFind=100;
   my $near_toMatch;
-  my %ArrayUAType=$CommonLib->GetMultipleUa(lc($UserAgent));  
+  my %ArrayUAType=$CommonLib->GetMultipleUa(lc($UserAgent));
   foreach $pair (reverse sort { $a <=> $b }  keys	 %ArrayUAType)
   {
       my $dummy=$ArrayUAType{$pair};
@@ -523,7 +523,7 @@ sub parseWURFLFile {
 		    $id="$val";
 		 } 
 	     if ($record =~ /\<device/o) {
-	        if (index($record,'user_agent') > 0 ) {
+	        if (index($record,'user_agent') > -1 ) {
 	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
 			  if (index($ua,'blackberry') > -1 ) {
 					$ua=substr($ua,index($ua,'blackberry'));
@@ -546,6 +546,7 @@ sub parseWURFLFile {
 				         my $contaUA=0;
 				         my $Array_fullua_id=$ua;
 				         foreach $pair (reverse sort { $a <=> $b }  keys %ParseUA) {
+						
 						 			my $dummy=$ParseUA{$pair};
 							    if ($Array_id{$dummy}) {} else {
 						            $Array_id{$dummy}=$id;
@@ -584,22 +585,20 @@ sub parsePatchFile {
 		    $id="$val";
 		 } 
 	     if ($record =~ /\<device/o) {
-	        if (index($record,'user_agent') > 0 ) {
+	        if (index($record,'user_agent') > -1 ) {
 	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
 	        }	        
-	        if (index($record,'id') > 0 ) {
+	        if (index($record,'id') > -1 ) {
 	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
 	        }	        
-	        if (index($record,'fall_back') > 0 ) {
+	        if (index($record,'fall_back') > -1 ) {
 	           $fb=substr($record,index($record,'fall_back') + 11,index($record,'"',index($record,'fall_back')+ 12)- index($record,'fall_back') - 11);	           
 	        }
 	        if (($fb) && ($id)) {	     	   
 					$Array_fb{"$id"}=$fb;
 				 }
 				 if (($ua) && ($id)) {
-				         #if (index($id,'_') > 0) {
-			             	$PatchArray_id{$ua}=$id;
-				         #}
+			             $PatchArray_id{$ua}=$id;
 			             $Array_id{$ua}=$id;
 
 				 }				 
