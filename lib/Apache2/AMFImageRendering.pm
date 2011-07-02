@@ -12,7 +12,8 @@
 package Apache2::AMFImageRendering; 
   
   use strict; 
-  use warnings; 
+  use warnings;
+  use POSIX qw(ceil);
   use Apache2::AMFCommonLib ();
   
   use Apache2::RequestRec ();
@@ -25,6 +26,7 @@ package Apache2::AMFImageRendering;
   use Image::Resize;
   use Image::Scale;
   use File::Copy;
+  use Imager;
   use Apache2::Const -compile => qw(OK REDIRECT DECLINED HTTP_MOVED_TEMPORARILY);
   use constant BUFF_LEN => 1024;
 
@@ -34,7 +36,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.25";
+  $VERSION= "3.30";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -219,28 +221,51 @@ sub handler    {
 						  if ($image->width() < $width && $resizeimagesmall eq 'false') {
 							copy($imageToConvert, $imagefile);
      					          } else {
-						  if ($content_type eq "image/gif") {
-							{
-							my $gd = $image->resize($width, $height);
-							if (open(FH, ">$imagefile")) {
-								      $image2=$gd->gif();
-								      print FH $image2;								
-							 }
-							 close(FH);
+							if ($content_type eq "image/gif") {
+							      my @in = Imager->read_multi(file => $imageToConvert);
+							      #$in[0]->tags(name => 'i_format') eq 'gif';
+							      my $src_screen_width = $in[0]->tags(name => 'gif_screen_width');
+							      my $src_screen_height = $in[0]->tags(name => 'gif_screen_height');
+							      my $factor=$width/$src_screen_width;
+							      my $out_screen_width = ceil($src_screen_width * $factor);
+							      my $out_screen_height = ceil($src_screen_height * $factor);
+							      my @out;
+							      for my $in (@in) {
+							      my $scaled = $in->scale(scalefactor => $factor, qtype=>'mixing');
+							      
+							      # roughly preserve the relative position
+							      $scaled->settag(name => 'gif_left', 
+									      value => $factor * $in->tags(name => 'gif_left'));
+							      $scaled->settag(name => 'gif_top', 
+									      value => $factor * $in->tags(name => 'gif_top'));
+							    
+							      $scaled->settag(name => 'gif_screen_width', value => $out_screen_width);
+							      $scaled->settag(name => 'gif_screen_height', value => $out_screen_height);
+							    
+							      # set some other tags from the source
+							      for my $tag (qw/gif_delay gif_user_input gif_loop gif_disposal/) {
+								$scaled->settag(name => $tag, value => $in->tags(name => $tag));
+							      }
+							      if ($in->tags(name => 'gif_local_map')) {
+								$scaled->settag(name => 'gif_local_map', value => 1);
+							      }
+							    
+							      push @out, $scaled;
+							      }
+							      my $dummy=$imagefile.".gif";
+							      Imager->write_multi({ file => $dummy }, @out) or die "Cannot save $imagefile: ", Imager->errstr, "\n";
+							      rename($dummy, $imagefile);
+							} 
+							if ($content_type eq "image/png") {
+							       my $img = Image::Scale->new("$imageToConvert") ;
+							       $img->resize_gd( { width => $width } );
+							       $img->save_png("$imagefile");
 							}
-							} else {
-						       $s->warn("Can not create $imagefile");
-						       }
-						 }
-						 if ($content_type eq "image/png") {
-							my $img = Image::Scale->new("$imageToConvert") ;
-							$img->resize_gd( { width => $width } );
-							$img->save_png("$imagefile");
-						 }
-						 if ($content_type eq "image/jpeg") {
-							my $img = Image::Scale->new("$imageToConvert") ;
-							$img->resize_gd( { width => $width } );
-							$img->save_jpeg("$imagefile");
+							if ($content_type eq "image/jpeg") {
+							       my $img = Image::Scale->new("$imageToConvert") ;
+							       $img->resize_gd( { width => $width } );
+							       $img->save_jpeg("$imagefile");
+							}
 						 }
 
 					  }

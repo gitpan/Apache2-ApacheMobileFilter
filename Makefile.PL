@@ -21,6 +21,7 @@ WriteMakefile(
     DISTNAME	=> "Apache2-ApacheMobileFilter",
     dist		=> {COMPRESS => 'gzip', SUFFIX => 'gz'},
     PREREQ_PM    => {
+                     'POSIX' => 0,
                      'Apache2::Filter' => 0,
                      'Apache2::RequestRec' => 0,
                      'Apache2::RequestUtil' => 0,
@@ -31,10 +32,11 @@ WriteMakefile(
                      'Apache2::Const' => 0, 
 		     'Image::Resize' => 0,
                      'Image::Scale' => 0,
+                     'Imager' => 0,
 		     'LWP::Simple' => 0,
 		     'File::Copy' => 0,
 	       	     'IO::Uncompress::Unzip'  => 0,
-	       	 'Cache::Memcached'  => "1.27",
+	       	     'Cache::Memcached'  => "1.27",
 		     'Cache::FileBackend' => 0 		 
                      },
     AUTHOR     	=> 'Idel Fuschini (idel@idelfuschini.it)' 

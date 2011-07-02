@@ -1,3 +1,8 @@
+ApacheMobileFilter 3.30
+AMFImageRendering now supports animated GIF
+AMFWebService support deflate mode.
+AMFWebService add new feature called capabilityList, to get specific capability (syntax is capabilityList=brand_name,xhtml_table_support). Thanks to Juan 
+
 ApacheMobileFilter 3.25
 Fixed bugs in AMFSwitcher. Thanks to Christofer.
 Optimize detection logic for iPhone and Apple. Thanks to Dave

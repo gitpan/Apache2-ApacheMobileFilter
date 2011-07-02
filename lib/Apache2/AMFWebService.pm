@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.25";
+  $VERSION= "3.30";
   #
   # Define the global environment
   #
@@ -40,18 +40,16 @@
 
   sub handler {
       my $f = shift;
-      my $query_string=$f->r->args;
+      my $query_string=$f->args;
       my $id;
       my $ua;
       my $capab;
       my %ArrayQuery;
       my %ArrayForSort;
       my %ArrayPnotes;
+      my %ArrayCapability;
       my $type="xml";
-      unless ($f->ctx) {
-          $f->r->headers_out->unset('Content-Length');
-          $f->ctx(1);
-      }
+      my $capabilityList="all";
       
       if ($query_string) {
     		  my @vars = split(/&/, $query_string); 	  
@@ -69,10 +67,20 @@
     	  if ($ArrayQuery{type}) {
     				$type=$ArrayQuery{type};
     	  }
+    	  if ($ArrayQuery{capabilityList}) {
+    				my @capability = split(/,/, $ArrayQuery{capabilityList});
+                                $capabilityList="no";
+                              foreach my $var (sort @capability){
+    				   if ($var) {
+                                        $var=~ tr/[a-z]/[A-Z]/;
+    					$ArrayCapability{$var}='ok';
+    				    }
+    		  }
+            }
 
       }
       
-      my $Hash=$f->r->subprocess_env();
+      my $Hash=$f->subprocess_env();
       my $html_page;
       my $content_type="text/xml";
       if ($type ne 'json' && $type ne 'xml') {
@@ -93,27 +101,26 @@
                   $key=substr($key,4,length($key));
                   if ($count > 0) {
                         $html_page=$html_page.",\n";
+                        $count=0;
                   }
-                  if ($type eq 'xml') {
+                  if ($type eq 'xml' && ($capabilityList eq 'all' || ($ArrayCapability{$key}))) {
                         $html_page=$html_page."<$key>$value</$key>";
                   }
-                  if ($type eq 'json') {
+                  if ($type eq 'json' && ($capabilityList eq 'all' || ($ArrayCapability{$key}))) {
                         $html_page=$html_page."             \"$key\":\"$value\"";
                         $count++;
                   }
-
             }
       }
       if ($type eq 'xml') {
             $html_page=$html_page.'</AMF_DEVICE_DETECTION>';
       }
       if ($type eq 'json') {
+            $html_page=substr($html_page,0,length($html_page)-2);
             $html_page=$html_page."\n     }\n}";
       }
-      my $len_bytes=length $html_page;
-      $f->r->headers_out->set("Content-Length"=>$len_bytes);
-      $f->r->headers_out->set("Last-Modified" => time());
-      $f->r->content_type($content_type);
+      $f->headers_out->set("Last-Modified" => time());
+      $f->content_type($content_type);
       $f->print($html_page);
       return Apache2::Const::OK;
   }
