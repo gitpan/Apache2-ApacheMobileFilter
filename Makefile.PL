@@ -8,6 +8,16 @@ Documentation: http://www.idelfuschini.it/en/apache-mobile-filter-v2x.html
 DemoSite: http://www.apachemobilefilter.org
 Support: http://amfticket.idelfuschini.it
 
+To try quickly the AMF add on httpd.conf this few rows:
+
+
+PerlSetEnv AMFMobileHome /home/AMF
+PerlSetEnv WURFLNetDownload true
+PerlSetEnv DownloadWurflURL http://downloads.sourceforge.net/wurfl/wurfl-latest.zip
+PerlSetEnv CacheDirectoryStore /tmp
+PerlTransHandler +Apache2::AMFWURFLFilter
+
+
 Note:
 Download Cache::Memcached library if you want use memcached (http://memcached.org)
 Download Cache::Cache library if you want use filesystem for caching

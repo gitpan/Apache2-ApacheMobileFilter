@@ -36,7 +36,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.30";
+  $VERSION= "3.31";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -222,8 +222,8 @@ sub handler    {
 							copy($imageToConvert, $imagefile);
      					          } else {
 							if ($content_type eq "image/gif") {
-							      my @in = Imager->read_multi(file => $imageToConvert);
-							      #$in[0]->tags(name => 'i_format') eq 'gif';
+							      my @in = Imager->read_multi(file => $imageToConvert) or die "Cannot read image file: ", Imager->errstr, "\n";
+							      $in[0]->tags(name => 'i_format') eq 'gif' or die "File $imageToConvert is not a GIF image";
 							      my $src_screen_width = $in[0]->tags(name => 'gif_screen_width');
 							      my $src_screen_height = $in[0]->tags(name => 'gif_screen_height');
 							      my $factor=$width/$src_screen_width;
@@ -296,7 +296,7 @@ sub handler    {
   1; 
 =head1 NAME
 
-Apache2::AMFImageRendering - Used to resize images on the fly to adapt to the screen size of the mobile device
+Apache2::AMFImageRendering - Used to resize images (jpg, png, gif gifanimated) on the fly to adapt to the screen size of the mobile device
 
 =head1 DESCRIPTION
 

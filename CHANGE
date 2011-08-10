@@ -1,3 +1,9 @@
+ApacheMobileFilter 3.31
+Change Makefile.PL
+Add info information for image supported
+Add AMFWSCacheControl parameter in AMFWebService, so all proxy cache in middle don’t send many request to webservice. (suggested by juan).
+Fix bugs for Opera (if webpatch is loaded)
+
 ApacheMobileFilter 3.30
 AMFImageRendering now supports animated GIF
 AMFWebService support deflate mode.

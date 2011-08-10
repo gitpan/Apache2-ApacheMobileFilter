@@ -22,20 +22,26 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.30";
+  $VERSION= "3.31";
   #
   # Define the global environment
   #
   my $CommonLib = new Apache2::AMFCommonLib ();
   my $cachedirectorystore="notdefined";
+  my $cachedirective="no-cache";
 
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("AMFWebService Version $VERSION");
   
   if ($ENV{RestMode}) {
-	
       } else {
       $CommonLib->printLog("RestMode must be setted not exist. Please set the variable RestMode into httpd.conf");      
+  }
+  if ($ENV{AMFWSCacheControl}) {
+            $cachedirective=$ENV{AMFWSCacheControl};
+            $CommonLib->printLog("AMFWSCacheControl is: $cachedirective"); 
+      } else {
+      $CommonLib->printLog("AMFWSCacheControl is not setted.");      
   }
 
   sub handler {
@@ -120,6 +126,9 @@
             $html_page=$html_page."\n     }\n}";
       }
       $f->headers_out->set("Last-Modified" => time());
+      if ($ENV{AMFWSCacheControl}) {
+            $f->err_headers_out->set('Cache-Control' => $cachedirective);
+      }
       $f->content_type($content_type);
       $f->print($html_page);
       return Apache2::Const::OK;

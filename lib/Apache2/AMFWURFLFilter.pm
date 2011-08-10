@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.30";
+  $VERSION= "3.31";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -52,6 +52,7 @@ package Apache2::AMFWURFLFilter;
   $MobileArray{'hiptop'}='mobile';
   $MobileArray{'htc'}='mobile';
   $MobileArray{'ipod'}='mobile';
+  $MobileArray{'ipad'}='mobile';
   $MobileArray{'kddi'}='mobile';
   $MobileArray{'kindle'}='mobile';
   $MobileArray{'lge'}='mobile';
@@ -75,6 +76,9 @@ package Apache2::AMFWURFLFilter;
   $MobileArray{'windows ce'}='mobile';
   $MobileArray{'wireless'}='mobile';
   $MobileArray{'xv6875.1'}='mobile';
+  $MobileArray{'mini'}='mobile';
+  $MobileArray{'mobi'}='mobile';
+  $MobileArray{'SymbOS'}='mobile';
 
   $PCArray{'msie'}='msie';
   $PCArray{'msie 5'}='msie_5';
