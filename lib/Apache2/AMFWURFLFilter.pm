@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.31";
+  $VERSION= "3.32";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -109,7 +109,13 @@ package Apache2::AMFWURFLFilter;
   my $restmode='false';
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
-  $CommonLib->printLog("---------------------------------------------------------------------------"); 
+  $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
+  $CommonLib->printLog("---------------------------------------------------------------------------");
+  $CommonLib->printLog("---       The license of the wurfl.xml file is now changed.             ---");
+  $CommonLib->printLog("--- The WURFL file is the Copyright of ScientiaMobile, read the license ---");
+  $CommonLib->printLog("--- For more info: http://www.scientiamobile.com.                       ---");
+  $CommonLib->printLog("---------------------------------------------------------------------------");
+
   $CommonLib->printLog("AMFWURFLFilter module Version $VERSION");
   if ($ENV{ResizeImageDirectory}) {
 	  $Capability{'max_image_width'}="max_image_width";
@@ -242,6 +248,7 @@ sub loadConfigFile {
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
 	    if ($wurflnetdownload eq "true") {
+		
 	        $CommonLib->printLog("Start process downloading  WURFL.xml from $downloadwurflurl");
 		        $CommonLib->printLog ("Test the  URL");
 	        my ($content_type, $document_length, $modified_time, $expires, $server) = head($downloadwurflurl);

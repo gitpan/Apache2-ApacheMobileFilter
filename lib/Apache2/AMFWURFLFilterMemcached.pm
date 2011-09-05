@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.31";
+  $VERSION= "3.32";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -109,7 +109,12 @@ package Apache2::AMFWURFLFilterMemcached;
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
-  $CommonLib->printLog("---------------------------------------------------------------------------"); 
+  $CommonLib->printLog("---------------------------------------------------------------------------");
+  $CommonLib->printLog("---       The license of the wurfl.xml file is now changed.             ---");
+  $CommonLib->printLog("--- The WURFL file is the Copyright of ScientiaMobile, read the license ---");
+  $CommonLib->printLog("--- For more info: http://www.scientiamobile.com.                       ---");
+  $CommonLib->printLog("---------------------------------------------------------------------------");
+
   $CommonLib->printLog("AMFWURFLFilterMemcached module Version $VERSION");
   if ($ENV{ResizeImageDirectory}) {
 	  $Capability{'max_image_width'}="max_image_width";

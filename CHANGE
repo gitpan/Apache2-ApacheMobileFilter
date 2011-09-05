@@ -1,3 +1,6 @@
+ApacheMobileFilter 3.32
+Add Alert message for new license of WURFL.
+
 ApacheMobileFilter 3.31
 Change Makefile.PL
 Add info information for image supported
@@ -6,7 +9,7 @@ Fix bugs for Opera (if webpatch is loaded)
 
 ApacheMobileFilter 3.30
 AMFImageRendering now supports animated GIF
-AMFWebService support deflate mode.
+AMFWebService supports deflate mode.
 AMFWebService add new feature called capabilityList, to get specific capability (syntax is capabilityList=brand_name,xhtml_table_support). Thanks to Juan 
 
 ApacheMobileFilter 3.25
