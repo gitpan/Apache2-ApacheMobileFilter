@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
   print << 'EOT1';
   
 Apache Mobile Filter (idel@idelfuschini.it)
-Documentation: http://www.idelfuschini.it/en/apache-mobile-filter-v2x.html
+Documentation: http://wiki.apachemobilefilter.org
 DemoSite: http://www.apachemobilefilter.org
 Support: http://amfticket.idelfuschini.it
 

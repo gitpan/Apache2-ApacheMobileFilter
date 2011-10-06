@@ -28,7 +28,7 @@ package Apache2::AMFMobileCachingMemcached;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.32";
+  $VERSION= "3.33";
   #
   # Define the global environment
   #
@@ -142,11 +142,11 @@ Apache2::AMFMobileCachingMemcached - This module has the scope to cache the stat
 
 This module has the scope to cache the static in content in different layout for mobile.
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 =head1 SEE ALSO
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 Demo page of the filter: http://www.apachemobilefilter.org
 

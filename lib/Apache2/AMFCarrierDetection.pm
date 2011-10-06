@@ -27,7 +27,7 @@ package Apache2::AMFCarrierDetection;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.32";
+  $VERSION= "3.33";
   #
   # Define the global environment
   #
@@ -143,7 +143,7 @@ NOTE: this software need carrier-data.txt you can download it directly from this
 
 =head1 SEE ALSO
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 Demo page of the filter: http://www.apachemobilefilter.org
 

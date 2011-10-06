@@ -1,3 +1,8 @@
+ApacheMobileFilter 3.33
+AMFCommonLib optimize code for device detection.
+AMFImageRendering correct bugs about fullbrowser. Thanks to Carsten.
+AMFDeviceMonitor support Deflate mode. Carsten rewrite for me parts of code, many thanks.
+
 ApacheMobileFilter 3.32
 Add Alert message for new license of WURFL.
 

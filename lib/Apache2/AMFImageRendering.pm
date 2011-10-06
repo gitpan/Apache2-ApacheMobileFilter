@@ -36,7 +36,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.32";
+  $VERSION= "3.33";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -162,12 +162,22 @@ sub handler    {
       my $width=1000;
       my $height=1000;
       my $image2="";
+      my $device_claims_web_support='null';
+      my $is_wireless_device='null';
+      my $isMobile='true';
+
       $content_type=lc($content_type);
       if ($f->r->pnotes('max_image_width')) {      
       	$width=$f->r->pnotes('max_image_width')
       }
       if ($f->r->pnotes('max_image_height')) {
          $height=$f->r->pnotes('max_image_height');
+      }
+      if ($f->r->pnotes('device_claims_web_support')) {      
+    	$device_claims_web_support=$f->r->pnotes('device_claims_web_support')
+      }
+      if ($f->r->pnotes('is_wireless_device')) {
+        $is_wireless_device=$f->r->pnotes('is_wireless_device');
       }
       $repasshanlder=$repasshanlder + 1;
  	  #
@@ -195,6 +205,12 @@ sub handler    {
 				       		$height=$ArrayQuery{par_height};
 				       }
 				  }
+				  $imageToConvert=$f->r->filename();
+				  if ($is_wireless_device eq 'false' and $device_claims_web_support eq 'true') {
+					$isMobile='false';
+					my $image = Image::Resize->new("$imageToConvert");
+					$width=$image->width();					
+				  }
 				  if ($ArrayQuery{$par_width}) {
 				       if ( $ArrayQuery{$par_width} =~ /^-?\d/) {
 				       		$width=$ArrayQuery{$par_width};
@@ -210,8 +226,8 @@ sub handler    {
 				  #
 				  # control if image exist
 				  #
-				  $imageToConvert=$f->r->filename();
 				  $return_value=Apache2::Const::DECLINED;
+				  
 				  if ( -e "$imageToConvert") {
 						  
 					  my $filesize; 
@@ -302,14 +318,14 @@ Apache2::AMFImageRendering - Used to resize images (jpg, png, gif gifanimated) o
 
 This module have the scope to manage with WURFLFilter.pm or WURFLFilterMemcached.pm module the images for mobile devices. 
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 
 NOTE: this software need wurfl.xml you can download it directly from this site: http://wurfl.sourceforge.net or you can set the filter to download it directly.
 
 =head1 SEE ALSO
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 Demo page of the filter: http://www.apachemobilefilter.org
 

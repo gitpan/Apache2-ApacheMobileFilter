@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.32";
+  $VERSION= "3.33";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -42,53 +42,8 @@ package Apache2::AMFWURFLFilter;
   my %Array_DDRcapability;
 
   my %PatchArray_id;
-  my %MobileArray;
-  my %PCArray;
-  $MobileArray{'android'}='mobile';
-  $MobileArray{'bolt'}='mobile';
-  $MobileArray{'brew'}='mobile';
-  $MobileArray{'docomo'}='mobile';
-  $MobileArray{'foma'}='mobile';
-  $MobileArray{'hiptop'}='mobile';
-  $MobileArray{'htc'}='mobile';
-  $MobileArray{'ipod'}='mobile';
-  $MobileArray{'ipad'}='mobile';
-  $MobileArray{'kddi'}='mobile';
-  $MobileArray{'kindle'}='mobile';
-  $MobileArray{'lge'}='mobile';
-  $MobileArray{'maemo'}='mobile';
-  $MobileArray{'midp'}='mobile';
-  $MobileArray{'mobile'}='mobile';
-  $MobileArray{'netfront'}='mobile';
-  $MobileArray{'nintendo'}='mobile';
-  $MobileArray{'nokia'}='mobile';
-  $MobileArray{'novarra'}='mobile';
-  $MobileArray{'palm'}='mobile';
-  $MobileArray{'phone'}='mobile';
-  $MobileArray{'playstation'}='mobile';
-  $MobileArray{'samsung'}='mobile';
-  $MobileArray{'sanyo'}='mobile';
-  $MobileArray{'softbank'}='mobile';
-  $MobileArray{'sony'}='mobile';
-  $MobileArray{'symbian'}='mobile';
-  $MobileArray{'tablet'}='mobile';
-  $MobileArray{'webos'}='mobile';
-  $MobileArray{'windows ce'}='mobile';
-  $MobileArray{'wireless'}='mobile';
-  $MobileArray{'xv6875.1'}='mobile';
-  $MobileArray{'mini'}='mobile';
-  $MobileArray{'mobi'}='mobile';
-  $MobileArray{'SymbOS'}='mobile';
-
-  $PCArray{'msie'}='msie';
-  $PCArray{'msie 5'}='msie_5';
-  $PCArray{'msie 6'}='msie_6';
-  $PCArray{'msie 7'}='msie_7';
-  $PCArray{'msie 8'}='msie_8';
-  $PCArray{'chrome'}='google_chrome';
-  $PCArray{'chrome/0'}='google_chrome_0';
-  $PCArray{'chrome/1'}='google_chrome_1';
-  $PCArray{'chrome/2'}='google_chrome_2';
+  my %MobileArray=$CommonLib->getMobileArray;
+  my %PCArray=$CommonLib->getPCArray;
   my $mobileversionurl="none";
   my $fullbrowserurl="none";
   my $redirecttranscoder="true";
@@ -107,6 +62,8 @@ package Apache2::AMFWURFLFilter;
   my $cachedirectorystore="/tmp";
   my $capabilitylist="none";
   my $restmode='false';
+  my $deepSearch=0;
+
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
@@ -186,7 +143,7 @@ sub loadConfigFile {
 					ModPerl::Util::exit();
 				}
 		}
-		 
+		
 	      	 if ($ENV{DownloadWurflURL}) {
 				$downloadwurflurl=$ENV{DownloadWurflURL};
 				$CommonLib->printLog("DownloadWurflURL is: $downloadwurflurl");
@@ -245,6 +202,13 @@ sub loadConfigFile {
 			$restmode=$ENV{RestMode};
 			$CommonLib->printLog("RestMode is: $restmode");
 		}
+		if ($ENV{AMFDeepParse}) {
+			$deepSearch=$ENV{AMFDeepParse};
+			$CommonLib->printLog("RestMode is: $deepSearch");			
+		} else {
+				$CommonLib->printLog("AMFDeepParse  is not setted the default value is 3");			   
+		}
+
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
 	    if ($wurflnetdownload eq "true") {
@@ -482,7 +446,7 @@ sub parseWURFLFile {
 					$Array_fb{"$id"}=$fb;
 				 }
 				 if (($ua) && ($id)) {
-				         my %ParseUA=$CommonLib->GetMultipleUa($ua);
+				         my %ParseUA=$CommonLib->GetMultipleUa($ua,$deepSearch);
 				         my $pair;
 				         my $arrUaLen = scalar %ParseUA;
 				         my $contaUA=0;
@@ -602,7 +566,7 @@ sub IdentifyUAMethod {
   my $ua_toMatch;
   my $near_toFind=100;
   my $near_toMatch;
-  my %ArrayUAType=$CommonLib->GetMultipleUa(lc($UserAgent));  
+  my %ArrayUAType=$CommonLib->GetMultipleUa(lc($UserAgent),$deepSearch);  
   foreach $pair (reverse sort { $a <=> $b }  keys	 %ArrayUAType)
   {
       my $dummy=$ArrayUAType{$pair};
@@ -671,7 +635,7 @@ sub handler {
     my $mobile=0;
     my $version="";
     if ($user_agent eq "") {
-	$user_agent="no usergnet found";
+	$user_agent="no useragent found";
     }
     if ($x_user_agent) {
        $user_agent=lc($x_user_agent);
@@ -752,7 +716,7 @@ sub handler {
 							$id=IdentifyPCUAMethod($user_agent);
 						} 
 					}
-					if ($id) {}else{$id="";};
+					if (!$id) {$id="";};
 					if ($id eq "") { 
 						$id=IdentifyUAMethod($user_agent);
 					}
@@ -839,7 +803,7 @@ Module for device detection, the cache is based on file system
 
 =head1 SEE ALSO
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 Demo page of the filter: http://www.apachemobilefilter.org
 

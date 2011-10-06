@@ -14,13 +14,68 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.32";
+  $VERSION= "3.33";
 
 sub new {
   my $package = shift;
   return bless({}, $package);
 }
-
+sub getMobileArray {
+  my %MobileArray;
+  $MobileArray{'android'}='mobile';
+  $MobileArray{'bolt'}='mobile';
+  $MobileArray{'brew'}='mobile';
+  $MobileArray{'docomo'}='mobile';
+  $MobileArray{'foma'}='mobile';
+  $MobileArray{'hiptop'}='mobile';
+  $MobileArray{'htc'}='mobile';
+  $MobileArray{'ipod'}='mobile';
+  $MobileArray{'ipad'}='mobile';
+  $MobileArray{'kddi'}='mobile';
+  $MobileArray{'kindle'}='mobile';
+  $MobileArray{'lge'}='mobile';
+  $MobileArray{'maemo'}='mobile';
+  $MobileArray{'midp'}='mobile';
+  $MobileArray{'mobile'}='mobile';
+  $MobileArray{'netfront'}='mobile';
+  $MobileArray{'nintendo'}='mobile';
+  $MobileArray{'nokia'}='mobile';
+  $MobileArray{'novarra'}='mobile';
+  $MobileArray{'palm'}='mobile';
+  $MobileArray{'phone'}='mobile';
+  $MobileArray{'playstation'}='mobile';
+  $MobileArray{'samsung'}='mobile';
+  $MobileArray{'sanyo'}='mobile';
+  $MobileArray{'softbank'}='mobile';
+  $MobileArray{'sony'}='mobile';
+  $MobileArray{'symbian'}='mobile';
+  #$MobileArray{'tablet'}='mobile';
+  $MobileArray{'webos'}='mobile';
+  $MobileArray{'windows ce'}='mobile';
+  $MobileArray{'wireless'}='mobile';
+  $MobileArray{'xv6875.1'}='mobile';
+  $MobileArray{'mini'}='mobile';
+  $MobileArray{'mobi'}='mobile';
+  $MobileArray{'symbos'}='mobile';
+  $MobileArray{'touchpad'}='mobile';
+  $MobileArray{'rim'}='mobile';
+  $MobileArray{'arm'}='mobile';
+  $MobileArray{'zune'}='mobile';
+  return %MobileArray;
+}
+sub getPCArray {
+  my %PCArray;
+  $PCArray{'msie'}='msie';
+  $PCArray{'msie 5'}='msie_5';
+  $PCArray{'msie 6'}='msie_6';
+  $PCArray{'msie 7'}='msie_7';
+  $PCArray{'msie 8'}='msie_8';
+  $PCArray{'chrome'}='google_chrome';
+  $PCArray{'chrome/0'}='google_chrome_0';
+  $PCArray{'chrome/1'}='google_chrome_1';
+  $PCArray{'chrome/2'}='google_chrome_2';
+  return %PCArray;
+}
 
 sub Data {
     my $_sec;
@@ -59,123 +114,47 @@ sub printLog {
 	}
 	my $data=Data();
 	print "$data - $self->{'printLog'}\n";
-} 
-sub GetMultipleUa {
-  my $self = shift;	
-  my $UserAgent;
-  if (@_) {
-	    $UserAgent = shift;
-  }
-  my %ArrayPM;
-  my $pair;
-  my $ind=0;
-  my $pairs3;
-  my %ArrayUAparse;
-  my $length=length($UserAgent);
-  my $count_iphone=0;
-  if (substr($UserAgent,$length-1,1) eq ')') {
-    $UserAgent=substr($UserAgent,0,$length-1);
-  } 
-  my @pairs = split(/\ /, $UserAgent);
-  foreach $pair (@pairs)
-  {
-     
-     if ($ind==0) {
-	     if ($pair =~ /\//o) {     	
-	     	my @pairs2 = split(/\//, $pair);
-    	  	foreach $pairs3 (@pairs2) {
-			     if ($ind==0) {
-			                if ($pairs3 =~ /\-/o){
-				       	     	my @pairs4 = split(/\-/, $pairs3);
-				       	     	my $last="";
-					    	  	foreach my $pairs5 (@pairs4) {
-								 if ($ind==0) {
-								       $ind=$ind+1;
-								       $ArrayUAparse{$ind}=$pairs5;
-							 	 } else {
-							 	       $ind=$ind+1;
-							    	   $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\-$pairs5";
-							    	 }
-							    	 $last=$pairs5;
-					     	 	}
-					     	 	my $lengthString=length($last);
-					     	 	my $count=0;
-					     	 	if ($ind > 1) {
-						     	 	$ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}-";
-						     	 	while($lengthString > $count) {
-							     	 	    my $partString=substr($last,$count,1);
-							     	 	    $count=$count+1;
-							     	 	    $ind=$ind + 1;
-								    	    $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}$partString";					     	 	    
-						     	 	}
-					     	 	}
-			                } else {
-						       $ind=$ind+1;
-						       $ArrayUAparse{$ind}=$pairs3;			                
-			                }
-		 	     } else {
-		 	       $ind=$ind+1;
-		    	       $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\/$pairs3";
-		    	 }
-     	 	}
-     	} else {
-	      $ind=$ind+1;
-     	  $ArrayUAparse{$ind}="$pair";
-     	}
-     } else {
-        if ($pair =~ /\//o) {
-          my $ind2=0;
-          my @pairs2 = split(/\//, $pair);
-          foreach $pairs3 (@pairs2) {
-			     if ($ind2==0) {
-			       $ind=$ind+1;
-			       $ind2=1;
-			       $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1} $pairs3";
-		 	     } else {
-		 	       $ind=$ind+1;
-		    	   $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\/$pairs3";
-		    	 }             
-          }
-		} else {
-	    	$ind=$ind+1;
-     		$ArrayUAparse{$ind}="$ArrayUAparse{$ind-1} $pair";
-     	}
-     }
-     my %arrayApple;
-     $arrayApple{'iphone'}="iphone os";
-     $arrayApple{'cpu os'}="cpu os";
-     #my $valueApple='iphone';
-     foreach my $valueApple (keys %arrayApple) {
-      if ($UserAgent =~ /$valueApple/o) {
-	 if ($count_iphone==1){
-
-	   my $value=substr($ArrayUAparse{$ind},index($ArrayUAparse{$ind},$arrayApple{$valueApple}) + length($arrayApple{$valueApple}) + 1);
-	   my $dummy="";
-	   my @underscore=split(/\_/, $value);
-	   my $first=0;
-	   foreach my $char (@underscore) {
-	     if ($first==0) {
-	       $dummy=$char;
-	       $first=1;
-	     } else {
-	       $dummy=$dummy."_".$char;	      
-	     }
-	     my $value2=substr($ArrayUAparse{$ind},0, index($ArrayUAparse{$ind},$arrayApple{$valueApple}) +length($arrayApple{$valueApple}) + 1).$dummy;
-	     $ind++;
-	     $ArrayUAparse{$ind}=$value2;
-	   }
-	   $count_iphone=0;
-	 }
-	 if (substr($ArrayUAparse{$ind},length($ArrayUAparse{$ind})-length($arrayApple{$valueApple})) eq $arrayApple{$valueApple}) {
-	   $count_iphone=1;
-	 }
-      }
-     }
-  }
-
-  return %ArrayUAparse;
-
 }
+sub GetMultipleUa {
+    my $self = shift;	
+    my $UserAgent;
+    my $deep;
+    my $count=0;
+    if (@_) {
+	    $UserAgent = shift;
+	    $deep = shift;
+    }
+    my $length=length($UserAgent);
+    my %ArrayUAparse;
+    if (substr($UserAgent,$length-1,1) eq ')') {
+     $UserAgent=substr($UserAgent,0,$length-1);
+    }
+    $UserAgent =~ s/\ /|/g;
+    $UserAgent =~ s/\//|/g;
+    $UserAgent =~ s/\-/|/g;
+    $UserAgent =~ s/\_/|/g;
+    my @pairs = split(/\|/, $UserAgent);
+    my $deep_to_verify=scalar(@pairs) - $deep - 1;
+    my $ind=0;
+    my $string="";
+    if ($deep > scalar(@pairs)) {
+      $deep=scalar(@pairs) - 1;
+    }
+    foreach my $key (@pairs) {
+        if ($ind==0) {
+	  $string=$key;
+	} else  {
+	  $string=$string." ".$key;
+	}
+	if ($ind > $deep - 1) {
+	   $ArrayUAparse{$ind}=$string;
+	}
+	$ind++;
+    }
+    return %ArrayUAparse;
+    
+}
+
 sub androidDetection {
 	my $self = shift;
 	my $ua="";
@@ -285,56 +264,7 @@ sub printLogInternal {
 	my $data=Data();
 	print "$data - $info\n";
 } 
-sub GetMultipleUaInternal {
-  my ($UserAgent) = @_;	
-  my %ArrayPM;
-  my $pair;
-  my $ind=0;
-  my $pairs3;
-  my %ArrayUAparse;  
-  my @pairs = split(/\ /, $UserAgent);
-  foreach $pair (@pairs)
-  { 
-     if ($ind==0) {
-	     if ($pair =~ /\//o) {     	
-	     	my @pairs2 = split(/\//, $pair);
-    	  	foreach $pairs3 (@pairs2) {
-			     if ($ind==0) {
-			       $ind=$ind+1;
-			       $ArrayUAparse{$ind}=$pairs3;
-		 	     } else {
-		 	       $ind=$ind+1;
-		    	   $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\/$pairs3";
-		    	 }
-     	 	}
-     	} else {
-	      $ind=$ind+1;
-     	  $ArrayUAparse{$ind}="$pair";
-     	}
-     } else {
-        if ($pair =~ /\//o) {
-          my $ind2=0;
-          my @pairs2 = split(/\//, $pair);
-          foreach $pairs3 (@pairs2) {
-			     if ($ind2==0) {
-			       $ind=$ind+1;
-			       $ind2=1;
-			       $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1} $pairs3";
-		 	     } else {
-		 	       $ind=$ind+1;
-		    	   $ArrayUAparse{$ind}="$ArrayUAparse{$ind-1}\/$pairs3";
-		    	 }             
-          }
-		} else {
-	    	$ind=$ind+1;
-     		$ArrayUAparse{$ind}="$ArrayUAparse{$ind-1} $pair";
-     	}
-     }
-  }
 
-  return %ArrayUAparse;
-
-}
 sub extValueTagInternal {
    my ($tag,$string) = @_;
    my $a_tag="\<$tag";
@@ -356,7 +286,7 @@ Is a simple Common Library for AMF
 
 =head1 SEE ALSO
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 Demo page of the filter: http://www.apachemobilefilter.org
 

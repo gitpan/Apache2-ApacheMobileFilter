@@ -26,7 +26,7 @@ package Apache2::AMFTrace;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.32";
+  $VERSION= "3.33";
   #
   # Define the global environment
   #
@@ -93,11 +93,11 @@ Apache2::AMFTrace - This module has the scope to trace the not detected devices 
 
 This module has the scope to trace info for debug.
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 =head1 SEE ALSO
 
-For more details: http://www.idelfuschini.it/apache-mobile-filter-v2x.html
+For more details: http://wiki.apachemobilefilter.org
 
 Demo page of the filter: http://www.apachemobilefilter.org
 
