@@ -1,3 +1,12 @@
+ApacheMobileFilter 3.40
+Fixed some minors bugs
+Add AMF Environment variable AMF_DEVICE_ISMOBILE (boolean)
+Add AMF AMFDownloadParamURL parameter for AMFLiteDetection default is true.
+Added New Module AMFLiteDetectionFilter for who don't want to use a commercial DR.
+Added New Module AMFDetectRightFilter and AMFDetectRightFilterMemcached for load Detect Right DB (http://www.detectright.com)
+Added new function that check the last version on line, it's possible enable with AMFCheckVersion parameter on true (default is false)
+Added parameter AMFDeepParse to increase the performance of Device Detection
+
 ApacheMobileFilter 3.33
 AMFCommonLib optimize code for device detection.
 AMFImageRendering correct bugs about fullbrowser. Thanks to Carsten.

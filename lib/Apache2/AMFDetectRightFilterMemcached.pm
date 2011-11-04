@@ -1,14 +1,14 @@
-#file:Apache2/AMFWURFLFilterMemcached.pm; 
+#file:Apache2/AMFDetectRightFilterMemcached.pm; 
 #-------------------------------- 
 
 #
 # Created by Idel Fuschini 
-# Date: 01/08/10
+# Date: 15/10/11
 # Site: http://www.idelfuschini.it
 # Mail: idel.fuschini@gmail.com
 
 
-package Apache2::AMFWURFLFilterMemcached; 
+package Apache2::AMFDetectRightFilterMemcached; 
   
   use strict; 
   use warnings; 
@@ -40,7 +40,6 @@ package Apache2::AMFWURFLFilterMemcached;
   my %Array_fullua_id;
   my %Array_DDRcapability;
 
-  my %PatchArray_id;
   my %MobileArray=$CommonLib->getMobileArray;
   my %PCArray=$CommonLib->getPCArray;
   my $mobileversionurl="none";
@@ -48,30 +47,22 @@ package Apache2::AMFWURFLFilterMemcached;
   my $redirecttranscoder="true";
   my $redirecttranscoderurl="none";
   my $resizeimagedirectory="none";
-  my $wurflnetdownload="false";
-  my $downloadwurflurl="false";
-  my $loadwebpatch="false";
-  my $patchwurflnetdownload="false"; 
-  my $patchwurflurl="";
+  my $DetectRightnetdownload="false";
+  my $downloadDetectRighturl="false";
   my $listall="false";
   my $cookiecachesystem="false";
-  my $WURFLVersion="unknown";  
-  my $WURFLPatchVersion="unknown";
-  my $personalwurflurl='unknown';
+  my $DetectRightVersion="unknown";  
+  my $personalDetectRighturl='unknown';
   my $serverMemCache;
   my $restmode='false';
-  my $deepSearch=0;
+  my $deepSearch=2;
   my $checkVersion='false';
   
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
   $CommonLib->printLog("---------------------------------------------------------------------------");
-  $CommonLib->printLog("---       The license of the wurfl.xml file is now changed.             ---");
-  $CommonLib->printLog("--- The WURFL file is the Copyright of ScientiaMobile, read the license ---");
-  $CommonLib->printLog("--- For more info: http://www.scientiamobile.com.                       ---");
-  $CommonLib->printLog("---------------------------------------------------------------------------");
-  $CommonLib->printLog("AMFWURFLFilterMemcached module Version $VERSION");
+  $CommonLib->printLog("AMFDetectRightFilterMemcached module Version $VERSION");
   if ($ENV{AMFCheckVersion}) {
 	$checkVersion=$ENV{AMFCheckVersion};
   }
@@ -141,7 +132,7 @@ package Apache2::AMFWURFLFilterMemcached;
    }
   $memd->set('device_not_found', "id=device_not_found&device=false&device_claims_web_support=true&is_wireless_device=false");
   if ($ENV{AMFMobileHome}) {
-	  &loadConfigFile("$ENV{AMFMobileHome}/wurfl.xml");
+	  &loadConfigFile("$ENV{AMFMobileHome}/DetectRightAMF.xml");
   }  else {
 	  $CommonLib->printLog("AMFMobileHome not exist. Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
@@ -149,7 +140,7 @@ package Apache2::AMFWURFLFilterMemcached;
   
 
 sub loadConfigFile {
-	my ($fileWurfl) = @_;
+	my ($fileDetectRight) = @_;
 	my $null="";
 	my $null2="";
 	my $null3="";  
@@ -160,18 +151,18 @@ sub loadConfigFile {
 	      	#The filter
 	      	$CommonLib->printLog("Start read configuration from httpd.conf");
 	
-	      	 if ($ENV{WurflNetDownload}) {
-				if ($ENV{WurflNetDownload} eq 'true' || $ENV{WurflNetDownload} eq 'false') {
-					$wurflnetdownload=$ENV{WurflNetDownload};
-					$CommonLib->printLog("WurflNetDownload is: $wurflnetdownload");
+	      	 if ($ENV{DetectRightNetDownload}) {
+				if ($ENV{DetectRightNetDownload} eq 'true' || $ENV{DetectRightNetDownload} eq 'false') {
+					$DetectRightnetdownload=$ENV{DetectRightNetDownload};
+					$CommonLib->printLog("DetectRightNetDownload is: $DetectRightnetdownload");
 				} else {
-					$CommonLib->printLog("Error WurflNetDownload parmeter must set to true or false");					
+					$CommonLib->printLog("Error DetectRightNetDownload parmeter must set to true or false");					
 					ModPerl::Util::exit();
 				}
 			 }	
-	      	 if ($ENV{DownloadWurflURL}) {
-				$downloadwurflurl=$ENV{DownloadWurflURL};
-				$CommonLib->printLog("DownloadWurflURL is: $downloadwurflurl");
+	      	 if ($ENV{DownloadDetectRightURL}) {
+				$downloadDetectRighturl=$ENV{DownloadDetectRightURL};
+				$CommonLib->printLog("DownloadDetectRightURL is: $downloadDetectRighturl");
 			 }	
 	      	 if ($ENV{CapabilityList}) {
 				my @dummycapability = split(/,/, $ENV{CapabilityList});
@@ -194,34 +185,17 @@ sub loadConfigFile {
 				      $CommonLib->printLog("AMFMobileKeys is: $ENV{AMFMobileKeys}");
 		} 	
 	             
-	      	 if ($ENV{LoadWebPatch}) {
-				$loadwebpatch=$ENV{LoadWebPatch};
-				$CommonLib->printLog("LoadWebPatch is: $loadwebpatch");
-			 }	
-	      	 if ($ENV{PatchWurflNetDownload}) {
-				if ($ENV{PatchWurflNetDownload} eq 'true' || $ENV{PatchWurflNetDownload} eq 'false') {
-					$patchwurflnetdownload=$ENV{PatchWurflNetDownload};
-					$CommonLib->printLog("PatchWurflNetDownload is: $patchwurflnetdownload");
-				} else {
-					$CommonLib->printLog("Error PatchWurflNetDownload parmeter must set to true or false");					
-					ModPerl::Util::exit();
-				}
-		 }	
-	      	 if ($ENV{PatchWurflUrl}) {
-				$patchwurflurl=$ENV{PatchWurflUrl};
-				$CommonLib->printLog("PatchWurflUrl is: $patchwurflurl");
-			 }	
 
-			 if ($ENV{AMFProductionMode}) {
-				$cookiecachesystem=$ENV{AMFProductionMode};
-				$CommonLib->printLog("AMFProductionMode is: $cookiecachesystem");
-			 } else {
-				$CommonLib->printLog("AMFProductionMode (the CookieCacheSystem is deprecated) is not setted the default value is $cookiecachesystem");			   
-			 }		
+		 if ($ENV{AMFProductionMode}) {
+			$cookiecachesystem=$ENV{AMFProductionMode};
+			$CommonLib->printLog("AMFProductionMode is: $cookiecachesystem");
+		 } else {
+			$CommonLib->printLog("AMFProductionMode (the CookieCacheSystem is deprecated) is not setted the default value is $cookiecachesystem");			   
+      		 }		
 	
-		if ($ENV{PersonalWurflFileName}) {
-			$personalwurflurl=$ENV{AMFMobileHome}."/".$ENV{PersonalWurflFileName};
-			$CommonLib->printLog("PersonalWurflFileName is: $ENV{PersonalWurflFileName}");
+		if ($ENV{PersonalDetectRightFileName}) {
+			$personalDetectRighturl=$ENV{AMFMobileHome}."/".$ENV{PersonalDetectRightFileName};
+			$CommonLib->printLog("PersonalDetectRightFileName is: $ENV{PersonalDetectRightFileName}");
 		}
 
 		if ($ENV{RestMode}) {
@@ -230,18 +204,18 @@ sub loadConfigFile {
 		}
 		if ($ENV{AMFDeepParse}) {
 			$deepSearch=$ENV{AMFDeepParse};
-			$CommonLib->printLog("AMFDeepParse is: $deepSearch");			
+			$CommonLib->printLog("RestMode is: $deepSearch");			
 		} else {
-				$CommonLib->printLog("AMFDeepParse  is not setted the default value is 0");			   
+				$CommonLib->printLog("AMFDeepParse  is not setted the default value is 3");			   
 		}
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
-	    if ($wurflnetdownload eq "true") {
-	        $CommonLib->printLog("Start process downloading  WURFL.xml from $downloadwurflurl");
+	    if ($DetectRightnetdownload eq "true") {
+	        $CommonLib->printLog("Start process downloading  DetectRightAMF.xml from $downloadDetectRighturl");
 		        $CommonLib->printLog ("Test the  URL");
-	        my ($content_type, $document_length, $modified_time, $expires, $server) = head($downloadwurflurl);
+	        my ($content_type, $document_length, $modified_time, $expires, $server) = head($downloadDetectRighturl);
 	        if ($content_type eq "") {
-   		        $CommonLib->printLog("Couldn't get $downloadwurflurl.");
+   		        $CommonLib->printLog("Couldn't get $downloadDetectRighturl.");
 		   		ModPerl::Util::exit();
 	        } else {
 	            $CommonLib->printLog("The URL is correct");
@@ -251,23 +225,23 @@ sub loadConfigFile {
 	        if ($content_type eq 'application/zip') {
 	              $CommonLib->printLog("The file is a zip file.");
 	              $CommonLib->printLog ("Start downloading");
-				  my @dummypairs = split(/\//, $downloadwurflurl);
-				  my ($ext_zip) = $downloadwurflurl =~ /\.(\w+)$/;
+				  my @dummypairs = split(/\//, $downloadDetectRighturl);
+				  my ($ext_zip) = $downloadDetectRighturl =~ /\.(\w+)$/;
 				  my $filezip=$dummypairs[-1];
 				  my $tmp_dir=$ENV{AMFMobileHome};
 				  $filezip="$tmp_dir/$filezip";
-				  my $status = getstore ($downloadwurflurl,$filezip);
-				  my $output="$tmp_dir/tmp_wurfl.xml";
+				  my $status = getstore ($downloadDetectRighturl,$filezip);
+				  my $output="$tmp_dir/tmp_DetectRightAMF.xml";
 				  unzip $filezip => $output 
 						or die "unzip failed: $UnzipError\n";
 					#
-					# call parseWURFLFile
+					# call parseDetectRightFile
 					#
-					callparseWURFLFile($output);
+					callparseDetectRightFile($output);
 
 			} else {
 				$CommonLib->printLog("The file is a xml file.");
-			        my $content = get ($downloadwurflurl);
+			        my $content = get ($downloadDetectRighturl);
                                 $content =~ s/\n//g;
 				$content =~ s/>/>\n/g;
 
@@ -275,106 +249,46 @@ sub loadConfigFile {
 				my $row;
 				my $count=0;
 				foreach $row (@rows){
-					$r_id=parseWURFLFile($row,$r_id);
+					$r_id=parseDetectRightFile($row,$r_id);
 				}
 			}
-			$CommonLib->printLog("Finish downloading WURFL from $downloadwurflurl");
+			$CommonLib->printLog("Finish downloading DetectRight from $downloadDetectRighturl");
 
 	    } else {
-			if (-e "$fileWurfl") {
-					$CommonLib->printLog("Start loading  WURFL.xml");
-					if (open (IN,"$fileWurfl")) {
+			if (-e "$fileDetectRight") {
+					$CommonLib->printLog("Start loading  DetectRightAMF.xml");
+					if (open (IN,"$fileDetectRight")) {
 						while (<IN>) {
-							 $r_id=parseWURFLFile($_,$r_id);
+							 $r_id=parseDetectRightFile($_,$r_id);
 							 
 						}
 						close IN;
 					} else {
-					    $CommonLib->printLog("Error open file:$fileWurfl");
+					    $CommonLib->printLog("Error open file:$fileDetectRight");
 					    ModPerl::Util::exit();
 					}
 			} else {
-			  $CommonLib->printLog("File $fileWurfl not found");
+			  $CommonLib->printLog("File $fileDetectRight not found");
 			  ModPerl::Util::exit();
 			}
 		}
 		close IN;
-		#
-		# Start for web_patch_wurfl (full browser)
-		#
-		if ($loadwebpatch eq 'true') {
-			if ($patchwurflnetdownload eq "true") {
-				$CommonLib->printLog("Start downloading patch WURFL from $patchwurflurl");
-			    my ($content_type, $document_length, $modified_time, $expires, $server) = head($patchwurflurl);
-		        if ($content_type eq "") {
-	   		        $CommonLib->printLog("Couldn't get $patchwurflurl.");
-			   		ModPerl::Util::exit();
-		        } else {
-		            $CommonLib->printLog("The URL for download patch WURFL is correct");
-		            $CommonLib->printLog("The size of document is: $document_length bytes");	       
-		        }
-				my $content = get ($patchwurflurl);
-				$CommonLib->printLog("Finish downloading patch WURFL.xml");
-				if ($content eq "") {
-					$CommonLib->printLog("Couldn't get patch $patchwurflurl.");
-					ModPerl::Util::exit();
-				}
-				$content =~ s/\n//g;
-				$content =~ s/>/>\n/g;
-				my @rows = split(/\n/, $content);
-				my $row;
-				my $count=0;
-				foreach $row (@rows){
-					$r_id=parsePatchFile($row,$r_id);
-				}
-	         } else {
-				my $filePatch="$ENV{AMFMobileHome}/web_browsers_patch.xml";
-				if (-e "$filePatch") {
-						$CommonLib->printLog("Start loading Web Patch File of WURFL");
-						if (open (IN,"$filePatch")) {
-							my $filesize= -s $filePatch;
-							my $string_file;
-							read (IN,$string_file,$filesize);
-							close IN;
-							$string_file =~ s/\n//g;
-							$string_file =~ s/>/>\n/g;
-							my @arrayFile=split(/\n/, $string_file);
-							foreach my $line (@arrayFile) {
-								$r_id=parsePatchFile($line,$r_id);
-							}
-
-						} else {
-							$CommonLib->printLog("Error open file:$filePatch");
-							ModPerl::Util::exit();
-						}
-				} else {
-				  $CommonLib->printLog("File patch $filePatch not found");
-				  ModPerl::Util::exit();
-				}
-			}
-		}
-
-			close IN;
-
 		my $arrLen = scalar %Array_fb;
 		($arrLen,$dummy)= split(/\//, $arrLen);
 		if ($arrLen == 0) {
-		     $CommonLib->printLog("Error the file probably is not a wurfl file, control the url or path");
+		     $CommonLib->printLog("Error the file probably is not a DetectRight file, control the url or path");
 		     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
 		     #ModPerl::Util::exit();
 		}
-        $CommonLib->printLog("WURFL version: $WURFLVersion");
-	if ($WURFLVersion ne 'unknown'){
-		$CommonLib->printLog("Patch File version: $WURFLPatchVersion");		
-	}
-        $CommonLib->printLog("This version of WURFL has $arrLen UserAgent");
-        $CommonLib->printLog("End loading  WURFL.xml");
-	if ($personalwurflurl ne 'unknown') {
+        $CommonLib->printLog("DetectRight version: $DetectRightVersion");
+        $CommonLib->printLog("This version of DetectRight has $arrLen UserAgent");
+        $CommonLib->printLog("End loading  DetectRightAMF.xml");
+	if ($personalDetectRighturl ne 'unknown') {
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
-		if (-e "$personalwurflurl") {
-					$CommonLib->printLog("Start loading  $ENV{PersonalWurflFileName}");
-					if (open (IN,"$personalwurflurl")) {
-						my $filesize= -s $personalwurflurl;
+		if (-e "$personalDetectRighturl") {
+					$CommonLib->printLog("Start loading  $ENV{PersonalDetectRightFileName}");
+					if (open (IN,"$personalDetectRighturl")) {
+						my $filesize= -s $personalDetectRighturl;
 						my $string_file;
 						read (IN,$string_file,$filesize);
 						close IN;
@@ -383,17 +297,17 @@ sub loadConfigFile {
 						my @arrayFile=split(/\n/, $string_file);
 						foreach my $line (@arrayFile) {
 						#print "$line\n";
-							$r_id=parseWURFLFile($line,$r_id);
+							$r_id=parseDetectRightFile($line,$r_id);
 						}
 					} else {
-					    $CommonLib->printLog("Error open file:$personalwurflurl");
+					    $CommonLib->printLog("Error open file:$personalDetectRighturl");
 					    ModPerl::Util::exit();
 					}
-					$CommonLib->printLog("END loading  $ENV{PersonalWurflFileName}");
+					$CommonLib->printLog("END loading  $ENV{PersonalDetectRightFileName}");
 					close IN;
 		
 		} else {
-			  $CommonLib->printLog("File $personalwurflurl not found");
+			  $CommonLib->printLog("File $personalDetectRighturl not found");
 			  ModPerl::Util::exit();
 		}
 	}
@@ -468,19 +382,9 @@ sub IdentifyPCUAMethod {
 	}
   }
   if ($id_find) {} else {$id_find="";};
-  if ($id_find eq "") { 
-	foreach $pair (%PatchArray_id)
-	{  
-	     if (index($UserAgent,$pair) > -1) {
-		      if ($PatchArray_id{$pair}) {
-			      $id_find=$PatchArray_id{$pair};
-		      }
-	     }
-	}
-  }
   return $id_find;
 }
-sub callparseWURFLFile {
+sub callparseDetectRightFile {
 	 my ($output) = @_;
 	 my $r_id;
 	if (open (IN,"$output")) {
@@ -492,7 +396,7 @@ sub callparseWURFLFile {
 		$string_file =~ s/>/>\n/g;
 		my @arrayFile=split(/\n/, $string_file);
 		foreach my $line (@arrayFile) {
-			$r_id=parseWURFLFile($line,$r_id);
+			$r_id=parseDetectRightFile($line,$r_id);
 		}
 		close IN;			  
 	} else {
@@ -501,7 +405,7 @@ sub callparseWURFLFile {
 	}
 }
 
-sub parseWURFLFile {
+sub parseDetectRightFile {
          my ($record,$val) = @_;
 		 my $null="";
 		 my $null2="";
@@ -559,60 +463,11 @@ sub parseWURFLFile {
 			}
 		 }
 		 if ($record =~ /\/ver>/o) {
-		     $WURFLVersion=substr($record,index($record,'<ver>') + 5,index($record,"</ver>") - 9);
+		     $DetectRightVersion=substr($record,index($record,'<ver>') + 5,index($record,"</ver>") - 9);
 		 }
 		 return $id;
 
 }
-sub parsePatchFile {
-         my ($record,$val) = @_;
-		 my $null="";
-		 my $null2="";
-		 my $null3="";
-		 my $ua="";
-		 my $fb="";
-		 my $value="";
-		 my $id;
-		 my $name="";
-		 if ($val) {
-		    $id="$val";
-		 } 
-	     if ($record =~ /\<device/o) {
-	        if (index($record,'user_agent') > -1 ) {
-	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
-	        }	        
-	        if (index($record,'id') > -1 ) {
-	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
-	        }	        
-	        if (index($record,'fall_back') > -1 ) {
-	           $fb=substr($record,index($record,'fall_back') + 11,index($record,'"',index($record,'fall_back')+ 12)- index($record,'fall_back') - 11);	           
-	        }
-	        if (($fb) && ($id)) {	     	   
-					$Array_fb{"$id"}=$fb;
-				 }
-				 if (($ua) && ($id)) {
-			             $PatchArray_id{$ua}=$id;
-			             $Array_id{$ua}=$id;
-
-				 }				 
-		 }
-		 if ($record =~ /\<capability/o) { 
-			($null,$name,$null2,$value,$null3,$fb)=split(/\"/, $record);
-			if ($listall eq "true") {
-				$Capability{$name}=$name;
-			}
-			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
-			   $Array_DDRcapability{"$val|$name"}=$value;
-			}
-		 }
-		 if ($record =~ /\/last_updated>/o) {
-		     $WURFLPatchVersion=substr($record,0,index($record,"</last_updated>"));
-		 }
-		 
-		 return $id;
-
-}
-
 sub handler {
     my $f = shift;  
     my $capability2;
@@ -628,16 +483,21 @@ sub handler {
     my $width_toSearch;
     my $type_redirect="internal";
     my $return_value;
-	my $dummy="";
-	my $variabile2="";
-	my %ArrayCapFound;
-	my $controlCookie;
-	my $query_img="";
-	$ArrayCapFound{is_transcoder}='false';
+    my $dummy="";
+    my $variabile2="";
+    my %ArrayCapFound;
+    my $controlCookie;
+    my $query_img="";
+    $ArrayCapFound{is_transcoder}='false';
+    $ArrayCapFound{'device_claims_web_support'}='none';
+    $ArrayCapFound{'is_wireless_device'}='none';
+
     my %ArrayQuery;
     my $var;
     my $mobile=0;
     my $version="";
+    my $realPCbrowser='none';
+
     if ($user_agent eq "") {
 	$user_agent="no useragent found";
     }
@@ -691,7 +551,11 @@ sub handler {
 						
 						if ($mobile==0) {
 							$user_agent=$CommonLib->botDetection($user_agent);    
-							$id=IdentifyPCUAMethod($user_agent);
+                                                        $realPCbrowser=IdentifyPCUAMethod($user_agent);
+                                                        if ($realPCbrowser ne "") {
+                                                            $id="generic_web_browser";
+                                                            $mobile=-1;
+                                                        }
 						}			            
 					}
 				        if (!$id) 	{$id="";};
@@ -737,6 +601,11 @@ sub handler {
 					}
 					$id=$ArrayCapFound{id};								   
 			} else {
+                                    if ($mobile == -1) {
+                                          %ArrayCapFound=FallBack('generic_web_browser');
+                                    } else {
+                                          %ArrayCapFound=FallBack($id);
+                                    }
 					%ArrayCapFound=FallBack($id);
 					foreach $capability2 (sort keys %ArrayCapFound) {
 						$variabile2="$variabile2$capability2=$ArrayCapFound{$capability2}&";
@@ -744,26 +613,27 @@ sub handler {
 						$f->subprocess_env("AMF_$upper" => $ArrayCapFound{$capability2});
 						$f->pnotes("$capability2" => $ArrayCapFound{$capability2});
 					}
-					$variabile2="id=$id&$variabile2";
-					$f->subprocess_env("AMF_ID" => $id);
-					$f->pnotes('id' => $id);
-					$memd->set("$id",$variabile2);
+                                    
+                                    if ($realPCbrowser ne 'none') {
+                                          $id=$realPCbrowser;
+                                    }
+                                    $variabile2="id=$id&$variabile2";
+				    $f->subprocess_env("AMF_ID" => $id);
+                                    $f->pnotes('id' => $id);
+				    $memd->set("$id",$variabile2);
 			}
 			if ($cookiecachesystem eq "true") {
 						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
 			}		  			  
 	} 
         my $amf_device_ismobile = 'true';
-	if (($ArrayCapFound{'device_claims_web_support'}) && ($ArrayCapFound{'device_claims_web_support'})) {
-		if ($ArrayCapFound{'device_claims_web_support'} eq 'true' && $ArrayCapFound{'is_wireless_device'} eq 'false') {
-			$amf_device_ismobile = 'false';		
-		}
+	if ($ArrayCapFound{'device_claims_web_support'} eq 'true' && $ArrayCapFound{'is_wireless_device'} eq 'false') {
+	        $amf_device_ismobile = 'false';		
 	}
 	$f->pnotes("amf_device_ismobile" => $amf_device_ismobile);
 	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => $amf_device_ismobile);
 	$f->subprocess_env("AMF_VER" => $VERSION);
-	$f->subprocess_env("AMF_WURFLVER" => $WURFLVersion);
-	$f->subprocess_env("AMF_PATCHFILEVER" => $WURFLPatchVersion);
+	$f->subprocess_env("AMF_DETECT_RIGHT_VER" => $DetectRightVersion);
 	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {
 	    $f->subprocess_env("AMF_MOBILE_BROWSER" => $x_operamini_ua);
@@ -778,7 +648,7 @@ __END__
 	
 =head1 NAME
 
-Apache2::AMFWURFLFilterMemcached - The module detects the mobile device and passes the WURFL capabilities on to the other web application as environment variables
+Apache2::AMFDetectRightFilterMemcached - The module detects the mobile device and passes the DetectRight capabilities on to the other web application as environment variables
 
 =head1 SEE ALSO
 

@@ -26,7 +26,7 @@ package Apache2::AMFSwitcher;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.33";
+  $VERSION= "3.40";
   #
   # Define the global environment
   #
@@ -59,20 +59,9 @@ package Apache2::AMFSwitcher;
 	  $CommonLib->printLog("Pre-Requisite: WURFLFilter must be activated");
 	  ModPerl::Util::exit();
   }
-  if ($ENV{LoadWebPatch}) {
-      if ($ENV{LoadWebPatch} eq 'true') {
-			  &loadConfigFile();
-			  
-      } else {
-	  	$CommonLib->printLog("LoadWebPatch not exist.	Please set the variable LoadWebPatch must be set with true value");
-	  	$CommonLib->printLog("Pre-Requisite: WURFLFilter must be activated");
-	  	ModPerl::Util::exit();
-      }
-  } else {
-	  $CommonLib->printLog("LoadWebPatch must be set.	Please set the variable LoadWebPatch into httpd.conf with boolean value (true o false)");
-	  $CommonLib->printLog("Pre-Requisite: WURFLFilter must be activated");
-	  ModPerl::Util::exit();
-  }
+  $CommonLib->printLog("If you use AMFWURFLFilter is better to use WebPatch LoadWebPatch not exist.");
+  $CommonLib->printLog("Pre-Requisite: WURFLFilter must be activated");	 	
+   &loadConfigFile();
 sub loadConfigFile {
 	my $null="";
 	my $null2="";
@@ -161,6 +150,8 @@ sub handler    {
     my $filter="true";
     my %ArrayQuery;
     my $isTablet="null";
+    my $amf_device_ismobile = "true";
+
     if ($query_string) {
 	my @vars = split(/&/, $query_string); 	  
 	foreach my $var (sort @vars){
@@ -183,17 +174,14 @@ sub handler    {
 	$f->err_headers_out->set('Set-Cookie' => "amfFull=false; path=/;");
 	$amfFull="ok";
     }
-    if ($f->pnotes('device_claims_web_support')) {      
-    	$device_claims_web_support=$f->pnotes('device_claims_web_support')
-    }
     if ($f->pnotes('is_tablet')) {      
     	$isTablet=$f->pnotes('is_tablet')
     }
-    if ($f->pnotes('is_wireless_device')) {
-        $is_wireless_device=$f->pnotes('is_wireless_device');
-    }
     if ($f->pnotes('is_transcoder')) {
     	$is_transcoder=$f->pnotes('is_transcoder');
+    }
+    if ($f->pnotes('amf_device_ismobile')) {
+    	$amf_device_ismobile=$f->pnotes('amf_device_ismobile');
     }
     foreach my $string (@ExcludeString) {
         if (index($uri,$string) > -1) {
@@ -201,7 +189,7 @@ sub handler    {
         } 
     }
     if ($filter eq "true"){
-		if ($device_claims_web_support eq 'true' && $is_wireless_device eq 'false' || ($isTablet eq "true" && $forcetablet eq "true")) {
+		if ($amf_device_ismobile eq 'false'|| ($isTablet eq "true" && $forcetablet eq "true")) {
 			if ($fullbrowserDomain ne $servername) {
 				if ($fullbrowserurl ne 'none') {
 					if ($wildcardredirect eq 'true'){
@@ -220,15 +208,15 @@ sub handler    {
 		} else {
 			if ($mobileDomain ne $servername) {
 				if ($wildcardredirect eq 'true'){
-				$location=$uri;
+					$location=$uri;
 					if ($location =~ /$fullbrowserurl_ck/o) { 
 						$location =~ s/$fullbrowserurl_ck/$mobileversionurl/;
 					} else {
 						$location = $mobileversionurl;            
 					}
-				} else {
+			} else {
 		            	$location = $mobileversionurl;            
-				}
+			}
 				$device_type=1;
 			}
 		}
@@ -247,6 +235,7 @@ sub handler    {
 				$device_type=3;
 			}
 	    }
+
 	    if ($ArrayPath{$device_type} eq substr($uri,0,length($ArrayPath{$device_type}))) {
 	    	$no_redirect=0;
 	    }
@@ -286,9 +275,7 @@ NOTE: this software need wurfl.xml you can download it directly from this site: 
 
 =head1 SEE ALSO
 
-For more details: http://wiki.apachemobilefilter.org
-
-Demo page of the filter: http://www.apachemobilefilter.org
+Site: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

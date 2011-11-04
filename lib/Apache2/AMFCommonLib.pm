@@ -14,53 +14,20 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.33";
+  $VERSION= "3.40";
 
 sub new {
   my $package = shift;
   return bless({}, $package);
 }
+
 sub getMobileArray {
   my %MobileArray;
-  $MobileArray{'android'}='mobile';
-  $MobileArray{'bolt'}='mobile';
-  $MobileArray{'brew'}='mobile';
-  $MobileArray{'docomo'}='mobile';
-  $MobileArray{'foma'}='mobile';
-  $MobileArray{'hiptop'}='mobile';
-  $MobileArray{'htc'}='mobile';
-  $MobileArray{'ipod'}='mobile';
-  $MobileArray{'ipad'}='mobile';
-  $MobileArray{'kddi'}='mobile';
-  $MobileArray{'kindle'}='mobile';
-  $MobileArray{'lge'}='mobile';
-  $MobileArray{'maemo'}='mobile';
-  $MobileArray{'midp'}='mobile';
-  $MobileArray{'mobile'}='mobile';
-  $MobileArray{'netfront'}='mobile';
-  $MobileArray{'nintendo'}='mobile';
-  $MobileArray{'nokia'}='mobile';
-  $MobileArray{'novarra'}='mobile';
-  $MobileArray{'palm'}='mobile';
-  $MobileArray{'phone'}='mobile';
-  $MobileArray{'playstation'}='mobile';
-  $MobileArray{'samsung'}='mobile';
-  $MobileArray{'sanyo'}='mobile';
-  $MobileArray{'softbank'}='mobile';
-  $MobileArray{'sony'}='mobile';
-  $MobileArray{'symbian'}='mobile';
-  #$MobileArray{'tablet'}='mobile';
-  $MobileArray{'webos'}='mobile';
-  $MobileArray{'windows ce'}='mobile';
-  $MobileArray{'wireless'}='mobile';
-  $MobileArray{'xv6875.1'}='mobile';
-  $MobileArray{'mini'}='mobile';
-  $MobileArray{'mobi'}='mobile';
-  $MobileArray{'symbos'}='mobile';
-  $MobileArray{'touchpad'}='mobile';
-  $MobileArray{'rim'}='mobile';
-  $MobileArray{'arm'}='mobile';
-  $MobileArray{'zune'}='mobile';
+  my $mobileParam="android,bolt,brew,docomo,foma,hiptop,htc,ipod,ipad,kddi,kindle,lge,maemo,midp,mobi,netfront,nintendo,nokia,novarra,openweb,palm,phone,playstation,psp,samsung,sanyo,softbank,sony,symbian,up.browser,up.link,wap,webos,windows ce,wireless,xv6875.1,mini,mobi,symbos,touchpad,rim,arm,zune,spv,blackberry,mitsu,sie,sama,sch-,moto,ipaq,sec-,sgh-,gradiente,alcat,mot-,sagem,ericsson,lg-,lg/,nec-,philips,panasonic,kwc-,portalm,telit,ericy,zte,hutc,qc-,sharp,vodafone,compal,dbtel,sendo,benq,bird,amoi,becker,lenovo,tsm";
+  my @dummyMobileKeys = split(/,/, $mobileParam);
+  foreach my $dummy (@dummyMobileKeys) {
+      $MobileArray{$dummy}='mobile';
+  }
   return %MobileArray;
 }
 sub getPCArray {
@@ -70,10 +37,14 @@ sub getPCArray {
   $PCArray{'msie 6'}='msie_6';
   $PCArray{'msie 7'}='msie_7';
   $PCArray{'msie 8'}='msie_8';
+  $PCArray{'msie 8'}='msie_9';
   $PCArray{'chrome'}='google_chrome';
   $PCArray{'chrome/0'}='google_chrome_0';
   $PCArray{'chrome/1'}='google_chrome_1';
   $PCArray{'chrome/2'}='google_chrome_2';
+  $PCArray{'safari'}='safari';
+  $PCArray{'opera'}='opera';
+  $PCArray{'konqueror'}='konqueror';
   return %PCArray;
 }
 
@@ -286,9 +257,7 @@ Is a simple Common Library for AMF
 
 =head1 SEE ALSO
 
-For more details: http://wiki.apachemobilefilter.org
-
-Demo page of the filter: http://www.apachemobilefilter.org
+Site: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

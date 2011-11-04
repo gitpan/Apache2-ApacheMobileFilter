@@ -26,7 +26,7 @@ package Apache2::AMFTrace;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.33";
+  $VERSION= "3.40";
   #
   # Define the global environment
   #
@@ -97,9 +97,7 @@ For more details: http://wiki.apachemobilefilter.org
 
 =head1 SEE ALSO
 
-For more details: http://wiki.apachemobilefilter.org
-
-Demo page of the filter: http://www.apachemobilefilter.org
+Site: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

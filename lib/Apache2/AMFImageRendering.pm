@@ -36,7 +36,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.33";
+  $VERSION= "3.40";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -325,9 +325,7 @@ NOTE: this software need wurfl.xml you can download it directly from this site: 
 
 =head1 SEE ALSO
 
-For more details: http://wiki.apachemobilefilter.org
-
-Demo page of the filter: http://www.apachemobilefilter.org
+Site: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 
