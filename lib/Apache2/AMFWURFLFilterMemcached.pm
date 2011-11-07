@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.40";
+  $VERSION= "3.40a";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -666,7 +666,7 @@ sub handler {
     		$user_agent=lc($ArrayQuery{amf});
     	  }
 
-    }    
+    }
 
 	if ($user_agent =~ m/blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'blackberry'));

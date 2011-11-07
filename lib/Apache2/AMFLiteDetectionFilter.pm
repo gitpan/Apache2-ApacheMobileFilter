@@ -32,7 +32,7 @@ package Apache2::AMFLiteDetectionFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.40";
+  $VERSION= "3.40a";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %MobileArray;#=$CommonLib->getMobileArray;
   my %MobileTabletArray;

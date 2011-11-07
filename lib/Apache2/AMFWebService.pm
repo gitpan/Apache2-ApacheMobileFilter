@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.40";
+  $VERSION= "3.40a";
   #
   # Define the global environment
   #

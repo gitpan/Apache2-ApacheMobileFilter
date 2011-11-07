@@ -36,7 +36,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.40";
+  $VERSION= "3.40a";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;

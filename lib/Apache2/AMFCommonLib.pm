@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.40";
+  $VERSION= "3.40a";
 
 sub new {
   my $package = shift;
@@ -23,7 +23,7 @@ sub new {
 
 sub getMobileArray {
   my %MobileArray;
-  my $mobileParam="android,bolt,brew,docomo,foma,hiptop,htc,ipod,ipad,kddi,kindle,lge,maemo,midp,mobi,netfront,nintendo,nokia,novarra,openweb,palm,phone,playstation,psp,samsung,sanyo,softbank,sony,symbian,up.browser,up.link,wap,webos,windows ce,wireless,xv6875.1,mini,mobi,symbos,touchpad,rim,arm,zune,spv,blackberry,mitsu,sie,sama,sch-,moto,ipaq,sec-,sgh-,gradiente,alcat,mot-,sagem,ericsson,lg-,lg/,nec-,philips,panasonic,kwc-,portalm,telit,ericy,zte,hutc,qc-,sharp,vodafone,compal,dbtel,sendo,benq,bird,amoi,becker,lenovo,tsm";
+  my $mobileParam="android,bolt,brew,docomo,foma,hiptop,htc,ipod,ipad,kddi,kindle,lge,maemo,midp,mobi,netfront,nintendo,nokia,novarra,openweb,palm,phone,playstation,psp,samsung,sanyo,softbank,sony,symbian,up.browser,up.link,wap,webos,windows ce,wireless,xv6875.1,mini,mobi,symbos,touchpad,rim,arm,zune,spv,blackberry,mitsu,siem,sama,sch-,moto,ipaq,sec-,sgh-,gradiente,alcat,mot-,sagem,ericsson,lg-,lg/,nec-,philips,panasonic,kwc-,portalm,telit,ericy,zte,hutc,qc-,sharp,vodafone,compal,dbtel,sendo,benq,bird,amoi,becker,lenovo,tsm";
   my @dummyMobileKeys = split(/,/, $mobileParam);
   foreach my $dummy (@dummyMobileKeys) {
       $MobileArray{$dummy}='mobile';
@@ -33,11 +33,11 @@ sub getMobileArray {
 sub getPCArray {
   my %PCArray;
   $PCArray{'msie'}='msie';
-  $PCArray{'msie 5'}='msie_5';
-  $PCArray{'msie 6'}='msie_6';
-  $PCArray{'msie 7'}='msie_7';
-  $PCArray{'msie 8'}='msie_8';
-  $PCArray{'msie 8'}='msie_9';
+  $PCArray{'msie 5'}='msie';
+  $PCArray{'msie 6'}='msie';
+  $PCArray{'msie 7'}='msie';
+  $PCArray{'msie 8'}='msie';
+  $PCArray{'msie 9'}='msie';
   $PCArray{'chrome'}='google_chrome';
   $PCArray{'chrome/0'}='google_chrome_0';
   $PCArray{'chrome/1'}='google_chrome_1';
