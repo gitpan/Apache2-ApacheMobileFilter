@@ -4,7 +4,7 @@
 #
 # Created by Idel Fuschini 
 # Date: 01/08/10
-# Site: http://www.idelfuschini.it
+# Site: http://www.apachemobilefilter.org
 # Mail: idel.fuschini@gmail.com
 
 package Apache2::AMFCommonLib;
@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.40a";
+  $VERSION= "3.50";
 
 sub new {
   my $package = shift;
@@ -86,6 +86,41 @@ sub printLog {
 	my $data=Data();
 	print "$data - $self->{'printLog'}\n";
 }
+sub CleanUa {
+    my $self = shift;	
+    my $UserAgent;
+    if (@_) {
+	    $UserAgent = shift;
+    }
+	my $string="";
+	$UserAgent =~ s/\  //g;
+	#$UserAgent =~ s/([0-9\\.]+).*?//g;
+	$UserAgent =~ s/iemobile \/([0-9\\.]+).*?/iemobile /g;
+	$UserAgent =~ s/series40\/([0-9\\.]+)...(!?abc)*?/series40/g;
+	$UserAgent =~ s/series60\/([0-9\\.]+)...(!?abc)*?/series60/g;
+
+	if ( $UserAgent =~ m/^outlook/i ) {  
+	  $UserAgent=substr($UserAgent,index($UserAgent,'(') + 1,length($UserAgent) -  index($UserAgent,'(') -2);
+	}
+
+	if ( $UserAgent =~ m/windows nt/i ) {
+	    my $first=substr($UserAgent,0,index($UserAgent,'windows nt') + 12);
+	    my $second=substr($UserAgent,index($UserAgent,'windows nt') + 14);
+	    $UserAgent=$first.$second;
+	}
+  	my @arrayFile=split(/\ /, $UserAgent);
+	foreach my $field (@arrayFile) {
+		if ($field =~ m/applewebkit/i || $field =~ m/chrome/i || $field =~ m/safari/i) {
+			my ($first,$second)=split(/\//, $field);
+
+			$string=$string." ".$first;
+		} else {
+			$string=$string." ".$field;
+		}
+	}
+	$string=substr($string,1);
+	return $string;
+}
 sub GetMultipleUa {
     my $self = shift;	
     my $UserAgent;
@@ -104,6 +139,7 @@ sub GetMultipleUa {
     $UserAgent =~ s/\//|/g;
     $UserAgent =~ s/\-/|/g;
     $UserAgent =~ s/\_/|/g;
+    $UserAgent =~ s/\./|/g;
     my @pairs = split(/\|/, $UserAgent);
     my $deep_to_verify=scalar(@pairs) - $deep - 1;
     my $ind=0;

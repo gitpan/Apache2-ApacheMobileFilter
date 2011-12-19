@@ -4,7 +4,7 @@
 #
 # Created by Idel Fuschini 
 # Date: 01/08/10
-# Site: http://www.idelfuschini.it
+# Site: http://www.apachemobilefilter.org
 # Mail: idel.fuschini@gmail.com
 
 
@@ -36,7 +36,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.40a";
+  $VERSION= "3.50";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -316,7 +316,7 @@ Apache2::AMFImageRendering - Used to resize images (jpg, png, gif gifanimated) o
 
 =head1 DESCRIPTION
 
-This module have the scope to manage with WURFLFilter.pm or WURFLFilterMemcached.pm module the images for mobile devices. 
+This module have the scope to manage with AMF51DegreesFilter, AMFDetectRightFilter and AMFWURFLFilter module the images for mobile devices. 
 
 For more details: http://wiki.apachemobilefilter.org
 

@@ -4,7 +4,7 @@
 #
 # Created by Idel Fuschini 
 # Date: 01/08/10
-# Site: http://www.idelfuschini.it
+# Site: http://www.apachemobilefilter.org
 # Mail: idel.fuschini@gmail.com
 
 
@@ -32,7 +32,7 @@ package Apache2::AMFLiteDetectionFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.40a";
+  $VERSION= "3.50";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %MobileArray;#=$CommonLib->getMobileArray;
   my %MobileTabletArray;

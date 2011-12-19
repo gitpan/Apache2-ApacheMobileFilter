@@ -4,7 +4,7 @@
 #
 # Created by Idel Fuschini 
 # Date: 01/08/10
-# Site: http://www.idelfuschini.it
+# Site: http://www.apachemobilefilter.org
 # Mail: idel.fuschini@gmail.com
 
   package Apache2::AMFWebService;
@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.40a";
+  $VERSION= "3.50";
   #
   # Define the global environment
   #

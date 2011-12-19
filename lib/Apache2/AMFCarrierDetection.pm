@@ -4,7 +4,7 @@
 #
 # Created by Idel Fuschini 
 # Date: 01/08/10
-# Site: http://www.idelfuschini.it
+# Site: http://www.apachemobilefilter.org
 # Mail: idel.fuschini@gmail.com
 
 
@@ -27,7 +27,7 @@ package Apache2::AMFCarrierDetection;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.40a";
+  $VERSION= "3.50";
   #
   # Define the global environment
   #
@@ -89,7 +89,7 @@ sub loadConfigFile {
 					$total_carrier_ip++;
 				}
 	} else {
-				my $fileCarrier="$ENV{MOBILE_HOME}/carrier-data.txt";
+				my $fileCarrier="$ENV{AMFMobileHome}/carrier-data.txt";
 				if (-e "$fileCarrier") {
 						$CommonLib->printLog("Start loading carrier-data.txt");
 						if (open (IN,"$fileCarrier")) {

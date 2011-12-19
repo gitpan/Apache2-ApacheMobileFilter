@@ -1,9 +1,14 @@
-ApacheMobileFilter 3.40
+ApacheMobileFilter 3.50
+Added New Module AMF51DegreesFilter and AMF51DegreesFilterMemcached for load 51Degrees DR (http://51Degrees.mobi)
+Fixed bugs for DetectRight modules
+Fixed bugs for AMFCarrierDetection
+
+ApacheMobileFilter 3.40a
 Fixed some minors bugs
 Add AMF Environment variable AMF_DEVICE_ISMOBILE (boolean)
 Add AMF AMFDownloadParamURL parameter for AMFLiteDetection default is true.
 Added New Module AMFLiteDetectionFilter for who don't want to use a commercial DR.
-Added New Module AMFDetectRightFilter and AMFDetectRightFilterMemcached for load Detect Right DB (http://www.detectright.com)
+Added New Module AMFDetectRightFilter and AMFDetectRightFilterMemcached for load DetectRight DR (http://www.detectright.com)
 Added new function that check the last version on line, it's possible enable with AMFCheckVersion parameter on true (default is false)
 Added parameter AMFDeepParse to increase the performance of Device Detection
 

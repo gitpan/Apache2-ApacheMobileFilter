@@ -4,7 +4,7 @@
 #
 # Created by Idel Fuschini 
 # Date: 15/10/11
-# Site: http://www.idelfuschini.it
+# Site: http://www.apachemobilefilter.org
 # Mail: idel.fuschini@gmail.com
 
 
@@ -32,7 +32,7 @@ package Apache2::AMFDetectRightFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.40a";
+  $VERSION= "3.50";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -201,7 +201,7 @@ sub loadConfigFile {
 		}
 		if ($ENV{AMFDeepParse}) {
 			$deepSearch=$ENV{AMFDeepParse};
-			$CommonLib->printLog("RestMode is: $deepSearch");			
+			$CommonLib->printLog("AMFDeepParse is: $deepSearch");			
 		} else {
 				$CommonLib->printLog("AMFDeepParse  is not setted the default value is 3");			   
 		}
@@ -471,9 +471,7 @@ sub IdentifyUAMethod {
   {
       my $dummy=$ArrayUAType{$pair};
       if ($Array_id{$dummy}) {
-         if ($id_find) {
-           my $dummy2="";
-         } else {
+         if (!$id_find) {
            $id_find=$Array_id{$dummy};
          }
       }
@@ -483,12 +481,12 @@ sub IdentifyUAMethod {
 sub IdentifyPCUAMethod {
   my ($UserAgent) = @_;
   my $ind=0;
-  my $id_find="";
+  my $id_find="none";
   my $pair;
   my $length=0;
 
   foreach $pair (sort keys %PCArray) {
-	if ($UserAgent =~ m/$pair/) {
+	if ($UserAgent =~ m/$pair/ && $id_find eq 'none') {
 		$id_find=$PCArray{$pair};
 	}
   }
@@ -555,6 +553,7 @@ sub handler {
 
     }
 
+    $user_agent=lc($user_agent);
 	if ($user_agent =~ m/blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'blackberry'));
 		$mobile=1;
@@ -565,7 +564,6 @@ sub handler {
 	}
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
-    $user_agent=lc($user_agent);
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
 
     if ($cacheSystem->restore( 'DetectRight-ua', $user_agent )) {
@@ -582,12 +580,18 @@ sub handler {
 				my $string_tofound;
 				foreach $param_tofound (@pairs) {      	       
 					($string_tofound,$dummy)=split(/=/, $param_tofound);
-					$ArrayCapFound{$string_tofound}=$dummy;
-					my $upper2=uc($string_tofound);
-					$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
-					$f->pnotes($string_tofound => $ArrayCapFound{$string_tofound});
+                                        if ($dummy) {
+                                          $ArrayCapFound{$string_tofound}=$dummy;
+                                          my $upper2=uc($string_tofound);
+                                          $f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
+                                          $f->pnotes($string_tofound => $ArrayCapFound{$string_tofound});
+                                        }
 				}
 				$id=$ArrayCapFound{id};
+                                if ($ArrayCapFound{realpcbrowser} ne 'none') {
+                                    $ArrayCapFound{'is_wireless_device'}='false';
+                                    $ArrayCapFound{'device_claims_web_support'}='true';
+                                }
 		  }
     } else {
               if ($id eq "") { 
@@ -603,7 +607,7 @@ sub handler {
 						if ($mobile==0) {
 							$user_agent=$CommonLib->botDetection($user_agent);    
                                                         $realPCbrowser=IdentifyPCUAMethod($user_agent);
-                                                        if ($realPCbrowser ne "") {
+                                                        if ($realPCbrowser ne "none") {
                                                             $id="generic_web_browser";
                                                             $mobile=-1; 
                                                         }
@@ -634,11 +638,14 @@ sub handler {
 					}
 					$cacheSystem->store( 'DetectRight-ua', $user_agent, $id);
 				  }	
-		}                        
-		if ($id ne "") {
+     }                        
+     if ($id ne "") {
 	      	     #
 	      	     #  device detected 
 	      	     #
+                     if ($realPCbrowser ne 'none') {
+                        $id=$realPCbrowser;
+                     }
 		         if ($cacheSystem->restore( 'DetectRight-id', $id )) {
 				#
 				# I'm here only for old device looking in cache
@@ -653,7 +660,9 @@ sub handler {
 					$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
 					$f->pnotes("$string_tofound" => $ArrayCapFound{$string_tofound});
 				}
-				$id=$ArrayCapFound{id};								   
+				$id=$ArrayCapFound{id};
+
+
 			} else {
                                 if ($mobile == -1) {
                                     %ArrayCapFound=FallBack('generic_web_browser');
@@ -668,9 +677,11 @@ sub handler {
 				}
                                 if ($realPCbrowser ne 'none') {
                                     $id=$realPCbrowser;
+                                    $ArrayCapFound{'is_wireless_device'}='false';
+                                    $ArrayCapFound{'device_claims_web_support'}='true';
                                 }
 
-				$variabile2="id=$id&$variabile2";
+				$variabile2="id=$id&$variabile2&realpcbrowser=$realPCbrowser";
 				$f->subprocess_env("AMF_ID" => $id);
 				$f->pnotes('id' => $id);
 				$cacheSystem->store( 'DetectRight-id', $id, $variabile2 );

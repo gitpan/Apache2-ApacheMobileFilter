@@ -1,14 +1,14 @@
-#file:Apache2/AMFDetectRightFilterMemcached.pm; 
+#file:Apache2/AMF51DegreesFilterMemcached.pm; 
 #-------------------------------- 
 
 #
 # Created by Idel Fuschini 
-# Date: 15/10/11
+# Date: 08/12/11
 # Site: http://www.apachemobilefilter.org
 # Mail: idel.fuschini@gmail.com
 
 
-package Apache2::AMFDetectRightFilterMemcached; 
+package Apache2::AMF51DegreesFilterMemcached; 
   
   use strict; 
   use warnings; 
@@ -47,22 +47,34 @@ package Apache2::AMFDetectRightFilterMemcached;
   my $redirecttranscoder="true";
   my $redirecttranscoderurl="none";
   my $resizeimagedirectory="none";
-  my $DetectRightnetdownload="false";
-  my $downloadDetectRighturl="false";
+  my $Degreesnetdownload="false";
+  my $download51Degreesurl="false";
   my $listall="false";
   my $cookiecachesystem="false";
-  my $DetectRightVersion="unknown";  
-  my $personalDetectRighturl='unknown';
+  my $DegreesVersion="unknown";  
+  my $personal51Degreesurl='unknown';
   my $serverMemCache;
   my $restmode='false';
-  my $deepSearch=2;
+  my $deepSearch=0;
   my $checkVersion='false';
+  
+  #details
+  my %PCDetails;
+  $PCDetails{'google_chrome'}='Chrome|Google';
+  $PCDetails{'google_chrome_0'}='Chrome|Google';
+  $PCDetails{'google_chrome_1'}='Chrome|Google';
+  $PCDetails{'google_chrome_2'}='Chrome|Google';
+  $PCDetails{'google_chrome_3'}='Chrome|Google';
+  $PCDetails{'msie'}="Microsoft Explorer|Microsoft";
+  $PCDetails{'safari'}='Safari|Apple';
+  $PCDetails{'opera'}='Opera|Opera Software';
+  $PCDetails{'konqueror'}='Konqueror|Mozilla';
   
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
   $CommonLib->printLog("---------------------------------------------------------------------------");
-  $CommonLib->printLog("AMFDetectRightFilterMemcached module Version $VERSION");
+  $CommonLib->printLog("AMF51DegreesFilterMemcached module Version $VERSION");
   if ($ENV{AMFCheckVersion}) {
 	$checkVersion=$ENV{AMFCheckVersion};
   }
@@ -132,7 +144,7 @@ package Apache2::AMFDetectRightFilterMemcached;
    }
   $memd->set('device_not_found', "id=device_not_found&device=false&device_claims_web_support=true&is_wireless_device=false");
   if ($ENV{AMFMobileHome}) {
-	  &loadConfigFile("$ENV{AMFMobileHome}/DetectRightAMF.xml");
+	  &loadConfigFile("$ENV{AMFMobileHome}/51Degrees.xml");
   }  else {
 	  $CommonLib->printLog("AMFMobileHome not exist. Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
@@ -140,7 +152,7 @@ package Apache2::AMFDetectRightFilterMemcached;
   
 
 sub loadConfigFile {
-	my ($fileDetectRight) = @_;
+	my ($file51Degrees) = @_;
 	my $null="";
 	my $null2="";
 	my $null3="";  
@@ -151,18 +163,18 @@ sub loadConfigFile {
 	      	#The filter
 	      	$CommonLib->printLog("Start read configuration from httpd.conf");
 	
-	      	 if ($ENV{DetectRightNetDownload}) {
-				if ($ENV{DetectRightNetDownload} eq 'true' || $ENV{DetectRightNetDownload} eq 'false') {
-					$DetectRightnetdownload=$ENV{DetectRightNetDownload};
-					$CommonLib->printLog("DetectRightNetDownload is: $DetectRightnetdownload");
+	      	 if ($ENV{Degrees51NetDownload}) {
+				if ($ENV{Degrees51NetDownload} eq 'true' || $ENV{Degrees51NetDownload} eq 'false') {
+					$Degreesnetdownload=$ENV{Degrees51NetDownload};
+					$CommonLib->printLog("51DegreesNetDownload is: $Degreesnetdownload");
 				} else {
-					$CommonLib->printLog("Error DetectRightNetDownload parmeter must set to true or false");					
+					$CommonLib->printLog("Error 51DegreesNetDownload parmeter must set to true or false");					
 					ModPerl::Util::exit();
 				}
 			 }	
-	      	 if ($ENV{DownloadDetectRightURL}) {
-				$downloadDetectRighturl=$ENV{DownloadDetectRightURL};
-				$CommonLib->printLog("DownloadDetectRightURL is: $downloadDetectRighturl");
+	      	 if ($ENV{Download51DegreesURL}) {
+				$download51Degreesurl=$ENV{Download51DegreesURL};
+				$CommonLib->printLog("Download51DegreesURL is: $download51Degreesurl");
 			 }	
 	      	 if ($ENV{CapabilityList}) {
 				my @dummycapability = split(/,/, $ENV{CapabilityList});
@@ -193,9 +205,9 @@ sub loadConfigFile {
 			$CommonLib->printLog("AMFProductionMode (the CookieCacheSystem is deprecated) is not setted the default value is $cookiecachesystem");			   
       		 }		
 	
-		if ($ENV{PersonalDetectRightFileName}) {
-			$personalDetectRighturl=$ENV{AMFMobileHome}."/".$ENV{PersonalDetectRightFileName};
-			$CommonLib->printLog("PersonalDetectRightFileName is: $ENV{PersonalDetectRightFileName}");
+		if ($ENV{Personal51DegreesFileName}) {
+			$personal51Degreesurl=$ENV{AMFMobileHome}."/".$ENV{Personal51DegreesFileName};
+			$CommonLib->printLog("Personal51DegreesFileName is: $ENV{Personal51DegreesFileName}");
 		}
 
 		if ($ENV{RestMode}) {
@@ -210,12 +222,12 @@ sub loadConfigFile {
 		}
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
-	    if ($DetectRightnetdownload eq "true") {
-	        $CommonLib->printLog("Start process downloading  DetectRightAMF.xml from $downloadDetectRighturl");
+	    if ($Degreesnetdownload eq "true") {
+	        $CommonLib->printLog("Start process downloading  51Degrees.xml from $download51Degreesurl");
 		        $CommonLib->printLog ("Test the  URL");
-	        my ($content_type, $document_length, $modified_time, $expires, $server) = head($downloadDetectRighturl);
+	        my ($content_type, $document_length, $modified_time, $expires, $server) = head($download51Degreesurl);
 	        if ($content_type eq "") {
-   		        $CommonLib->printLog("Couldn't get $downloadDetectRighturl.");
+   		        $CommonLib->printLog("Couldn't get $download51Degreesurl.");
 		   		ModPerl::Util::exit();
 	        } else {
 	            $CommonLib->printLog("The URL is correct");
@@ -225,23 +237,29 @@ sub loadConfigFile {
 	        if ($content_type eq 'application/zip') {
 	              $CommonLib->printLog("The file is a zip file.");
 	              $CommonLib->printLog ("Start downloading");
-				  my @dummypairs = split(/\//, $downloadDetectRighturl);
-				  my ($ext_zip) = $downloadDetectRighturl =~ /\.(\w+)$/;
+				  my @dummypairs = split(/\//, $download51Degreesurl);
+				  my ($ext_zip) = $download51Degreesurl =~ /\.(\w+)$/;
 				  my $filezip=$dummypairs[-1];
 				  my $tmp_dir=$ENV{AMFMobileHome};
 				  $filezip="$tmp_dir/$filezip";
-				  my $status = getstore ($downloadDetectRighturl,$filezip);
-				  my $output="$tmp_dir/tmp_DetectRightAMF.xml";
+				  my $status = getstore ($download51Degreesurl,$filezip);
+				  my $output="$tmp_dir/tmp_51Degrees.xml";
 				  unzip $filezip => $output 
 						or die "unzip failed: $UnzipError\n";
 					#
-					# call parseDetectRightFile
+					# call parse51DegreesFile
 					#
-					callparseDetectRightFile($output);
+					callparse51DegreesFile($output);
 
 			} else {
 				$CommonLib->printLog("The file is a xml file.");
-			        my $content = get ($downloadDetectRighturl);
+			        my $content = get ($download51Degreesurl);
+                                 if ($content =~ /\<validation/o) {
+                                    $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'<validation>') - index($content,'<version>') - 9);
+                                 } else {
+                                    $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'</version>') - index($content,'<version>') - 9);
+                                 }
+
                                 $content =~ s/\n//g;
 				$content =~ s/>/>\n/g;
 
@@ -249,31 +267,36 @@ sub loadConfigFile {
 				my $row;
 				my $count=0;
 				foreach $row (@rows){
-					$r_id=parseDetectRightFile($row,$r_id);
+					$r_id=parse51DegreesFile($row,$r_id);
 				}
 			}
-			$CommonLib->printLog("Finish downloading DetectRight from $downloadDetectRighturl");
+			$CommonLib->printLog("Finish downloading 51Degrees from $download51Degreesurl");
 
 	    } else {
-			if (-e "$fileDetectRight") {
-					$CommonLib->printLog("Start loading  DetectRightAMF.xml");
-					if (open (IN,"$fileDetectRight")) {
-                                         	      my $filesize= -s $fileDetectRight;
-                                                      read (IN,my $string_file,$filesize);
+			if (-e "$file51Degrees") {
+					$CommonLib->printLog("Start loading  51Degrees.xml");
+					if (open (IN,"$file51Degrees")) {
+						      my $filesize= -s $file51Degrees;
+                                                      read (IN,my $content,$filesize);
                                                       close IN;
-                                                      $string_file =~ s/\n//g;
-                                                      $string_file =~ s/>/>\n/g;
-                                                      my @rows = split(/\n/, $string_file); 
+                                                      if ($content =~ /\<validation/o) {
+                                                            $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'<validation>') - index($content,'<version>') - 9);
+                                                      } else {
+                                                            $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'</version>') - index($content,'<version>') - 9);
+                                                      }
+                                                      $content =~ s/\n//g;
+                                                      $content =~ s/>/>\n/g;
+                                                      my @rows = split(/\n/, $content); 
                                                       foreach my $row (@rows){
-                                                            $r_id=parseDetectRightFile($row,$r_id);
-                                                      } 
+                                                            $r_id=parse51DegreesFile($row,$r_id);
+                                                      }
 						close IN;
 					} else {
-					    $CommonLib->printLog("Error open file:$fileDetectRight");
+					    $CommonLib->printLog("Error open file:$file51Degrees");
 					    ModPerl::Util::exit();
 					}
 			} else {
-			  $CommonLib->printLog("File $fileDetectRight not found");
+			  $CommonLib->printLog("File $file51Degrees not found");
 			  ModPerl::Util::exit();
 			}
 		}
@@ -281,38 +304,38 @@ sub loadConfigFile {
 		my $arrLen = scalar %Array_fb;
 		($arrLen,$dummy)= split(/\//, $arrLen);
 		if ($arrLen == 0) {
-		     $CommonLib->printLog("Error the file probably is not a DetectRight file, control the url or path");
+		     $CommonLib->printLog("Error the file probably is not a 51Degrees file, control the url or path");
 		     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
 		     #ModPerl::Util::exit();
 		}
-        $CommonLib->printLog("DetectRight version: $DetectRightVersion");
-        $CommonLib->printLog("This version of DetectRight has $arrLen UserAgent");
-        $CommonLib->printLog("End loading  DetectRightAMF.xml");
-	if ($personalDetectRighturl ne 'unknown') {
+        $CommonLib->printLog("51Degrees version: $DegreesVersion");
+        $CommonLib->printLog("This version of 51Degrees has $arrLen UserAgent");
+        $CommonLib->printLog("End loading  51Degrees.xml");
+	if ($personal51Degreesurl ne 'unknown') {
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
-		if (-e "$personalDetectRighturl") {
-					$CommonLib->printLog("Start loading  $ENV{PersonalDetectRightFileName}");
-					if (open (IN,"$personalDetectRighturl")) {
-						my $filesize= -s $personalDetectRighturl;
+		if (-e "$personal51Degreesurl") {
+					$CommonLib->printLog("Start loading  $ENV{Personal51DegreesFileName}");
+					if (open (IN,"$personal51Degreesurl")) {
+						my $filesize= -s $personal51Degreesurl;
 						my $string_file;
 						read (IN,$string_file,$filesize);
 						close IN;
+                                                
 						$string_file =~ s/\n//g;
 						$string_file =~ s/>/>\n/g;
 						my @arrayFile=split(/\n/, $string_file);
 						foreach my $line (@arrayFile) {
-						#print "$line\n";
-							$r_id=parseDetectRightFile($line,$r_id);
+							$r_id=parse51DegreesFile($line,$r_id);
 						}
 					} else {
-					    $CommonLib->printLog("Error open file:$personalDetectRighturl");
+					    $CommonLib->printLog("Error open file:$personal51Degreesurl");
 					    ModPerl::Util::exit();
 					}
-					$CommonLib->printLog("END loading  $ENV{PersonalDetectRightFileName}");
+					$CommonLib->printLog("END loading  $ENV{Personal51DegreesFileName}");
 					close IN;
 		
 		} else {
-			  $CommonLib->printLog("File $personalDetectRighturl not found");
+			  $CommonLib->printLog("File $personal51Degreesurl not found");
 			  ModPerl::Util::exit();
 		}
 	}
@@ -339,9 +362,9 @@ sub FallBack {
         	      if ($Array_fb{$dummy_id}) {
 	        	  		$dummy_id=$Array_fb{$dummy_id};
         	      } else {
-        	         $dummy_id="root";
+        	         $dummy_id="generic_web_browser";
         	      }
-	              if ($dummy_id eq "root" || $dummy_id eq "generic") {
+	              if ($dummy_id eq "generic_web_browser") {
 	        	    $LOOP++;
 	              }
         	}   
@@ -387,7 +410,7 @@ sub IdentifyPCUAMethod {
   if (!$id_find) {$id_find="";}
   return $id_find;
 }
-sub callparseDetectRightFile {
+sub callparse51DegreesFile {
 	 my ($output) = @_;
 	 my $r_id;
 	if (open (IN,"$output")) {
@@ -399,7 +422,7 @@ sub callparseDetectRightFile {
 		$string_file =~ s/>/>\n/g;
 		my @arrayFile=split(/\n/, $string_file);
 		foreach my $line (@arrayFile) {
-			$r_id=parseDetectRightFile($line,$r_id);
+			$r_id=parse51DegreesFile($line,$r_id);
 		}
 		close IN;			  
 	} else {
@@ -408,7 +431,7 @@ sub callparseDetectRightFile {
 	}
 }
 
-sub parseDetectRightFile {
+sub parse51DegreesFile {
          my ($record,$val) = @_;
 		 my $null="";
 		 my $null2="";
@@ -419,57 +442,60 @@ sub parseDetectRightFile {
 		 my $id;
 		 my $name="";
 		 my $version="";
-		 my $lan_sub="xx-xx";
 		 if ($val) {
 		    $id="$val";
 		 } 
-	     if ($record =~ /\<device/o) {
-	        if (index($record,'user_agent') > -1 ) {
-	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
-			  if (index($ua,'blackberry') > -1 ) {
-					$ua=substr($ua,index($ua,'blackberry'));
+	     if ($record =~ /\<profile/o) {
+                my @field=split(/\"/, $record);
+                if ($field[5]) {
+                        $ua=lc($field[5]);
+			  if (index($ua,'blackberry') >-1 ) {
+			      $ua=substr($ua,index($ua,'blackberry'));
 			  }
 			  ($ua,$version)=$CommonLib->androidDetection($ua);
+                        $ua=$CommonLib->CleanUa($ua);
+                } 
+	        if ($field[1]) {
+	           $id=$field[1];
+                   if ($id eq '1') {
+                        $id='generic_web_browser';
+                   }
 	        }	        
-	        if (index($record,'id') > 0 ) {
-	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);
-	        }	        
-	        if (index($record,'fall_back') > 0 ) {
-	           $fb=substr($record,index($record,'fall_back') + 11,index($record,'"',index($record,'fall_back')+ 12)- index($record,'fall_back') - 11);
-	        }
+	        if ($field[3]) {
+	           $fb=$field[3];	           
+                   if ($fb eq '1') {
+                        $fb='generic_web_browser';
+                   }
+                }
 	        if (($fb) && ($id)) {	     	   
 					$Array_fb{"$id"}=$fb;
 				 }
-				 if (($ua) && ($id)) {
+				 if (($field[5]) && ($id)) {
 				         my %ParseUA=$CommonLib->GetMultipleUa($ua,$deepSearch);
 				         my $pair;
 				         my $arrUaLen = scalar %ParseUA;
 				         my $contaUA=0;
 				         my $Array_fullua_id=$ua;
 				         foreach $pair (reverse sort { $a <=> $b }  keys %ParseUA) {
-						 	my $dummy=$ParseUA{$pair};
-							if ($Array_id{$dummy}) {} else {
-						            $Array_id{$dummy}=$id;
-							}
+						 	    my $dummy=$ParseUA{$pair};
+							    if ($Array_id{$dummy}) {} else {
+								$Array_id{$dummy}=$id;
+							    }
 				                $contaUA=$contaUA-1;
-					 }
+					  }
 				 }
 				 
-		 }
-		 if ($record =~ /\<capability/o) { 
+	    }
+		 if ($record =~ /\<property/o) { 
 			($null,$name,$null2,$value,$null3,$fb)=split(/\"/, $record);
-			if ($listall eq "true") {
-				$Capability{$name}=$name;
+			if ($listall eq "true") {                             
+			      $Capability{$name}=$name;
 			}
 			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
 			   $Array_DDRcapability{"$val|$name"}=$value;
 			}
 		 }
-		 if ($record =~ /\/ver>/o) {
-		     $DetectRightVersion=substr($record,index($record,'<ver>') + 5,index($record,"</ver>") - 9);
-		 }
 		 return $id;
-
 }
 sub handler {
     my $f = shift;  
@@ -492,12 +518,10 @@ sub handler {
     my $controlCookie;
     my $query_img="";
     $ArrayCapFound{is_transcoder}='false';
-    $ArrayCapFound{'device_claims_web_support'}='none';
-    $ArrayCapFound{'is_wireless_device'}='none';
+    $ArrayCapFound{'IsMobile'}='true';
 
     my %ArrayQuery;
     my $var;
-    my $mobile=0;
     my $version="";
     my $realPCbrowser='none';
 
@@ -534,33 +558,20 @@ sub handler {
     $user_agent=lc($user_agent);
 	if ($user_agent =~ m/blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'blackberry'));
-		$mobile=1;
 	}
 	if ($user_agent =~ m/up.link/i ) {
 		$user_agent=substr($user_agent,0,index($user_agent,'up.link') - 1);
-		$mobile=1;
 	}
+        if ($user_agent =~ m/c4_acer_mozilla/i ) {
+		$user_agent=substr($user_agent,index($user_agent,'mozilla'));
+	}
+        
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
+    $user_agent=$CommonLib->CleanUa($user_agent);
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
     if ($id eq ""){
                   if ($user_agent) {
-	  			    if ($mobile==0) {
-						foreach my $pair (%MobileArray) {
-							if ($user_agent =~ m/$pair/i) {
-								$mobile=1;
-							}
-						}
-						
-						if ($mobile==0) {
-							$user_agent=$CommonLib->botDetection($user_agent);    
-                                                        $realPCbrowser=IdentifyPCUAMethod($user_agent);
-                                                        if ($realPCbrowser ne "none") {
-                                                            $id="generic_web_browser";
-                                                            $mobile=-1;
-                                                        }
-						}			            
-					}
 				        if (!$id) 	{$id="";};
 					if ($id eq "") { 
 							$id=IdentifyUAMethod($user_agent);
@@ -593,8 +604,7 @@ sub handler {
                      if ($realPCbrowser ne 'none') {
                         $id=$realPCbrowser;
                      }
-
-	      	     my $var=$memd->get("DR_$id");
+	      	     my $var=$memd->get("D51_$id");
 		         if ($var) {
 					my @pairs = split(/&/, $var);
 					my $param_tofound;
@@ -608,16 +618,8 @@ sub handler {
 					}
 					$id=$ArrayCapFound{id};								   
 			} else {
-                                    if ($mobile == -1) {
-                                          %ArrayCapFound=FallBack('generic_web_browser');
-                                    } else {
-                                          %ArrayCapFound=FallBack($id);
-                                    }
-                                    if ($realPCbrowser ne 'none') {
-                                          $id=$realPCbrowser;
-                                          $ArrayCapFound{'is_wireless_device'}='false';
-                                          $ArrayCapFound{'device_claims_web_support'}='true';
-                                    }
+
+                                    %ArrayCapFound=FallBack($id);
 					foreach $capability2 (sort keys %ArrayCapFound) {
 						$variabile2="$variabile2$capability2=$ArrayCapFound{$capability2}&";
 						my $upper=uc($capability2);
@@ -628,20 +630,23 @@ sub handler {
                                     $variabile2="id=$id&$variabile2";
 				    $f->subprocess_env("AMF_ID" => $id);
                                     $f->pnotes('id' => $id);
-      				    $memd->set("DR_$id",$variabile2);
+				    $memd->set("D51_$id",$variabile2);
 			}
 			if ($cookiecachesystem eq "true") {
 						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
 			}		  			  
-	} 
-        my $amf_device_ismobile = 'true';
-	if ($ArrayCapFound{'device_claims_web_support'} eq 'true' && $ArrayCapFound{'is_wireless_device'} eq 'false') {
-	        $amf_device_ismobile = 'false';		
 	}
-	$f->pnotes("amf_device_ismobile" => $amf_device_ismobile);
-	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => $amf_device_ismobile);
+        if ($ArrayCapFound{'ScreenPixelsWidth'} ne 'Unknown') {
+            $f->pnotes("max_image_width" => $ArrayCapFound{'ScreenPixelsWidth'});
+            $f->pnotes("max_image_height" => $ArrayCapFound{'ScreenPixelsHeight'});            
+        }
+        if ($ArrayCapFound{'IsTablet'}) {
+            $f->pnotes("is_tablet" => lc($ArrayCapFound{'IsTablet'}));
+        }
+	$f->pnotes("amf_device_ismobile" => lc($ArrayCapFound{'IsMobile'}));      
+	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => lc($ArrayCapFound{'IsMobile'}));
 	$f->subprocess_env("AMF_VER" => $VERSION);
-	$f->subprocess_env("AMF_DETECT_RIGHT_VER" => $DetectRightVersion);
+	$f->subprocess_env("AMF_DEGREES51_VER" => $DegreesVersion);
 	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {
 	    $f->subprocess_env("AMF_MOBILE_BROWSER" => $x_operamini_ua);
@@ -656,7 +661,7 @@ __END__
 	
 =head1 NAME
 
-Apache2::AMFDetectRightFilterMemcached - The module detects the mobile device and passes the DetectRight capabilities on to the other web application as environment variables
+Apache2::AMF51DegreesFilterMemcached - The module detects the mobile device and passes the 51Degrees capabilities on to the other web application as environment variables
 
 =head1 SEE ALSO
 

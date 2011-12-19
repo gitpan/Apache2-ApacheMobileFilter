@@ -3,6 +3,8 @@ lib/Apache2/AMFWURFLFilter.pm
 lib/Apache2/AMFWURFLFilterMemcached.pm
 lib/Apache2/AMFDetectRightFilter.pm
 lib/Apache2/AMFDetectRightFilterMemcached.pm
+lib/Apache2/AMF51DegreesFilter.pm
+lib/Apache2/AMF51DegreesFilterMemcached.pm
 lib/Apache2/AMFImageRendering.pm
 lib/Apache2/AMFSwitcher.pm
 lib/Apache2/AMFCarrierDetection.pm

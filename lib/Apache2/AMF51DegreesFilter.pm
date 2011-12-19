@@ -1,14 +1,14 @@
-#file:Apache2/AMFWURFLFilter.pm; 
+#file:Apache2/AMF51DegreesFilter.pm; 
 #-------------------------------- 
 
 #
 # Created by Idel Fuschini 
-# Date: 01/08/10
+# Date: 08/12/11
 # Site: http://www.apachemobilefilter.org
 # Mail: idel.fuschini@gmail.com
 
 
-package Apache2::AMFWURFLFilter; 
+package Apache2::AMF51DegreesFilter; 
   
   use strict; 
   use warnings; 
@@ -41,7 +41,6 @@ package Apache2::AMFWURFLFilter;
   my %Array_fullua_id;
   my %Array_DDRcapability;
 
-  my %PatchArray_id;
   my %MobileArray=$CommonLib->getMobileArray;
   my %PCArray=$CommonLib->getPCArray;
   my $mobileversionurl="none";
@@ -49,31 +48,34 @@ package Apache2::AMFWURFLFilter;
   my $redirecttranscoder="true";
   my $redirecttranscoderurl="none";
   my $resizeimagedirectory="none";
-  my $wurflnetdownload="false";
-  my $downloadwurflurl="false";
-  my $loadwebpatch="false";
-  my $patchwurflnetdownload="false"; 
-  my $patchwurflurl="";
+  my $Degreesnetdownload="false";
+  my $download51Degreesurl="false";
   my $listall="false";
   my $cookiecachesystem="false";
-  my $WURFLVersion="unknown";
-  my $WURFLPatchVersion="unknown";
-  my $personalwurflurl='unknown';
+  my $DegreesVersion="unknown";
+  my $personal51Degreesurl='unknown';
   my $cachedirectorystore="/tmp";
   my $capabilitylist="none";
   my $restmode='false';
   my $deepSearch=0;
   my $checkVersion='false';
-
+ #details
+  my %PCDetails;
+  $PCDetails{'google_chrome'}='Chrome|Google';
+  $PCDetails{'google_chrome_0'}='Chrome|Google';
+  $PCDetails{'google_chrome_1'}='Chrome|Google';
+  $PCDetails{'google_chrome_2'}='Chrome|Google';
+  $PCDetails{'google_chrome_3'}='Chrome|Google';
+  $PCDetails{'msie'}="Microsoft Explorer|Microsoft";
+  $PCDetails{'safari'}='Safari|Apple';
+  $PCDetails{'opera'}='Opera|Opera Software';
+  $PCDetails{'konqueror'}='Konqueror|Mozilla';
+  
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
   $CommonLib->printLog("---------------------------------------------------------------------------");
-  $CommonLib->printLog("---       The license of the wurfl.xml file is now changed.             ---");
-  $CommonLib->printLog("--- The WURFL file is the Copyright of ScientiaMobile, read the license ---");
-  $CommonLib->printLog("--- For more info: http://www.scientiamobile.com.                       ---");
-  $CommonLib->printLog("---------------------------------------------------------------------------");
-  $CommonLib->printLog("AMFWURFLFilter module Version $VERSION");
+  $CommonLib->printLog("AMF51DegreesFilter module Version $VERSION");
   if ($ENV{AMFCheckVersion}) {
 	$checkVersion=$ENV{AMFCheckVersion};
   }
@@ -127,26 +129,26 @@ package Apache2::AMFWURFLFilter;
   # Define the cache system directory
   #
   my $cacheSystem = new Cache::FileBackend( $cachedirectorystore, 3, 000 );
-  $cacheSystem->store( 'wurfl-id', 'device_not_found', "id=device_not_found&device=false&device_claims_web_support=true&is_wireless_device=false");
-  if ($cacheSystem->restore('wurfl-conf','ver')) {
+  $cacheSystem->store( '51Degrees-id', 'device_not_found', "id=device_not_found&device=false&device_claims_web_support=true&is_wireless_device=false");
+  if ($cacheSystem->restore('51Degrees-conf','ver')) {
   } else {
             $CommonLib->printLog('Create new wurf-con store');
-      	    $cacheSystem->store('wurfl-conf', 'ver', 'null');
-	        $cacheSystem->store('wurfl-conf', 'caplist', 'null');
-	        $cacheSystem->store('wurfl-conf', 'listall', 'null');
-	        $cacheSystem->store('wurfl-conf', 'RedirectTranscoderUrl','null');
-	        $cacheSystem->store('wurfl-conf', 'MobileVersionUrl','null');
-	        $cacheSystem->store('wurfl-conf', 'FullBrowserUrl','null');
-	        $cacheSystem->store('wurfl-conf', 'ResizeImageDirectory','null');
+      	    $cacheSystem->store('51Degrees-conf', 'ver', 'null');
+	        $cacheSystem->store('51Degrees-conf', 'caplist', 'null');
+	        $cacheSystem->store('51Degrees-conf', 'listall', 'null');
+	        $cacheSystem->store('51Degrees-conf', 'RedirectTranscoderUrl','null');
+	        $cacheSystem->store('51Degrees-conf', 'MobileVersionUrl','null');
+	        $cacheSystem->store('51Degrees-conf', 'FullBrowserUrl','null');
+	        $cacheSystem->store('51Degrees-conf', 'ResizeImageDirectory','null');
   }
   if ($ENV{AMFMobileHome}) {
-	  &loadConfigFile("$ENV{AMFMobileHome}/wurfl.xml");
+	  &loadConfigFile("$ENV{AMFMobileHome}/51Degrees.xml");
   }  else {
 	  $CommonLib->printLog("AMFMobileHome not exist. Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
 sub loadConfigFile {
-	my ($fileWurfl) = @_;
+	my ($file51Degrees) = @_;
 	my $null="";
 	my $null2="";
 	my $null3="";  
@@ -157,19 +159,19 @@ sub loadConfigFile {
 	      	#The filter
 	      	$CommonLib->printLog("Start read configuration from httpd.conf");
 	
-	      	 if ($ENV{WurflNetDownload}) {
-				if ($ENV{WurflNetDownload} eq 'true' || $ENV{WurflNetDownload} eq 'false') {
-					$wurflnetdownload=$ENV{WurflNetDownload};
-					$CommonLib->printLog("WurflNetDownload is: $wurflnetdownload");
+	      	 if ($ENV{Degrees51NetDownload}) {
+				if ($ENV{Degrees51NetDownload} eq 'true' || $ENV{Degrees51NetDownload} eq 'false') {
+					$Degreesnetdownload=$ENV{Degrees51NetDownload};
+					$CommonLib->printLog("51DegreesNetDownload is: $Degreesnetdownload");
 				} else {
-					$CommonLib->printLog("Error WurflNetDownload parmeter must set to true or false");					
+					$CommonLib->printLog("Error 51DegreesNetDownload parmeter must set to true or false");					
 					ModPerl::Util::exit();
 				}
 		}
 		
-	      	 if ($ENV{DownloadWurflURL}) {
-				$downloadwurflurl=$ENV{DownloadWurflURL};
-				$CommonLib->printLog("DownloadWurflURL is: $downloadwurflurl");
+	      	 if ($ENV{Download51DegreesURL}) {
+				$download51Degreesurl=$ENV{Download51DegreesURL};
+				$CommonLib->printLog("Download51DegreesURL is: $download51Degreesurl");
 			 }	
 	      	 if ($ENV{CapabilityList}) {
 				my @dummycapability = split(/,/, $ENV{CapabilityList});
@@ -193,23 +195,6 @@ sub loadConfigFile {
 				      $CommonLib->printLog("AMFMobileKeys is: $ENV{AMFMobileKeys}");
 		} 	
 	             
-	      	 if ($ENV{LoadWebPatch}) {
-				$loadwebpatch=$ENV{LoadWebPatch};
-				$CommonLib->printLog("LoadWebPatch is: $loadwebpatch");
-			 }	
-	      	 if ($ENV{PatchWurflNetDownload}) {
-				if ($ENV{PatchWurflNetDownload} eq 'true' || $ENV{PatchWurflNetDownload} eq 'false') {
-					$patchwurflnetdownload=$ENV{PatchWurflNetDownload};
-					$CommonLib->printLog("PatchWurflNetDownload is: $patchwurflnetdownload");
-				} else {
-					$CommonLib->printLog("Error PatchWurflNetDownload parmeter must set to true or false");					
-					ModPerl::Util::exit();
-				}
-		}	
-	      	 if ($ENV{PatchWurflUrl}) {
-				$patchwurflurl=$ENV{PatchWurflUrl};
-				$CommonLib->printLog("PatchWurflUrl is: $patchwurflurl");
-			 }	
 
 			 if ($ENV{AMFProductionMode}) {
 				$cookiecachesystem=$ENV{AMFProductionMode};
@@ -217,9 +202,9 @@ sub loadConfigFile {
 			 } else {
 				$CommonLib->printLog("AMFProductionMode (the CookieCacheSystem is deprecated) is not setted the default value is $cookiecachesystem");			   
 			 }		
-		if ($ENV{PersonalWurflFileName}) {
-			$personalwurflurl=$ENV{AMFMobileHome}."/".$ENV{PersonalWurflFileName};
-			$CommonLib->printLog("PersonalWurflFileName is: $ENV{PersonalWurflFileName}");
+		if ($ENV{Personal51DegreesFileName}) {
+			$personal51Degreesurl=$ENV{AMFMobileHome}."/".$ENV{Personal51DegreesFileName};
+			$CommonLib->printLog("Personal51DegreesFileName is: $ENV{Personal51DegreesFileName}");
 		}
 		if ($ENV{RestMode}) {
 			$restmode=$ENV{RestMode};
@@ -229,18 +214,18 @@ sub loadConfigFile {
 			$deepSearch=$ENV{AMFDeepParse};
 			$CommonLib->printLog("AMFDeepParse is: $deepSearch");			
 		} else {
-				$CommonLib->printLog("AMFDeepParse  is not setted the default value is 0");			   
+				$CommonLib->printLog("AMFDeepParse  is not setted the default value is $deepSearch");			   
 		}
 
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
-	    if ($wurflnetdownload eq "true") {
+	    if ($Degreesnetdownload eq "true") {
 		
-	        $CommonLib->printLog("Start process downloading  WURFL.xml from $downloadwurflurl");
+	        $CommonLib->printLog("Start process downloading  51Degrees.xml from $download51Degreesurl");
 		        $CommonLib->printLog ("Test the  URL");
-	        my ($content_type, $document_length, $modified_time, $expires, $server) = head($downloadwurflurl);
+	        my ($content_type, $document_length, $modified_time, $expires, $server) = head($download51Degreesurl);
 	        if ($content_type eq "") {
-   		        $CommonLib->printLog("Couldn't get $downloadwurflurl.");
+   		        $CommonLib->printLog("Couldn't get $download51Degreesurl.");
 		   		ModPerl::Util::exit();
 	        } else {
 	            $CommonLib->printLog("The URL is correct");
@@ -250,23 +235,28 @@ sub loadConfigFile {
 	        if ($content_type eq 'application/zip') {
 	              $CommonLib->printLog("The file is a zip file.");
 	              $CommonLib->printLog ("Start downloading");
-				  my @dummypairs = split(/\//, $downloadwurflurl);
-				  my ($ext_zip) = $downloadwurflurl =~ /\.(\w+)$/;
+				  my @dummypairs = split(/\//, $download51Degreesurl);
+				  my ($ext_zip) = $download51Degreesurl =~ /\.(\w+)$/;
 				  my $filezip=$dummypairs[-1];
 				  my $tmp_dir=$ENV{AMFMobileHome};
 				  $filezip="$tmp_dir/$filezip";
-				  my $status = getstore ($downloadwurflurl,$filezip);
-				  my $output="$tmp_dir/tmp_wurfl.xml";
+				  my $status = getstore ($download51Degreesurl,$filezip);
+				  my $output="$tmp_dir/tmp_51Degrees.xml";
 				  unzip $filezip => $output 
 						or die "unzip failed: $UnzipError\n";
 					#
-					# call parseWURFLFile
+					# call parse51DegreesFile
 					#
-					callparseWURFLFile($output);
+					callparse51DegreesFile($output);
 
 			} else {
 				$CommonLib->printLog("The file is a xml file.");
-				my $content = get ($downloadwurflurl);
+				my $content = get ($download51Degreesurl);
+                                    if ($content =~ /\<validation/o) {
+                                          $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'<validation>') - index($content,'<version>') - 9);
+                                    } else {
+                                          $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'</version>') - index($content,'<version>') - 9);
+                                    }
 			    	$content =~ s/\n//g;
 				$content =~ s/>/>\n/g;
 
@@ -274,124 +264,78 @@ sub loadConfigFile {
 				my $row;
 				my $count=0;
 				foreach $row (@rows){
-					$r_id=parseWURFLFile($row,$r_id);
+					$r_id=parse51DegreesFile($row,$r_id);
 				}
 			}
-			$CommonLib->printLog("Finish downloading WURFL from $downloadwurflurl");
+			$CommonLib->printLog("Finish downloading 51Degrees from $download51Degreesurl");
 
 	    } else {
-			if (-e "$fileWurfl") {
-					$CommonLib->printLog("Start loading  WURFL.xml");
-					if (open (IN,"$fileWurfl")) {
-						my $filesize= -s $fileWurfl;
-						my $string_file;
-						read (IN,$string_file,$filesize);
-						close IN;
-						$string_file =~ s/\n//g;
-						$string_file =~ s/>/>\n/g;
-						my @arrayFile=split(/\n/, $string_file);
-						foreach my $line (@arrayFile) {
-							$r_id=parseWURFLFile($line,$r_id);
-						}
+			if (-e "$file51Degrees") {
+					$CommonLib->printLog("Start loading  51Degrees.xml");
+					if (open (IN,"$file51Degrees")) {
+                                                      my $filesize= -s $file51Degrees;
+                                                      read (IN,my $content,$filesize);
+                                                      close IN;
+                                                      if ($content =~ /\<validation/o) {
+                                                            $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'<validation>') - index($content,'<version>') - 9);
+                                                      } else {
+                                                            $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'</version>') - index($content,'<version>') - 9);
+                                                      }
+                                                      $content =~ s/\n//g;
+                                                      $content =~ s/>/>\n/g;
+                                                      my @rows = split(/\n/, $content); 
+                                                      foreach my $row (@rows){
+                                                            $r_id=parse51DegreesFile($row,$r_id);
+                                                      }
 					} else {
-					    $CommonLib->printLog("Error open file:$fileWurfl");
+					    $CommonLib->printLog("Error open file:$file51Degrees");
 					    ModPerl::Util::exit();
 					}
 			} else {
-			  $CommonLib->printLog("File $fileWurfl not found");
+			  $CommonLib->printLog("File $file51Degrees not found");
 			  ModPerl::Util::exit();
-			}
-		}
-		close IN;
-		#
-		# Start for web_patch_wurfl (full browser)
-		#
-		if ($loadwebpatch eq 'true') {
-			if ($patchwurflnetdownload eq "true") {
-				$CommonLib->printLog("Start downloading patch WURFL from $patchwurflurl");
-			    my ($content_type, $document_length, $modified_time, $expires, $server) = head($patchwurflurl);
-		        if ($content_type eq "") {
-	   		        $CommonLib->printLog("Couldn't get $patchwurflurl.");
-			   		ModPerl::Util::exit();
-		        } else {
-		            $CommonLib->printLog("The URL for download patch WURFL is correct");
-		            $CommonLib->printLog("The size of document is: $document_length bytes");	       
-		        }
-				my $content = get ($patchwurflurl);
-				$CommonLib->printLog("Finish downloading  patch WURFL.xml");
-				if ($content eq "") {
-					$CommonLib->printLog("Couldn't get patch $patchwurflurl.");
-					ModPerl::Util::exit();
-				}
-				$content =~ s/\n//g;
-				$content =~ s/>/>\n/g;
-				my @rows = split(/\n/, $content);
-				my $row;
-				my $count=0;
-				foreach $row (@rows){
-					$r_id=parsePatchFile($row,$r_id);
-				}
-	         } else {
-				my $filePatch="$ENV{AMFMobileHome}/web_browsers_patch.xml";
-				if (-e "$filePatch") {
-						$CommonLib->printLog("Start loading Web Patch File of WURFL");
-						if (open (IN,"$filePatch")) {
-							my $filesize= -s $filePatch;
-							my $string_file;
-							read (IN,$string_file,$filesize);
-							close IN;
-							$string_file =~ s/\n//g;
-							$string_file =~ s/>/>\n/g;
-							my @arrayFile=split(/\n/, $string_file);
-							foreach my $line (@arrayFile) {
-								$r_id=parsePatchFile($line,$r_id);
-							}
-						} else {
-							$CommonLib->printLog("Error open file:$filePatch");
-							ModPerl::Util::exit();
-						}
-				} else {
-				  $CommonLib->printLog("File patch $filePatch not found");
-				  ModPerl::Util::exit();
-				}
 			}
 		}
 		close IN;
 	my $arrLen = scalar %Array_fb;
 	($arrLen,$dummy)= split(/\//, $arrLen);
 	if ($arrLen == 0) {
-		     $CommonLib->printLog("Error the file probably is not a wurfl file, control the url or path");
+		     $CommonLib->printLog("Error the file probably is not a 51Degrees file, control the url or path");
 		     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
 		     ModPerl::Util::exit();
 	}
-        $CommonLib->printLog("WURFL version: $WURFLVersion");
-	if ($WURFLVersion ne 'unknown'){
-		$CommonLib->printLog("Patch File version: $WURFLPatchVersion");		
-	}
-        if ($cacheSystem->restore('wurfl-conf', 'amfver') ne $VERSION||$cacheSystem->restore('wurfl-conf', 'ResizeImageDirectory') ne $resizeimagedirectory||$cacheSystem->restore('wurfl-conf', 'DownloadWurflURL') ne $downloadwurflurl||$cacheSystem->restore('wurfl-conf', 'FullBrowserUrl') ne $fullbrowserurl||$cacheSystem->restore('wurfl-conf', 'RedirectTranscoderUrl') ne $redirecttranscoderurl || $cacheSystem->restore('wurfl-conf', 'ver') ne $WURFLVersion || $cacheSystem->restore('wurfl-conf', 'caplist') ne $capabilitylist||$cacheSystem->restore('wurfl-conf', 'listall') ne $listall) {
+        $CommonLib->printLog("51Degrees version: $DegreesVersion");
+        if ($cacheSystem->restore('51Degrees-conf', 'amfver') ne $VERSION||
+            $cacheSystem->restore('51Degrees-conf', 'ResizeImageDirectory') ne $resizeimagedirectory||
+            $cacheSystem->restore('51Degrees-conf', 'Download51DegreesURL') ne $download51Degreesurl||
+            $cacheSystem->restore('51Degrees-conf', 'FullBrowserUrl') ne $fullbrowserurl||
+            $cacheSystem->restore('51Degrees-conf', 'RedirectTranscoderUrl') ne $redirecttranscoderurl||
+            $cacheSystem->restore('51Degrees-conf', 'ver') ne $DegreesVersion ||
+            $cacheSystem->restore('51Degrees-conf', 'caplist') ne $capabilitylist||
+            $cacheSystem->restore('51Degrees-conf', 'listall') ne $listall) {
             $CommonLib->printLog("********************************************************************************************************");
-            $CommonLib->printLog("* This is a new version of WURFL or you change some parameter value or it's a new version of AMF, now the old cache must be deleted *");
+            $CommonLib->printLog("* This is a new version of 51Degrees or you change some parameter value or it's a new version of AMF, now the old cache must be deleted *");
             $CommonLib->printLog("********************************************************************************************************");
-	        $cacheSystem->store('wurfl-conf', 'ver', $WURFLVersion);
-		$cacheSystem->store('wurfl-conf', 'amfver', $VERSION);
-	        $cacheSystem->store('wurfl-conf', 'caplist', $capabilitylist);
-	        $cacheSystem->store('wurfl-conf', 'listall', $listall);
-	        $cacheSystem->store('wurfl-conf', 'RedirectTranscoderUrl', $redirecttranscoderurl);
-	        $cacheSystem->store('wurfl-conf', 'FullBrowserUrl', $fullbrowserurl);
-	        $cacheSystem->store('wurfl-conf', 'DownloadWurflURL', $downloadwurflurl);
-	        $cacheSystem->store('wurfl-conf', 'ResizeImageDirectory', $resizeimagedirectory);
+	        $cacheSystem->store('51Degrees-conf', 'ver', $DegreesVersion);
+		$cacheSystem->store('51Degrees-conf', 'amfver', $VERSION);
+	        $cacheSystem->store('51Degrees-conf', 'caplist', $capabilitylist);
+	        $cacheSystem->store('51Degrees-conf', 'listall', $listall);
+	        $cacheSystem->store('51Degrees-conf', 'RedirectTranscoderUrl', $redirecttranscoderurl);
+	        $cacheSystem->store('51Degrees-conf', 'FullBrowserUrl', $fullbrowserurl);
+	        $cacheSystem->store('51Degrees-conf', 'Download51DegreesURL', $download51Degreesurl);
+	        $cacheSystem->store('51Degrees-conf', 'ResizeImageDirectory', $resizeimagedirectory);
 	        
-	        $cacheSystem->delete_namespace( 'WURFL-id' );       
-	        $cacheSystem->delete_namespace( 'WURFL-ua' );       
+	        $cacheSystem->delete_namespace( '51Degrees-id' );       
+	        $cacheSystem->delete_namespace( '51Degrees-ua' );       
         }
-        $CommonLib->printLog("This version of WURFL has $arrLen UserAgent");
-        $CommonLib->printLog("End loading  WURFL.xml");
-	if ($personalwurflurl ne 'unknown') {
+        $CommonLib->printLog("This version of 51Degrees has $arrLen UserAgent");
+        $CommonLib->printLog("End loading  51Degrees.xml");
+	if ($personal51Degreesurl ne 'unknown') {
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
-		if (-e "$personalwurflurl") {
-					$CommonLib->printLog("Start loading  $ENV{PersonalWurflFileName}");
-					if (open (IN,"$personalwurflurl")) {
-						my $filesize= -s $personalwurflurl;
+		if (-e "$personal51Degreesurl") {
+					$CommonLib->printLog("Start loading  $ENV{Personal51DegreesFileName}");
+					if (open (IN,"$personal51Degreesurl")) {
+						my $filesize= -s $personal51Degreesurl;
 						my $string_file;
 						read (IN,$string_file,$filesize);
 						close IN;
@@ -399,25 +343,24 @@ sub loadConfigFile {
 						$string_file =~ s/>/>\n/g;
 						my @arrayFile=split(/\n/, $string_file);
 						foreach my $line (@arrayFile) {
-						#print "$line\n";
-							$r_id=parseWURFLFile($line,$r_id);
+							$r_id=parse51DegreesFile($line,$r_id);
 						}
 					} else {
-					    $CommonLib->printLog("Error open file:$personalwurflurl");
+					    $CommonLib->printLog("Error open file:$personal51Degreesurl");
 					    ModPerl::Util::exit();
 					}
-					$CommonLib->printLog("END loading  $ENV{PersonalWurflFileName}");
+					$CommonLib->printLog("END loading  $ENV{Personal51DegreesFileName}");
 					close IN;
 		
 		} else {
-			  $CommonLib->printLog("File $personalwurflurl not found");
+			  $CommonLib->printLog("File $personal51Degreesurl not found");
 			  ModPerl::Util::exit();
 		}
 	}
 
 
 }
-sub callparseWURFLFile {
+sub callparse51DegreesFile {
 	 my ($output) = @_;
 	 my $r_id;
 	if (open (IN,"$output")) {
@@ -429,14 +372,14 @@ sub callparseWURFLFile {
 		$string_file =~ s/>/>\n/g;
 		my @arrayFile=split(/\n/, $string_file);
 		foreach my $line (@arrayFile) {
-			$r_id=parseWURFLFile($line,$r_id);
+			$r_id=parse51DegreesFile($line,$r_id);
 		}
 	} else {
 			$CommonLib->printLog("Error open file:$output");
 			ModPerl::Util::exit();
 	}
 }
-sub parseWURFLFile {
+sub parse51DegreesFile {
          my ($record,$val) = @_;
 		 my $null="";
 		 my $null2="";
@@ -450,25 +393,32 @@ sub parseWURFLFile {
 		 if ($val) {
 		    $id="$val";
 		 } 
-	     if ($record =~ /\<device/o) {
-	        if (index($record,'user_agent') > -1 ) {
-	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
-
+	     if ($record =~ /\<profile/o) {
+                my @field=split(/\"/, $record);
+                if ($field[5]) {
+                        $ua=lc($field[5]);
 			  if (index($ua,'blackberry') >-1 ) {
-					$ua=substr($ua,index($ua,'blackberry'));
+			      $ua=substr($ua,index($ua,'blackberry'));
 			  }
 			  ($ua,$version)=$CommonLib->androidDetection($ua);
+                } 
+	        if ($field[1]) {
+	           $id=$field[1];
+                    if ($id eq '1') {
+                        $id='generic_web_browser';
+                   }
+
 	        }	        
-	        if (index($record,'id') > -1 ) {
-	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
-	        }	        
-	        if (index($record,'fall_back') > -1 ) {
-	           $fb=substr($record,index($record,'fall_back') + 11,index($record,'"',index($record,'fall_back')+ 12)- index($record,'fall_back') - 11);	           
+	        if ($field[3]) {
+	           $fb=$field[3];
+                    if ($fb eq '1') {
+                        $fb='generic_web_browser';
+                    }
 	        }
 	        if (($fb) && ($id)) {	     	   
 					$Array_fb{"$id"}=$fb;
 				 }
-				 if (($ua) && ($id)) {
+				 if (($field[5]) && ($id)) {
 				         my %ParseUA=$CommonLib->GetMultipleUa($ua,$deepSearch);
 				         my $pair;
 				         my $arrUaLen = scalar %ParseUA;
@@ -483,69 +433,22 @@ sub parseWURFLFile {
 					  }
 				 }
 				 
-		 }
-		 if ($record =~ /\<capability/o) { 
+	    }
+		 if ($record =~ /\<property/o) { 
 			($null,$name,$null2,$value,$null3,$fb)=split(/\"/, $record);
-			if ($listall eq "true") {
-				$Capability{$name}=$name;
+			if ($listall eq "true") {                             
+			      $Capability{$name}=$name;
 			}
 			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
 			   $Array_DDRcapability{"$val|$name"}=$value;
 			}
 		 }
-		 if ($record =~ /\/ver>/o) {
-		     $WURFLVersion=substr($record,index($record,'<ver>') + 5,index($record,'</ver>') - 9);
+		 if ($record =~ /\/version>/o) {
+		     $DegreesVersion=substr($record,index($record,'<version>') + 9 ,index($record,'<validation>') -13);
 		 }
 		 return $id;
 
 }
-sub parsePatchFile {
-         my ($record,$val) = @_;
-		 my $null="";
-		 my $null2="";
-		 my $null3="";
-		 my $ua="";
-		 my $fb="";
-		 my $value="";
-		 my $id;
-		 my $name="";
-		 if ($val) {
-		    $id="$val";
-		 } 
-	     if ($record =~ /\<device/o) {
-	        if (index($record,'user_agent') > -1 ) {
-	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
-	        }	        
-	        if (index($record,'id') > -1 ) {
-	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
-	        }	        
-	        if (index($record,'fall_back') > -1 ) {
-	           $fb=substr($record,index($record,'fall_back') + 11,index($record,'"',index($record,'fall_back')+ 12)- index($record,'fall_back') - 11);	           
-	        }
-	        if (($fb) && ($id)) {	     	   
-					$Array_fb{"$id"}=$fb;
-				 }
-				 if (($ua) && ($id)) {
-			             $PatchArray_id{$ua}=$id;
-			             $Array_id{$ua}=$id;
-				 }				 
-		 }
-		 if ($record =~ /\<capability/o) { 
-			($null,$name,$null2,$value,$null3,$fb)=split(/\"/, $record);
-			if ($listall eq "true") {
-				$Capability{$name}=$name;
-			}
-			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
-			   $Array_DDRcapability{"$val|$name"}=$value;
-			}
-		 }
-		 if ($record =~ /\/last_updated>/o) {
-		     $WURFLPatchVersion=substr($record,0,index($record,"</last_updated>"));
-		 }
-		 return $id;
-
-}
-
 sub FallBack {
   my ($idToFind) = @_;
   my $dummy_id;
@@ -567,9 +470,9 @@ sub FallBack {
         	      if ($Array_fb{$dummy_id}) {
 	        	  		$dummy_id=$Array_fb{$dummy_id};
         	      } else {
-        	         $dummy_id="root";
+        	         $dummy_id="generic_web_browser";
         	      }
-	              if ($dummy_id eq "root" || $dummy_id eq "generic") {
+	              if ($dummy_id eq "generic_web_browser") {
 	        	    $LOOP++;
 	              }
         	}   
@@ -604,28 +507,16 @@ sub IdentifyUAMethod {
 sub IdentifyPCUAMethod {
   my ($UserAgent) = @_;
   my $ind=0;
-  my $id_find="";
+  my $id_find="none";
   my $pair;
   my $length=0;
 
   foreach $pair (sort keys %PCArray) {
-	if ($UserAgent =~ m/$pair/) {
+	if ($UserAgent =~ m/$pair/ && $id_find eq 'none') {
 		$id_find=$PCArray{$pair};
 	}
   }
   if ($id_find) {}else{$id_find="";};
-  if ($id_find eq "") { 
-	foreach $pair (%PatchArray_id)
-	{
-	     my $value=index($UserAgent,$pair);
-	     
-	     if (index($UserAgent,$pair) > -1) {
-		      if ($PatchArray_id{$pair}) {
-			$id_find=$PatchArray_id{$pair};
-		      }
-	     }
-	}
-  }
   return $id_find;
 }
 
@@ -651,13 +542,12 @@ sub handler {
     my $controlCookie;
     my $query_img="";
     $ArrayCapFound{is_transcoder}='false';
-    $ArrayCapFound{'device_claims_web_support'}='none';
-    $ArrayCapFound{'is_wireless_device'}='none';
+    $ArrayCapFound{'IsMobile'}='true';
 
     my %ArrayQuery;
     my $var;
-    my $mobile=0;
     my $version="";
+    my $realPCbrowser='none';
     if ($user_agent eq "") {
 	$user_agent="no useragent found";
     }
@@ -687,56 +577,54 @@ sub handler {
     	  }
 
     }
-        $user_agent=lc($user_agent);
+
+          $user_agent=lc($user_agent);
 	if ($user_agent =~ m/blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'blackberry'));
-		$mobile=1;
 	}
 	if ($user_agent =~ m/up.link/i ) {
 		$user_agent=substr($user_agent,0,index($user_agent,'up.link') - 1);
-		$mobile=1;
 	}
+        if ($user_agent =~ m/c4_acer_mozilla/i ) {
+		$user_agent=substr($user_agent,index($user_agent,'mozilla'));
+	}
+              
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
 
-    if ($cacheSystem->restore( 'wurfl-ua', $user_agent )) {
+    if ($cacheSystem->restore( '51Degrees-ua', $user_agent )) {
           #
           # cookie is not empty so I try to read in memory cache on my httpd cache
           #
-          $id=$cacheSystem->restore( 'wurfl-ua', $user_agent );
-          if ($cacheSystem->restore( 'wurfl-id', $id )) {    
+          $id=$cacheSystem->restore( '51Degrees-ua', $user_agent );
+          if ($cacheSystem->restore( '51Degrees-id', $id )) {    
 				#
 				# I'm here only for old device
 				#
-				my @pairs = split(/&/, $cacheSystem->restore( 'wurfl-id', $id ));
+				my @pairs = split(/&/, $cacheSystem->restore( '51Degrees-id', $id ));
 				my $param_tofound;
 				my $string_tofound;
 				foreach $param_tofound (@pairs) {      	       
 					($string_tofound,$dummy)=split(/=/, $param_tofound);
-					$ArrayCapFound{$string_tofound}=$dummy;
-					my $upper2=uc($string_tofound);
-					$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
-					$f->pnotes($string_tofound => $ArrayCapFound{$string_tofound});
+                                        if ($dummy) {
+                                          $ArrayCapFound{$string_tofound}=$dummy;
+                                          my $upper2=uc($string_tofound);
+                                          $f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
+                                          $f->pnotes($string_tofound => $ArrayCapFound{$string_tofound});
+                                        }
 				}
 				$id=$ArrayCapFound{id};
+                                if ($ArrayCapFound{realpcbrowser} ne 'none') {
+                                    $id=$realPCbrowser;
+                                    $ArrayCapFound{'IsMobile'}='false';
+                                }
 		  }
     } else {
               if ($id eq "") { 
 				  if ($user_agent) {
 					my $pair;
 					my $lcuser_agent=lc($user_agent);
-	  			    if ($mobile==0) {
-						foreach $pair (%MobileArray) {		
-							if ($user_agent =~ m/$pair/i) {
-								$mobile=1;
-							}
-						}
-						if ($mobile==0) {
-							$user_agent=$CommonLib->botDetection($user_agent);    
-							$id=IdentifyPCUAMethod($user_agent);
-						} 
-					}
 					if (!$id) {$id="";};
 					if ($id eq "") { 
 						$id=IdentifyUAMethod($user_agent);
@@ -760,18 +648,18 @@ sub handler {
 							}
 						}
 					}
-					$cacheSystem->store( 'wurfl-ua', $user_agent, $id);
+					$cacheSystem->store( '51Degrees-ua', $user_agent, $id);
 				  }	
      }                        
      if ($id ne "") {
 	      	     #
 	      	     #  device detected 
 	      	     #
-		         if ($cacheSystem->restore( 'wurfl-id', $id )) {
+		         if ($cacheSystem->restore( '51Degrees-id', $id )) {
 				#
 				# I'm here only for old device looking in cache
 				#
-				my @pairs = split(/&/, $cacheSystem->restore( 'wurfl-id', $id ));
+				my @pairs = split(/&/, $cacheSystem->restore( '51Degrees-id', $id ));
 				my $param_tofound;
 				my $string_tofound;
 				foreach $param_tofound (@pairs) {      	       
@@ -781,37 +669,41 @@ sub handler {
 					$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
 					$f->pnotes("$string_tofound" => $ArrayCapFound{$string_tofound});
 				}
-				$id=$ArrayCapFound{id};								   
+				$id=$ArrayCapFound{id};
+
+
 			} else {
-				%ArrayCapFound=FallBack($id);         
+
+                                %ArrayCapFound=FallBack($id);
 				foreach $capability2 (sort keys %ArrayCapFound) {
 					$variabile2="$variabile2$capability2=$ArrayCapFound{$capability2}&";
 					my $upper=uc($capability2);
 					$f->subprocess_env("AMF_$upper" => $ArrayCapFound{$capability2});
 					$f->pnotes("$capability2" => $ArrayCapFound{$capability2});
 				}
-				$variabile2="id=$id&$variabile2";
+
+				$variabile2="id=$id&$variabile2&realpcbrowser=$realPCbrowser";
 				$f->subprocess_env("AMF_ID" => $id);
 				$f->pnotes('id' => $id);
-				$cacheSystem->store( 'wurfl-id', $id, $variabile2 );
-				$cacheSystem->store( 'wurfl-ua', $user_agent, $id);
+				$cacheSystem->store( '51Degrees-id', $id, $variabile2 );
+				$cacheSystem->store( '51Degrees-ua', $user_agent, $id);
 			}
 			if ($cookiecachesystem eq "true") {
 				$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
 			}		  			  
 	      	} 
     }
-        my $amf_device_ismobile = 'true';
-	if (($ArrayCapFound{'device_claims_web_support'}) && ($ArrayCapFound{'device_claims_web_support'})) {
-		if ($ArrayCapFound{'device_claims_web_support'} eq 'true' && $ArrayCapFound{'is_wireless_device'} eq 'false') {
-			$amf_device_ismobile = 'false';		
-		}
-	}
-	$f->pnotes("amf_device_ismobile" => $amf_device_ismobile); 
-	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => $amf_device_ismobile);
+        if ($ArrayCapFound{'ScreenPixelsWidth'} ne 'Unknown') {
+            $f->pnotes("max_image_width" => $ArrayCapFound{'ScreenPixelsWidth'});
+            $f->pnotes("max_image_height" => $ArrayCapFound{'ScreenPixelsHeight'});            
+        }
+        if ($ArrayCapFound{'IsTablet'}) {
+            $f->pnotes("is_tablet" => lc($ArrayCapFound{'IsTablet'}));
+        }
+	$f->pnotes("amf_device_ismobile" => lc($ArrayCapFound{'IsMobile'}));      
+	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => lc($ArrayCapFound{'IsMobile'}));
 	$f->subprocess_env("AMF_VER" => $VERSION);
-	$f->subprocess_env("AMF_WURFLVER" => $WURFLVersion);
-	$f->subprocess_env("AMF_PATCHFILEVER" => $WURFLPatchVersion);
+	$f->subprocess_env("AMF_DEGREES51_VER" => $DegreesVersion);
 	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {
 	    $f->subprocess_env("AMF_MOBILE_BROWSER" => $x_operamini_ua);
@@ -826,7 +718,7 @@ __END__
 	
 =head1 NAME
 
-Apache2::AMFWURFLFilter - The module detects the mobile device and passes the WURFL capabilities on to the other web application as environment variables
+Apache2::AMF51DegreesFilter - The module detects the mobile device and passes the 51Degrees capabilities on to the other web application as environment variables
 
 =head1 DESCRIPTION
 
@@ -834,9 +726,7 @@ Module for device detection, the cache is based on file system
 
 =head1 SEE ALSO
 
-For more details: http://wiki.apachemobilefilter.org
-
-Demo page of the filter: http://www.apachemobilefilter.org
+Site: http://www.apachemobilefilter.org
 
 =head1 AUTHOR
 

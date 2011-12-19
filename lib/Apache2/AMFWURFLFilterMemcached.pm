@@ -33,7 +33,7 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.40a";
+  $VERSION= "3.50";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -284,11 +284,16 @@ sub loadConfigFile {
 			if (-e "$fileWurfl") {
 					$CommonLib->printLog("Start loading  WURFL.xml");
 					if (open (IN,"$fileWurfl")) {
-						while (<IN>) {
-							 $r_id=parseWURFLFile($_,$r_id);
-							 
-						}
+						my $filesize= -s $fileWurfl;
+						my $string_file;
+						read (IN,$string_file,$filesize);
 						close IN;
+						$string_file =~ s/\n//g;
+						$string_file =~ s/>/>\n/g;
+						my @arrayFile=split(/\n/, $string_file);
+						foreach my $line (@arrayFile) {
+							$r_id=parseWURFLFile($line,$r_id);
+						}
 					} else {
 					    $CommonLib->printLog("Error open file:$fileWurfl");
 					    ModPerl::Util::exit();
@@ -447,9 +452,7 @@ sub IdentifyUAMethod {
   {
       my $dummy=$ArrayUAType{$pair};
       if ($Array_id{$dummy}) {
-         if ($id_find) {
-           my $dummy2="";
-         } else {
+         if (!$id_find) {
            $id_find=$Array_id{$dummy};
          }
       }
@@ -467,7 +470,7 @@ sub IdentifyPCUAMethod {
 		$id_find=$PCArray{$pair};
 	}
   }
-  if ($id_find) {} else {$id_find="";};
+  if (!$id_find) {$id_find="";}
   if ($id_find eq "") { 
 	foreach $pair (%PatchArray_id)
 	{  
@@ -667,6 +670,7 @@ sub handler {
     	  }
 
     }
+    $user_agent=lc($user_agent);
 
 	if ($user_agent =~ m/blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'blackberry'));
@@ -678,7 +682,6 @@ sub handler {
 	}
     my $cookie = $f->headers_in->{Cookie} || '';
     $id=$CommonLib->readCookie($cookie);
-    $user_agent=lc($user_agent);
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
     if ($id eq ""){
                   if ($user_agent) {
@@ -694,7 +697,7 @@ sub handler {
 							$id=IdentifyPCUAMethod($user_agent);
 						}			            
 					}
-				        if (!$id) 	{$id="";};
+				        if (!$id) {$id="";};
 					if ($id eq "") { 
 							$id=IdentifyUAMethod($user_agent);
 					}
@@ -723,7 +726,7 @@ sub handler {
 	      	     #
 	      	     #  device detected 
 	      	     #
-	      	     my $var=$memd->get("$id");
+	      	     my $var=$memd->get("WURFL_$id");
 		         if ($var) {
 					my @pairs = split(/&/, $var);
 					my $param_tofound;
@@ -747,7 +750,7 @@ sub handler {
 					$variabile2="id=$id&$variabile2";
 					$f->subprocess_env("AMF_ID" => $id);
 					$f->pnotes('id' => $id);
-					$memd->set("$id",$variabile2);
+					$memd->set("WURFL_$id",$variabile2);
 			}
 			if ($cookiecachesystem eq "true") {
 						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
