@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -64,10 +64,12 @@ package Apache2::AMFWURFLFilter;
   my $restmode='false';
   my $deepSearch=0;
   my $checkVersion='false';
+  my $mobilenable="false";
+
 
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
-  $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
+  $CommonLib->printLog("------- support http://groups.google.com/group/amf-device-detection -------");
   $CommonLib->printLog("---------------------------------------------------------------------------");
   $CommonLib->printLog("---       The license of the wurfl.xml file is now changed.             ---");
   $CommonLib->printLog("--- The WURFL file is the Copyright of ScientiaMobile, read the license ---");
@@ -231,6 +233,11 @@ sub loadConfigFile {
 		} else {
 				$CommonLib->printLog("AMFDeepParse  is not setted the default value is 0");			   
 		}
+                if ($ENV{FullBrowserMobileAccessKey}) {
+                          $mobilenable="$ENV{FullBrowserMobileAccessKey}";
+                          $CommonLib->printLog("FullBrowserMobileAccessKey is: $ENV{FullBrowserMobileAccessKey}");
+                          $CommonLib->printLog("For access the device to fullbrowser set the link: <url>?$mobilenable=true");
+                }
 
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
@@ -667,26 +674,34 @@ sub handler {
     if ($x_operamini_phone_ua) {
        $user_agent=lc($x_operamini_phone_ua);
     }
-    if (($query_string) && $restmode eq 'true') {
+    my $cookie = $f->headers_in->{Cookie} || '';
+    $id=$CommonLib->readCookie($cookie);
+    my $amfFull=$CommonLib->readCookie_fullB($cookie);
+    if ($query_string) {
     		  my @vars = split(/&/, $query_string); 	  
     		  foreach $var (sort @vars){
-    				   if ($var) {
-    						my ($v,$i) = split(/=/, $var);
-    						$v =~ tr/+/ /;
-    						$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-						if ($i) {
-							$i =~ tr/+/ /;
-							$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-							$i =~ s/<!--(.|\n)*-->//g;
-							$ArrayQuery{$v}=$i;
-						}
-    					}
+    			if ($var) {
+    				my ($v,$i) = split(/=/, $var);
+    				$v =~ tr/+/ /;
+    				$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+				if ($i) {
+					$i =~ tr/+/ /;
+					$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+					$i =~ s/<!--(.|\n)*-->//g;
+					$ArrayQuery{$v}=$i;
+				}
+    			}
     		  }
-    	  if ($ArrayQuery{amf}) {
-    				$user_agent=lc($ArrayQuery{amf});
+    	  if (($ArrayQuery{amf})  && $restmode eq 'true') {
+    		$user_agent=lc($ArrayQuery{amf});
     	  }
+          if ($ArrayQuery{$mobilenable}) {
+                $f->err_headers_out->set('Set-Cookie' => "amfFull=false; path=/;");
+                $amfFull='ok';
+          }    
 
     }
+
         $user_agent=lc($user_agent);
 	if ($user_agent =~ m/blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'blackberry'));
@@ -696,10 +711,7 @@ sub handler {
 		$user_agent=substr($user_agent,0,index($user_agent,'up.link') - 1);
 		$mobile=1;
 	}
-    my $cookie = $f->headers_in->{Cookie} || '';
-    $id=$CommonLib->readCookie($cookie);
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
-
     if ($cacheSystem->restore( 'wurfl-ua', $user_agent )) {
           #
           # cookie is not empty so I try to read in memory cache on my httpd cache
@@ -797,7 +809,7 @@ sub handler {
 				$cacheSystem->store( 'wurfl-ua', $user_agent, $id);
 			}
 			if ($cookiecachesystem eq "true") {
-				$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
+				$f->err_headers_out->set('Set-Cookie' => "amfID=$id; path=/;");	
 			}		  			  
 	      	} 
     }
@@ -807,6 +819,13 @@ sub handler {
 			$amf_device_ismobile = 'false';		
 		}
 	}
+        if ($amfFull ne "") {
+            $f->subprocess_env("AMF_FORCE_TO_DESKTOP" => 'true');
+            $f->pnotes("amf_force_to_desktop" => 'true');
+        } 
+        if ($ArrayCapFound{'is_tablet'}) {
+            $f->subprocess_env("AMF_DEVICE_IS_TABLET" => lc($ArrayCapFound{'is_tablet'}));
+        }
 	$f->pnotes("amf_device_ismobile" => $amf_device_ismobile); 
 	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => $amf_device_ismobile);
 	$f->subprocess_env("AMF_VER" => $VERSION);
@@ -822,7 +841,7 @@ sub handler {
 	return Apache2::Const::DECLINED;
 }
 1; 
-__END__
+
 	
 =head1 NAME
 
@@ -832,11 +851,15 @@ Apache2::AMFWURFLFilter - The module detects the mobile device and passes the WU
 
 Module for device detection, the cache is based on file system
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-For more details: http://wiki.apachemobilefilter.org
+http://www.apachemobilefilter.org
 
-Demo page of the filter: http://www.apachemobilefilter.org
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFWURFLFilter
 
 =head1 AUTHOR
 

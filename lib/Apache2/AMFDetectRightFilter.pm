@@ -32,7 +32,7 @@ package Apache2::AMFDetectRightFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -59,10 +59,11 @@ package Apache2::AMFDetectRightFilter;
   my $restmode='false';
   my $deepSearch=2;
   my $checkVersion='false';
+  my $mobilenable="false";
 
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
-  $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
+  $CommonLib->printLog("------- support http://groups.google.com/group/amf-device-detection -------");
   $CommonLib->printLog("---------------------------------------------------------------------------");
   $CommonLib->printLog("AMFDetectRightFilter module Version $VERSION");
   if ($ENV{AMFCheckVersion}) {
@@ -205,7 +206,11 @@ sub loadConfigFile {
 		} else {
 				$CommonLib->printLog("AMFDeepParse  is not setted the default value is 3");			   
 		}
-
+                if ($ENV{FullBrowserMobileAccessKey}) {
+                          $mobilenable="$ENV{FullBrowserMobileAccessKey}";
+                          $CommonLib->printLog("FullBrowserMobileAccessKey is: $ENV{FullBrowserMobileAccessKey}");
+                          $CommonLib->printLog("For access the device to fullbrowser set the link: <url>?$mobilenable=true");
+                }
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
 	    if ($DetectRightnetdownload eq "true") {
@@ -532,27 +537,33 @@ sub handler {
     if ($x_operamini_phone_ua) {
        $user_agent=lc($x_operamini_phone_ua);
     }
-    if (($query_string) && $restmode eq 'true') {
+    my $cookie = $f->headers_in->{Cookie} || '';
+    $id=$CommonLib->readCookie($cookie);
+    my $amfFull=$CommonLib->readCookie_fullB($cookie);
+    if ($query_string) {
     		  my @vars = split(/&/, $query_string); 	  
     		  foreach $var (sort @vars){
-    				   if ($var) {
-    						my ($v,$i) = split(/=/, $var);
-    						$v =~ tr/+/ /;
-    						$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-						if ($i) {
-							$i =~ tr/+/ /;
-							$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-							$i =~ s/<!--(.|\n)*-->//g;
-							$ArrayQuery{$v}=$i;
-						}
-    					}
+    			if ($var) {
+    				my ($v,$i) = split(/=/, $var);
+    				$v =~ tr/+/ /;
+    				$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+				if ($i) {
+					$i =~ tr/+/ /;
+					$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+					$i =~ s/<!--(.|\n)*-->//g;
+					$ArrayQuery{$v}=$i;
+				}
+    			}
     		  }
-    	  if ($ArrayQuery{amf}) {
-    				$user_agent=lc($ArrayQuery{amf});
+    	  if (($ArrayQuery{amf})  && $restmode eq 'true') {
+    		$user_agent=lc($ArrayQuery{amf});
     	  }
+          if ($ArrayQuery{$mobilenable}) {
+                $f->err_headers_out->set('Set-Cookie' => "amfFull=false; path=/;");
+                $amfFull='ok';
+          }    
 
     }
-
     $user_agent=lc($user_agent);
 	if ($user_agent =~ m/blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'blackberry'));
@@ -562,8 +573,6 @@ sub handler {
 		$user_agent=substr($user_agent,0,index($user_agent,'up.link') - 1);
 		$mobile=1;
 	}
-    my $cookie = $f->headers_in->{Cookie} || '';
-    $id=$CommonLib->readCookie($cookie);
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
 
     if ($cacheSystem->restore( 'DetectRight-ua', $user_agent )) {
@@ -688,7 +697,7 @@ sub handler {
 				$cacheSystem->store( 'DetectRight-ua', $user_agent, $id);
 			}
 			if ($cookiecachesystem eq "true") {
-				$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
+				$f->err_headers_out->set('Set-Cookie' => "amfID=$id; path=/;");	
 			}		  			  
 	      	} 
     }
@@ -696,6 +705,14 @@ sub handler {
 	if ($ArrayCapFound{'device_claims_web_support'} eq 'true' && $ArrayCapFound{'is_wireless_device'} eq 'false') {
 	        $amf_device_ismobile = 'false';		
 	}
+        if ($ArrayCapFound{'is_tablet'}) {
+            $f->subprocess_env("AMF_DEVICE_IS_TABLET" => lc($ArrayCapFound{'is_tablet'}));
+        }
+
+        if ($amfFull ne "") {
+            $f->subprocess_env("AMF_FORCE_TO_DESKTOP" => 'true');
+            $f->pnotes("amf_force_to_desktop" => 'true');
+        }        
 	$f->pnotes("amf_device_ismobile" => $amf_device_ismobile);      
 	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => $amf_device_ismobile);
 	$f->subprocess_env("AMF_VER" => $VERSION);
@@ -710,7 +727,7 @@ sub handler {
 	return Apache2::Const::DECLINED;
 }
 1; 
-__END__
+
 	
 =head1 NAME
 
@@ -720,9 +737,15 @@ Apache2::AMFDetectRightFilter - The module detects the mobile device and passes 
 
 Module for device detection, the cache is based on file system
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-Site: http://www.apachemobilefilter.org
+http://www.apachemobilefilter.org
+
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFDetectRightFilter
 
 =head1 AUTHOR
 

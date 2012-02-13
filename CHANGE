@@ -1,3 +1,14 @@
+ApacheMobileFilter 3.51
+Change logic for be more mod_rewrite compatible
+Added new feature for download directly the premium device repository directly from 51Degrees.mobi site
+Added new parameter Key51Degrees to set premium key
+Added new pre-requisit LWP::Protocol::https for support https connection
+Fixed bug for modules that used memcached
+Fixed bug for AMFSwitcher
+Added parameter TypeRedirect for specify the type of redirect for AMFSwitcher 
+Clean header for AMFImageRendering
+Added environment variable AMF_FORCE_TO_DESKTOP is setted as true that mean you don't want redirect mobile device (mod_rewrite) 
+
 ApacheMobileFilter 3.50
 Added New Module AMF51DegreesFilter and AMF51DegreesFilterMemcached for load 51Degrees DR (http://51Degrees.mobi)
 Fixed bugs for DetectRight modules

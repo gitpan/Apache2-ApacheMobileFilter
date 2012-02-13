@@ -22,7 +22,7 @@ package Apache2::AMF51DegreesFilterMemcached;
   use APR::Table (); 
   use LWP::Simple;
   use Apache2::Const -compile => qw(OK REDIRECT DECLINED);
-  use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
+  use IO::Uncompress::Gunzip qw(gunzip $GunzipError) ;  
   use constant BUFF_LEN => 1024;
   use Cache::Memcached;
 
@@ -33,7 +33,7 @@ package Apache2::AMF51DegreesFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   my %Capability;
   my %Array_fb;
   my %Array_id;
@@ -48,7 +48,7 @@ package Apache2::AMF51DegreesFilterMemcached;
   my $redirecttranscoderurl="none";
   my $resizeimagedirectory="none";
   my $Degreesnetdownload="false";
-  my $download51Degreesurl="false";
+  my $download51Degreesurl="https://51degrees.mobi/Products/Downloads/Premium.aspx";
   my $listall="false";
   my $cookiecachesystem="false";
   my $DegreesVersion="unknown";  
@@ -57,6 +57,7 @@ package Apache2::AMF51DegreesFilterMemcached;
   my $restmode='false';
   my $deepSearch=0;
   my $checkVersion='false';
+  my $mobilenable="false";
   
   #details
   my %PCDetails;
@@ -72,7 +73,7 @@ package Apache2::AMF51DegreesFilterMemcached;
   
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
-  $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
+  $CommonLib->printLog("------- support http://groups.google.com/group/amf-device-detection -------");
   $CommonLib->printLog("---------------------------------------------------------------------------");
   $CommonLib->printLog("AMF51DegreesFilterMemcached module Version $VERSION");
   if ($ENV{AMFCheckVersion}) {
@@ -134,15 +135,6 @@ package Apache2::AMF51DegreesFilterMemcached;
     'enable_compress' => 1,
   };
   $memd->set_servers(\@Server);
-
-   $memd->set('AMFtest','test');
-   if ($memd->get('AMFtest')) {
-       $CommonLib->printLog("The AMF is connected to the Memcached server: $serverMemCache");
-   } else {
-       $CommonLib->printLog("The AMF is not connected to the Memcached server: $serverMemCache.");
-	   ModPerl::Util::exit();      
-   }
-  $memd->set('device_not_found', "id=device_not_found&device=false&device_claims_web_support=true&is_wireless_device=false");
   if ($ENV{AMFMobileHome}) {
 	  &loadConfigFile("$ENV{AMFMobileHome}/51Degrees.xml");
   }  else {
@@ -176,6 +168,16 @@ sub loadConfigFile {
 				$download51Degreesurl=$ENV{Download51DegreesURL};
 				$CommonLib->printLog("Download51DegreesURL is: $download51Degreesurl");
 			 }	
+                  if ($Degreesnetdownload eq 'true') {
+                        if ($ENV{Key51Degrees}) {
+                              $download51Degreesurl=$download51Degreesurl."?LicenseKeys=".$ENV{Key51Degrees}."&Type=XML&Download=True";
+                              $CommonLib->printLog("Key51Degrees is: $ENV{Key51Degrees}");
+                        } else {
+                              $CommonLib->printLog("Error Key51Degrees parmeter must be setted ");					
+                              ModPerl::Util::exit();                      
+                        }
+                    
+                  }
 	      	 if ($ENV{CapabilityList}) {
 				my @dummycapability = split(/,/, $ENV{CapabilityList});
 				foreach $dummy (@dummycapability) {
@@ -220,6 +222,12 @@ sub loadConfigFile {
 		} else {
 				$CommonLib->printLog("AMFDeepParse  is not setted the default value is 3");			   
 		}
+                if ($ENV{FullBrowserMobileAccessKey}) {
+                          $mobilenable="$ENV{FullBrowserMobileAccessKey}";
+                          $CommonLib->printLog("FullBrowserMobileAccessKey is: $ENV{FullBrowserMobileAccessKey}");
+                          $CommonLib->printLog("For access the device to fullbrowser set the link: <url>?$mobilenable");
+                }
+
 	    $CommonLib->printLog("Finish loading  parameter");
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
 	    if ($Degreesnetdownload eq "true") {
@@ -228,13 +236,13 @@ sub loadConfigFile {
 	        my ($content_type, $document_length, $modified_time, $expires, $server) = head($download51Degreesurl);
 	        if ($content_type eq "") {
    		        $CommonLib->printLog("Couldn't get $download51Degreesurl.");
-		   		ModPerl::Util::exit();
+   		        $CommonLib->printLog("Take the last version downloaded.");
+		   	#ModPerl::Util::exit();
 	        } else {
 	            $CommonLib->printLog("The URL is correct");
-	            $CommonLib->printLog("The size of document wurf file: $document_length bytes");	       
+	            $CommonLib->printLog("The size of document 51Degrees file: $document_length bytes");	       
 	        }
-	        
-	        if ($content_type eq 'application/zip') {
+	        if ($content_type eq 'application/octet-stream') {
 	              $CommonLib->printLog("The file is a zip file.");
 	              $CommonLib->printLog ("Start downloading");
 				  my @dummypairs = split(/\//, $download51Degreesurl);
@@ -243,36 +251,14 @@ sub loadConfigFile {
 				  my $tmp_dir=$ENV{AMFMobileHome};
 				  $filezip="$tmp_dir/$filezip";
 				  my $status = getstore ($download51Degreesurl,$filezip);
-				  my $output="$tmp_dir/tmp_51Degrees.xml";
-				  unzip $filezip => $output 
-						or die "unzip failed: $UnzipError\n";
-					#
-					# call parse51DegreesFile
-					#
-					callparse51DegreesFile($output);
-
-			} else {
-				$CommonLib->printLog("The file is a xml file.");
-			        my $content = get ($download51Degreesurl);
-                                 if ($content =~ /\<validation/o) {
-                                    $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'<validation>') - index($content,'<version>') - 9);
-                                 } else {
-                                    $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'</version>') - index($content,'<version>') - 9);
-                                 }
-
-                                $content =~ s/\n//g;
-				$content =~ s/>/>\n/g;
-
-				my @rows = split(/\n/, $content);
-				my $row;
-				my $count=0;
-				foreach $row (@rows){
-					$r_id=parse51DegreesFile($row,$r_id);
-				}
-			}
+				  my $output="$tmp_dir/51Degrees.xml";
+                                  gunzip $filezip => $output 
+                                          or die "gzip failed: $GunzipError\n";
 			$CommonLib->printLog("Finish downloading 51Degrees from $download51Degreesurl");
-
-	    } else {
+                } else {
+                  $CommonLib->printLog("Error download 51Degrees device repository, check the premium keys. AMF try to load the previous version.");
+                }
+            }
 			if (-e "$file51Degrees") {
 					$CommonLib->printLog("Start loading  51Degrees.xml");
 					if (open (IN,"$file51Degrees")) {
@@ -299,7 +285,6 @@ sub loadConfigFile {
 			  $CommonLib->printLog("File $file51Degrees not found");
 			  ModPerl::Util::exit();
 			}
-		}
 		close IN;
 		my $arrLen = scalar %Array_fb;
 		($arrLen,$dummy)= split(/\//, $arrLen);
@@ -534,7 +519,10 @@ sub handler {
     if ($x_operamini_phone_ua) {
        $user_agent=lc($x_operamini_phone_ua);
     }
-    if (($query_string) && $restmode eq 'true') {
+    my $cookie = $f->headers_in->{Cookie} || '';
+    $id=$CommonLib->readCookie($cookie);
+    my $amfFull=$CommonLib->readCookie_fullB($cookie);
+    if ($query_string) {
     		  my @vars = split(/&/, $query_string); 	  
     		  foreach $var (sort @vars){
     			if ($var) {
@@ -549,12 +537,15 @@ sub handler {
 				}
     			}
     		  }
-    	  if ($ArrayQuery{amf}) {
+    	  if (($ArrayQuery{amf})  && $restmode eq 'true') {
     		$user_agent=lc($ArrayQuery{amf});
     	  }
+          if ($ArrayQuery{$mobilenable}) {
+                $f->err_headers_out->set('Set-Cookie' => "amfFull=false; path=/;");
+                $amfFull='ok';
+          }    
 
-    }    
-
+    }
     $user_agent=lc($user_agent);
 	if ($user_agent =~ m/blackberry/i) {	 
 		$user_agent=substr($user_agent,index($user_agent,'blackberry'));
@@ -566,8 +557,6 @@ sub handler {
 		$user_agent=substr($user_agent,index($user_agent,'mozilla'));
 	}
         
-    my $cookie = $f->headers_in->{Cookie} || '';
-    $id=$CommonLib->readCookie($cookie);
     $user_agent=$CommonLib->CleanUa($user_agent);
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
     if ($id eq ""){
@@ -642,8 +631,13 @@ sub handler {
         }
         if ($ArrayCapFound{'IsTablet'}) {
             $f->pnotes("is_tablet" => lc($ArrayCapFound{'IsTablet'}));
+            $f->subprocess_env("AMF_DEVICE_IS_TABLET" => lc($ArrayCapFound{'IsTablet'}));
         }
-	$f->pnotes("amf_device_ismobile" => lc($ArrayCapFound{'IsMobile'}));      
+        if ($amfFull ne "") {
+            $f->subprocess_env("AMF_FORCE_TO_DESKTOP" => 'true');
+            $f->pnotes("amf_force_to_desktop" => 'true');
+        }
+        $f->pnotes("amf_device_ismobile" => lc($ArrayCapFound{'IsMobile'}));      
 	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => lc($ArrayCapFound{'IsMobile'}));
 	$f->subprocess_env("AMF_VER" => $VERSION);
 	$f->subprocess_env("AMF_DEGREES51_VER" => $DegreesVersion);
@@ -657,15 +651,21 @@ sub handler {
 	return Apache2::Const::DECLINED;
 }
 1; 
-__END__
+
 	
 =head1 NAME
 
 Apache2::AMF51DegreesFilterMemcached - The module detects the mobile device and passes the 51Degrees capabilities on to the other web application as environment variables
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-Site: http://www.apachemobilefilter.org
+http://www.apachemobilefilter.org
+
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMF51DegreesFilter
 
 =head1 AUTHOR
 

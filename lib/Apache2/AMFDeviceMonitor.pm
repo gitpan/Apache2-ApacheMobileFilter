@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   #
   # Define the global environment
   #
@@ -143,6 +143,8 @@
       return Apache2::Const::OK;
   }
   1;
+
+
 =head1 NAME
 
 Apache2::AMFDeviceMonitor - This module is an admin tool to control the devices access that Apache Mobile Filter has detected.
@@ -151,9 +153,15 @@ Apache2::AMFDeviceMonitor - This module is an admin tool to control the devices 
 
 This module is an admin tool to control the devices access that Apache Mobile Filter has detected.
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-Site: http://www.apachemobilefilter.org
+http://www.apachemobilefilter.org
+
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFDeviceMonitor
 
 =head1 AUTHOR
 

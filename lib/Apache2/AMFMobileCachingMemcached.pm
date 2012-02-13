@@ -28,7 +28,7 @@ package Apache2::AMFMobileCachingMemcached;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   #
   # Define the global environment
   #
@@ -61,13 +61,6 @@ package Apache2::AMFMobileCachingMemcached;
   };
   $memd->set_servers(\@Server);
 
-   $memd->set('AMFtest','test');
-   if ($memd->get('AMFtest')) {
-       $CommonLib->printLog("The AMF is connected to the Memcached server: $serverMemCache");
-   } else {
-       $CommonLib->printLog("The AMF is not connected to the Memcached server: $serverMemCache.");
-	   ModPerl::Util::exit();      
-   }
 sub loadConfigFile {
 	my $dummy;
 	my $carrier;
@@ -133,7 +126,9 @@ sub handler    {
     return Apache2::Const::OK; 
 } 
 
-  1; 
+1;
+
+
 =head1 NAME
 
 Apache2::AMFMobileCachingMemcached - This module has the scope to cache the static in content in different layout for mobile.
@@ -144,9 +139,15 @@ This module has the scope to cache the static in content in different layout for
 
 For more details: http://wiki.apachemobilefilter.org
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-Site: http://www.apachemobilefilter.org
+http://www.apachemobilefilter.org
+
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFMobileCaching
 
 =head1 AUTHOR
 

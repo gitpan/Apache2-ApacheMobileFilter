@@ -1,28 +1,36 @@
-Apache Mobile Filter: is an implementation of the Apache filter in Perl, The module detects the mobile device and passes the WURFL capabilities on to the other web application as environment variables. It can also be used to resize images on the fly to adapt to the screen size of the mobile device.
-A good point to start is: <http://wurfl.sourceforge.net>
-I don't try to install in Win32 platform, but I suppose it's run well.
+Apache Mobile Filter is the easiest way to detect mobile devices.
+AMF is a suite of tools that allow access to a Device Repository (such as WURFL, DetectRight, 51Degrees or others) directly from Apache: now you can detect devices no matter what language your website uses.
 
-To test the Apache Mobile Filte:
+Apache Mobile Filter site:
 
 http://www.apachemobilefilter.org
 
-Follow the Instructions the URL is:
+Documentation site:
 
-http://www.idelfuschini.it/it/apache-mobile-filter-v2x.html
+http://wiki.apachemobilefilter.org
+
+Documentation site:
+
+http://fiftyone.apachemobilefilter.org
+
+http://w.apachemobilefilter.org
 
 Support:
 
-http://amfticket.idelfuschini.it
+http://groups.google.com/group/amf-device-detection?hl=en
 
 AVAILABILITY
 
 The latest version of Apache Mobile Filter is available from the
-CPAN <http://search.cpan.org/> 
+CPAN <http://search.cpan.org/>
 
+or
+
+http://www.sourceforge.net/projects/mobilefilter/files/latest/download
 
 COPYRIGHT
 
-Copyright 2009-2010-2011 Idel Fuschini <idel.fuschini@gmail.com>
+Copyright 2009-2010-2011-2012 Idel Fuschini <idel.fuschini@gmail.com>
 
 This package is free software and is provided "as is" without express
 or implied warranty.  You can redistribute it and/or modify it under 

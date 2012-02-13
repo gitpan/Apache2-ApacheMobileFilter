@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   #
   # Define the global environment
   #
@@ -133,7 +133,9 @@
       $f->print($html_page);
       return Apache2::Const::OK;
   }
-  1;
+1;
+
+
 =head1 NAME
 
 Apache2::AMFWebService - This module give the result of Device Detection as WebService 
@@ -142,11 +144,15 @@ Apache2::AMFWebService - This module give the result of Device Detection as WebS
 
 This module give the info as WebService
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-For more details: http://wiki.apachemobilefilter.org
+http://www.apachemobilefilter.org
 
-Demo page of the filter: http://www.apachemobilefilter.org
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFWebService
 
 =head1 AUTHOR
 

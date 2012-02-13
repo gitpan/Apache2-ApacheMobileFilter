@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.50";
+  $VERSION= "3.51";
 
 sub new {
   my $package = shift;
@@ -223,7 +223,7 @@ sub readCookie {
     my $name;
     foreach $param_tofound (@pairs) {
        ($string_tofound,$value)=split(/=/, $param_tofound);
-       if ($string_tofound eq "amf") {
+       if ($string_tofound =~ "amfID") {
            $id_return=$value;
        }
     }   
@@ -243,7 +243,7 @@ sub readCookie_fullB {
     my $name;
     foreach $param_tofound (@pairs) {
        ($string_tofound,$value)=split(/=/, $param_tofound);
-       if ($string_tofound eq "amfFull") {
+       if ($string_tofound =~ "amfFull") {
            $id_return=$value;
        }
     }   
@@ -282,6 +282,8 @@ sub extValueTagInternal {
    my $return_tag=substr($string,$x,$y - $x);  
    return $return_tag;
 }
+1;
+
 
 =head1 NAME
 
@@ -291,9 +293,13 @@ Apache2::AMFCommonLib - Common Library That AMF uses.
 
 Is a simple Common Library for AMF
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-Site: http://www.apachemobilefilter.org
+http://www.apachemobilefilter.org
+
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
 
 =head1 AUTHOR
 

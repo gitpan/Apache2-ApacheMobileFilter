@@ -22,11 +22,11 @@ package Apache2::AMFSwitcher;
   use Apache2::Filter (); 
   use APR::Table (); 
   use LWP::Simple;
-  use Apache2::Const -compile => qw(OK REDIRECT DECLINED);
+  use Apache2::Const -compile => qw(REDIRECT DECLINED HTTP_TEMPORARY_REDIRECT HTTP_MOVED_PERMANENTLY HTTP_MOVED_TEMPORARILY HTTP_SEE_OTHER HTTP_NOT_MODIFIED HTTP_USE_PROXY);
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   #
   # Define the global environment
   #
@@ -46,6 +46,7 @@ package Apache2::AMFSwitcher;
   my $fullbrowserDomain="none";
   my $transcoderDomain="none";
   my $forcetablet="false";
+  my $return_http_switch=Apache2::Const::REDIRECT;
   
   my %ArrayPath;
   $ArrayPath{1}='none';
@@ -71,6 +72,22 @@ sub loadConfigFile {
 	my $r_id;
 	my $dummy;
 	$CommonLib->printLog("AMFSwitcher: Start read configuration from httpd.conf");
+	if ($ENV{TypeRedirect}) {
+		if ($ENV{TypeRedirect} eq "301") {
+			$return_http_switch=Apache2::Const::HTTP_MOVED_PERMANENTLY;
+		} elsif ($ENV{TypeRedirect} eq "302") {
+			$return_http_switch=Apache2::Const::HTTP_MOVED_TEMPORARILY;
+		} elsif ($ENV{TypeRedirect} eq "303") {
+			$return_http_switch=Apache2::Const::HTTP_SEE_OTHER;
+		} elsif ($ENV{TypeRedirect} eq "304") {
+			$return_http_switch=Apache2::Const::HTTP_NOT_MODIFIED;
+		} elsif ($ENV{TypeRedirect} eq "305") {
+			$return_http_switch=Apache2::Const::HTTP_USE_PROXY;
+		} elsif ($ENV{TypeRedirect} eq "307") {
+			$return_http_switch=Apache2::Const::HTTP_TEMPORARY_REDIRECT;
+		} 
+	}		
+
 	if ($ENV{FullBrowserUrl}) {
 		$fullbrowserurl=$ENV{FullBrowserUrl};
 		$ArrayPath{2}=$ENV{FullBrowserUrl};
@@ -126,11 +143,6 @@ sub loadConfigFile {
 			
 		}
 	}
-	if ($ENV{FullBrowserMobileAccessKey}) {
-		$mobilenable="$ENV{FullBrowserMobileAccessKey}";
-		$CommonLib->printLog("FullBrowserMobileAccessKey is: $ENV{FullBrowserMobileAccessKey}");
-		$CommonLib->printLog("For access the device to fullbrowser set the link: <url>?$mobilenable");
-	}
 	$CommonLib->printLog("Finish loading  parameter");
 }
 sub handler    {
@@ -151,6 +163,7 @@ sub handler    {
     my %ArrayQuery;
     my $isTablet="null";
     my $amf_device_ismobile = "true";
+    my $amf_force_to_mobile = "false";
 
     if ($query_string) {
 	my @vars = split(/&/, $query_string); 	  
@@ -168,17 +181,14 @@ sub handler    {
 			}
 	}
     }
-    my $cookie = $f->headers_in->{Cookie} || '';
-    my $amfFull=$CommonLib->readCookie_fullB($cookie);
-    if ($ArrayQuery{$mobilenable}) {
-	$f->err_headers_out->set('Set-Cookie' => "amfFull=false; path=/;");
-	$amfFull="ok";
-    }
     if ($f->pnotes('is_tablet')) {      
     	$isTablet=$f->pnotes('is_tablet')
     }
     if ($f->pnotes('is_transcoder')) {
     	$is_transcoder=$f->pnotes('is_transcoder');
+    }
+    if ($f->pnotes('amf_force_to_desktop')) {
+    	$amf_force_to_mobile=$f->pnotes('amf_force_to_desktop');
     }
     if ($f->pnotes('amf_device_ismobile')) {
     	$amf_device_ismobile=$f->pnotes('amf_device_ismobile');
@@ -214,11 +224,15 @@ sub handler    {
 					} else {
 						$location = $mobileversionurl;            
 					}
+				} else {
+					$location = $mobileversionurl;            
+				}
 			} else {
-		            	$location = $mobileversionurl;            
+				if (substr ($mobileversionurl,0,4) eq "http") {
+					$location = $mobileversionurl;            					
+				}
 			}
-				$device_type=1;
-			}
+			$device_type=1;
 		}
 	    if ($is_transcoder eq 'true') {
 			if ($transcoderDomain ne $servername) {
@@ -239,16 +253,16 @@ sub handler    {
 	    if ($ArrayPath{$device_type} eq substr($uri,0,length($ArrayPath{$device_type}))) {
 	    	$no_redirect=0;
 	    }
-		if ($location ne "none" && $amfFull eq "") {
-			    if (substr ($location,0,5) eq "http:") { 
+		if ($location ne "none" && $amf_force_to_mobile eq 'false') {
+			    if (substr ($location,0,4) eq "http") { 
 					$f->headers_out->set(Location => $location);
-					$f->status(Apache2::Const::REDIRECT); 
-					$return_value=Apache2::Const::REDIRECT;
+					$f->status($return_http_switch); 
+					$return_value=$return_http_switch;
 			    } else {
 			        if ($no_redirect==1) {
 						$f->headers_out->set(Location => $location);
-						$f->status(Apache2::Const::REDIRECT); 
-						$return_value=Apache2::Const::REDIRECT;		        
+						$f->status($return_http_switch); 
+						$return_value=$return_http_switch;		        
 			        }
 			    }
 		} 
@@ -257,7 +271,9 @@ sub handler    {
 	return $return_value;
 } 
 
-  1; 
+  1;
+
+
 =head1 NAME
 
 Apache2::AMFSwitcher - Used to switch the device to the apropriate content (mobile, fullbrowser or for transcoder)
@@ -267,15 +283,15 @@ Apache2::AMFSwitcher - Used to switch the device to the apropriate content (mobi
 
 This module has the scope to manage with WURFLFilter.pm module the group of device (MobileDevice, PC and transcoder).
 
-To work AMFSwitcher has need WURFLFilter configured.
+=head1 AMF PROJECT SITE
 
-For more details: http://wiki.apachemobilefilter.org
+http://www.apachemobilefilter.org
 
-NOTE: this software need wurfl.xml you can download it directly from this site: http://wurfl.sourceforge.net or you can set the filter to download it directly.
+=head1 DOCUMENTATION
 
-=head1 SEE ALSO
+http://wiki.apachemobilefilter.org
 
-Site: http://www.apachemobilefilter.org
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFSwitcher
 
 =head1 AUTHOR
 

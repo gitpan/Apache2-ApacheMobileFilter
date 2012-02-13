@@ -32,7 +32,7 @@ package Apache2::AMFLiteDetectionFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %MobileArray;#=$CommonLib->getMobileArray;
   my %MobileTabletArray;
@@ -43,11 +43,13 @@ package Apache2::AMFLiteDetectionFilter;
   my $forcetablet='true';
   my $configTabletFile;
   my $checkVersion='false';
+  my $mobilenable="false";
+  
   my $url="http://www.apachemobilefilter.org/param/litemobiledetection.config";
   my $urlTablet="http://www.apachemobilefilter.org/param/litetabletdetection.config";
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
-  $CommonLib->printLog("-------         support http://amfticket.idelfuschini.it            -------");
+  $CommonLib->printLog("------- support http://groups.google.com/group/amf-device-detection -------");
   $CommonLib->printLog("---------------------------------------------------------------------------");
   $CommonLib->printLog("----------------- AMF Lite Detection (not DR required)  -------------------");
   $CommonLib->printLog("---------------------------------------------------------------------------");
@@ -116,6 +118,11 @@ package Apache2::AMFLiteDetectionFilter;
 			$forcetablet="false";
 		}
      }
+                if ($ENV{FullBrowserMobileAccessKey}) {
+                          $mobilenable="$ENV{FullBrowserMobileAccessKey}";
+                          $CommonLib->printLog("FullBrowserMobileAccessKey is: $ENV{FullBrowserMobileAccessKey}");
+                          $CommonLib->printLog("For access the device to fullbrowser set the link: <url>?$mobilenable=true");
+                }
 
 sub readMobileParamFromUrl {
 		$CommonLib->printLog("Read data from apachemobilefilter.org");
@@ -253,38 +260,44 @@ sub handler {
     if ($x_operamini_phone_ua) {
        $user_agent=lc($x_operamini_phone_ua);
     }
-    if (($query_string) && $restmode eq 'true') {
+    my $cookie = $f->headers_in->{Cookie} || '';
+    my $amf_device_ismobile=$CommonLib->readCookie($cookie);
+    my $amfFull=$CommonLib->readCookie_fullB($cookie);
+    if ($query_string) {
     		  my @vars = split(/&/, $query_string); 	  
     		  foreach $var (sort @vars){
-    				   if ($var) {
-    						my ($v,$i) = split(/=/, $var);
-    						$v =~ tr/+/ /;
-    						$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-						if ($i) {
-							$i =~ tr/+/ /;
-							$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
-							$i =~ s/<!--(.|\n)*-->//g;
-							$ArrayQuery{$v}=$i;
-						}
-    					}
+    			if ($var) {
+    				my ($v,$i) = split(/=/, $var);
+    				$v =~ tr/+/ /;
+    				$v =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+				if ($i) {
+					$i =~ tr/+/ /;
+					$i =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+					$i =~ s/<!--(.|\n)*-->//g;
+					$ArrayQuery{$v}=$i;
+				}
+    			}
     		  }
-    	  if ($ArrayQuery{amf}) {
-    				$user_agent=lc($ArrayQuery{amf});
-    	  }
+          if ($ArrayQuery{$mobilenable}) {
+                $f->err_headers_out->set('Set-Cookie' => "amfFull=false; path=/;");
+                $amfFull='ok';
+          }    
 
     }
-        my $cookie = $f->headers_in->{Cookie} || '';
-        my $amf_device_ismobile=$CommonLib->readCookie($cookie);
 	if ($amf_device_ismobile eq "") {
 		$amf_device_ismobile = &isMobile($user_agent);
 		if ($cookiecachesystem eq "true") {
-			$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
+			$f->err_headers_out->set('Set-Cookie' => "amfID=$id; path=/;");	
 		}	
 	}
 	my $amf_device_istablet=&isTablet($user_agent);
 	if ($forcetablet eq "true") {
 		$f->subprocess_env("AMF_DEVICE_IS_TABLET" => $amf_device_istablet);
 	}
+        if ($amfFull ne "") {
+            $f->subprocess_env("AMF_FORCE_TO_DESKTOP" => 'true');
+            $f->pnotes("amf_force_to_desktop" => 'true');
+        }
 	$f->pnotes('is_tablet' => $amf_device_istablet);
 	$f->pnotes("amf_device_ismobile" => $amf_device_ismobile);
 	$f->subprocess_env("AMF_ID" => "amf_lite_detection");
@@ -302,7 +315,7 @@ sub handler {
 	return Apache2::Const::DECLINED;
 }
 1; 
-__END__
+
 	
 =head1 NAME
 
@@ -312,11 +325,15 @@ Apache2::AMFLiteDetectionFilter - The module detects in lite mode the mobile dev
 
 Module for device detection, parse the user agent and decide if the device is mobile or not.
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-For more details: http://wiki.apachemobilefilter.org
+http://www.apachemobilefilter.org
 
-Demo page of the filter: http://www.apachemobilefilter.org
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFLiteDetectionFilter
 
 =head1 AUTHOR
 

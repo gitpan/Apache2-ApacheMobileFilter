@@ -46,8 +46,10 @@ WriteMakefile(
 		     'LWP::Simple' => 0,
 		     'File::Copy' => 0,
 	       	     'IO::Uncompress::Unzip'  => 0,
-	       	     'Cache::Memcached'  => "1.27",
-		     'Cache::FileBackend' => 0 		 
+                     'IO::Uncompress::Gunzip' => 0,
+                     'Cache::Memcached'  => "1.27",
+		     'Cache::FileBackend' => 0,
+                     'LWP::Protocol::https' => 0
                      },
     AUTHOR     	=> 'Idel Fuschini (idel@idelfuschini.it)' 
    

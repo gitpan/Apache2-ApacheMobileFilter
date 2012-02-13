@@ -27,7 +27,7 @@ package Apache2::AMFCarrierDetection;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   #
   # Define the global environment
   #
@@ -130,7 +130,9 @@ sub handler    {
 	return $return_value;
 } 
 
-  1; 
+  1;
+
+  
 =head1 NAME
 
 Apache2::AMFCarrierDetection - This module has the scope to identify by ip address the carrier and the nation.
@@ -141,9 +143,15 @@ This module has the scope to identify by ip address the carrier and the nation.
 	
 NOTE: this software need carrier-data.txt you can download it directly from this site: http://www.andymoore.info/carrier-data.txt or you can set the filter to download it directly.
 
-=head1 SEE ALSO
+=head1 AMF PROJECT SITE
 
-Site: http://www.apachemobilefilter.org
+http://www.apachemobilefilter.org
+
+=head1 DOCUMENTATION
+
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFCarrierDetection
 
 =head1 AUTHOR
 

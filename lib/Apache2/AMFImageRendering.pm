@@ -36,7 +36,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.50";
+  $VERSION= "3.51";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -290,12 +290,7 @@ sub handler    {
 					       $f->ctx(1); 
 					    }
 					  $filesize = -s "$imagefile";
-					  $f->r->headers_out->set(Pragma => 'no-cache');
-					  $f->r->headers_out->set('Cache-control' => 'no-cache');
-					  $f->r->headers_out->set(Expires => '-1');
-					  $f->r->headers_out->set("Last-Modified" => time());
-	   				  $f->r->headers_out->set("Cache-control"=>"max-age=0");
-	   				  $f->r->headers_out->set("Content-Length"=>$filesize);
+		   			  $f->r->headers_out->set("Content-Length"=>$filesize);
 					  $f->r->content_type($content_type);
 					  open (FH,"$imagefile") or die ("couldn't open $imagefile\n");
  							read (FH,$image2,$filesize) ;
@@ -309,7 +304,9 @@ sub handler    {
       
 } 
 
-  1; 
+1;
+
+
 =head1 NAME
 
 Apache2::AMFImageRendering - Used to resize images (jpg, png, gif gifanimated) on the fly to adapt to the screen size of the mobile device
@@ -320,12 +317,15 @@ This module have the scope to manage with AMF51DegreesFilter, AMFDetectRightFilt
 
 For more details: http://wiki.apachemobilefilter.org
 
+=head1 AMF PROJECT SITE
 
-NOTE: this software need wurfl.xml you can download it directly from this site: http://wurfl.sourceforge.net or you can set the filter to download it directly.
+http://www.apachemobilefilter.org
 
-=head1 SEE ALSO
+=head1 DOCUMENTATION
 
-Site: http://www.apachemobilefilter.org
+http://wiki.apachemobilefilter.org
+
+Perl Module Documentation: http://wiki.apachemobilefilter.org/index.php/AMFImageRendering
 
 =head1 AUTHOR
 
