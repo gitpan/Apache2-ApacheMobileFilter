@@ -36,7 +36,7 @@ package Apache2::AMFImageRendering;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.51";
+  $VERSION= "3.52";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %Capability;
   my %Array_fb;
@@ -173,12 +173,10 @@ sub handler    {
       if ($f->r->pnotes('max_image_height')) {
          $height=$f->r->pnotes('max_image_height');
       }
-      if ($f->r->pnotes('device_claims_web_support')) {      
-    	$device_claims_web_support=$f->r->pnotes('device_claims_web_support')
+      if ($f->r->pnotes('amf_device_ismobile')) {
+        $isMobile=$f->r->pnotes('amf_device_ismobile');
       }
-      if ($f->r->pnotes('is_wireless_device')) {
-        $is_wireless_device=$f->r->pnotes('is_wireless_device');
-      }
+      
       $repasshanlder=$repasshanlder + 1;
  	  #
  	  # Reading value of query string 
@@ -206,8 +204,7 @@ sub handler    {
 				       }
 				  }
 				  $imageToConvert=$f->r->filename();
-				  if ($is_wireless_device eq 'false' and $device_claims_web_support eq 'true') {
-					$isMobile='false';
+				  if ($isMobile eq 'false') {
 					my $image = Image::Resize->new("$imageToConvert");
 					$width=$image->width();					
 				  }

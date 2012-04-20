@@ -1,3 +1,6 @@
+ApacheMobileFilter 3.52
+Fix minor for AMFImageRendering
+
 ApacheMobileFilter 3.51
 Change logic for be more mod_rewrite compatible
 Added new feature for download directly the premium device repository directly from 51Degrees.mobi site
