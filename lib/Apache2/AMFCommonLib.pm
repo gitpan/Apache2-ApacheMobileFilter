@@ -14,7 +14,7 @@ package Apache2::AMFCommonLib;
   use LWP::Simple;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use CGI;
-  $VERSION= "3.52";
+  $VERSION= "3.53";
 
 sub new {
   my $package = shift;
@@ -32,17 +32,29 @@ sub getMobileArray {
 }
 sub getPCArray {
   my %PCArray;
-  $PCArray{'msie'}='msie';
-  $PCArray{'msie 5'}='msie';
-  $PCArray{'msie 6'}='msie';
-  $PCArray{'msie 7'}='msie';
-  $PCArray{'msie 8'}='msie';
-  $PCArray{'msie 9'}='msie';
   $PCArray{'chrome'}='google_chrome';
-  $PCArray{'chrome/0'}='google_chrome_0';
-  $PCArray{'chrome/1'}='google_chrome_1';
-  $PCArray{'chrome/2'}='google_chrome_2';
-  $PCArray{'safari'}='safari';
+  my $i=0;
+  while ($i < 21) {
+    $PCArray{"chrome/$i"}="google_chrome_$i";
+    $i++;
+  }
+  $i=4;
+  $PCArray{'firefox'}='firefox';
+  $PCArray{'firefox/1.0'}='firefox_1';
+  $PCArray{'firefox/2.0'}='firefox_2';
+  $PCArray{'firefox/3.0'}='firefox_3';
+  $PCArray{'firefox/3.5'}='firefox_3_5';
+  while ($i < 12) {
+    $PCArray{"firefox/$i.0"}="firefox_".$i."_0";
+    $i++;
+  }
+  $PCArray{'chrome/'}='google_chrome_';
+  $PCArray{'msie'}='msie';
+  $PCArray{'msie 5'}='msie_5';
+  $PCArray{'msie 6'}='msie_6';
+  $PCArray{'msie 7'}='msie_7';
+  $PCArray{'msie 8'}='msie_8';
+  $PCArray{'msie 9'}='msie_9';
   $PCArray{'opera'}='opera';
   $PCArray{'konqueror'}='konqueror';
   return %PCArray;

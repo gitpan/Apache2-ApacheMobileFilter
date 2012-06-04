@@ -33,14 +33,13 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.52";
+  $VERSION= "3.53";
   my %Capability;
   my %Array_fb;
   my %Array_id;
   my %Array_fullua_id;
   my %Array_DDRcapability;
 
-  my %PatchArray_id;
   my %MobileArray=$CommonLib->getMobileArray;
   my %PCArray=$CommonLib->getPCArray;
   my $mobileversionurl="none";
@@ -50,13 +49,9 @@ package Apache2::AMFWURFLFilterMemcached;
   my $resizeimagedirectory="none";
   my $wurflnetdownload="false";
   my $downloadwurflurl="false";
-  my $loadwebpatch="false";
-  my $patchwurflnetdownload="false"; 
-  my $patchwurflurl="";
   my $listall="false";
   my $cookiecachesystem="false";
   my $WURFLVersion="unknown";  
-  my $WURFLPatchVersion="unknown";
   my $personalwurflurl='unknown';
   my $serverMemCache;
   my $restmode='false';
@@ -187,23 +182,6 @@ sub loadConfigFile {
 				      $CommonLib->printLog("AMFMobileKeys is: $ENV{AMFMobileKeys}");
 		} 	
 	             
-	      	 if ($ENV{LoadWebPatch}) {
-				$loadwebpatch=$ENV{LoadWebPatch};
-				$CommonLib->printLog("LoadWebPatch is: $loadwebpatch");
-			 }	
-	      	 if ($ENV{PatchWurflNetDownload}) {
-				if ($ENV{PatchWurflNetDownload} eq 'true' || $ENV{PatchWurflNetDownload} eq 'false') {
-					$patchwurflnetdownload=$ENV{PatchWurflNetDownload};
-					$CommonLib->printLog("PatchWurflNetDownload is: $patchwurflnetdownload");
-				} else {
-					$CommonLib->printLog("Error PatchWurflNetDownload parmeter must set to true or false");					
-					ModPerl::Util::exit();
-				}
-		 }	
-	      	 if ($ENV{PatchWurflUrl}) {
-				$patchwurflurl=$ENV{PatchWurflUrl};
-				$CommonLib->printLog("PatchWurflUrl is: $patchwurflurl");
-			 }	
 
 			 if ($ENV{AMFProductionMode}) {
 				$cookiecachesystem=$ENV{AMFProductionMode};
@@ -302,63 +280,6 @@ sub loadConfigFile {
 			}
 		}
 		close IN;
-		#
-		# Start for web_patch_wurfl (full browser)
-		#
-		if ($loadwebpatch eq 'true') {
-			if ($patchwurflnetdownload eq "true") {
-				$CommonLib->printLog("Start downloading patch WURFL from $patchwurflurl");
-			    my ($content_type, $document_length, $modified_time, $expires, $server) = head($patchwurflurl);
-		        if ($content_type eq "") {
-	   		        $CommonLib->printLog("Couldn't get $patchwurflurl.");
-			   		ModPerl::Util::exit();
-		        } else {
-		            $CommonLib->printLog("The URL for download patch WURFL is correct");
-		            $CommonLib->printLog("The size of document is: $document_length bytes");	       
-		        }
-				my $content = get ($patchwurflurl);
-				$CommonLib->printLog("Finish downloading patch WURFL.xml");
-				if ($content eq "") {
-					$CommonLib->printLog("Couldn't get patch $patchwurflurl.");
-					ModPerl::Util::exit();
-				}
-				$content =~ s/\n//g;
-				$content =~ s/>/>\n/g;
-				my @rows = split(/\n/, $content);
-				my $row;
-				my $count=0;
-				foreach $row (@rows){
-					$r_id=parsePatchFile($row,$r_id);
-				}
-	         } else {
-				my $filePatch="$ENV{AMFMobileHome}/web_browsers_patch.xml";
-				if (-e "$filePatch") {
-						$CommonLib->printLog("Start loading Web Patch File of WURFL");
-						if (open (IN,"$filePatch")) {
-							my $filesize= -s $filePatch;
-							my $string_file;
-							read (IN,$string_file,$filesize);
-							close IN;
-							$string_file =~ s/\n//g;
-							$string_file =~ s/>/>\n/g;
-							my @arrayFile=split(/\n/, $string_file);
-							foreach my $line (@arrayFile) {
-								$r_id=parsePatchFile($line,$r_id);
-							}
-
-						} else {
-							$CommonLib->printLog("Error open file:$filePatch");
-							ModPerl::Util::exit();
-						}
-				} else {
-				  $CommonLib->printLog("File patch $filePatch not found");
-				  ModPerl::Util::exit();
-				}
-			}
-		}
-
-			close IN;
-
 		my $arrLen = scalar %Array_fb;
 		($arrLen,$dummy)= split(/\//, $arrLen);
 		if ($arrLen == 0) {
@@ -367,9 +288,6 @@ sub loadConfigFile {
 		     #ModPerl::Util::exit();
 		}
         $CommonLib->printLog("WURFL version: $WURFLVersion");
-	if ($WURFLVersion ne 'unknown'){
-		$CommonLib->printLog("Patch File version: $WURFLPatchVersion");		
-	}
         $CommonLib->printLog("This version of WURFL has $arrLen UserAgent");
         $CommonLib->printLog("End loading  WURFL.xml");
 	if ($personalwurflurl ne 'unknown') {
@@ -465,19 +383,13 @@ sub IdentifyPCUAMethod {
   my $length=0;
   foreach $pair (sort keys %PCArray) {
 	if ($UserAgent =~ m/$pair/) {
-		$id_find=$PCArray{$pair};
+                        $id_find=$PCArray{$pair};
 	}
   }
-  if (!$id_find) {$id_find="";}
-  if ($id_find eq "") { 
-	foreach $pair (%PatchArray_id)
-	{  
-	     if (index($UserAgent,$pair) > -1) {
-		      if ($PatchArray_id{$pair}) {
-			      $id_find=$PatchArray_id{$pair};
-		      }
-	     }
-	}
+  if ($id_find eq "") {
+	if ($UserAgent =~ m/safari/) {
+		$id_find='safari';
+	}      
   }
   return $id_find;
 }
@@ -560,56 +472,8 @@ sub parseWURFLFile {
 			}
 		 }
 		 if ($record =~ /\/ver>/o) {
-		     $WURFLVersion=substr($record,index($record,'<ver>') + 5,index($record,"</ver>") - 9);
+		     $WURFLVersion=substr($record,index($record,'<ver>') + 1,index($record,"</ver>") - 9);
 		 }
-		 return $id;
-
-}
-sub parsePatchFile {
-         my ($record,$val) = @_;
-		 my $null="";
-		 my $null2="";
-		 my $null3="";
-		 my $ua="";
-		 my $fb="";
-		 my $value="";
-		 my $id;
-		 my $name="";
-		 if ($val) {
-		    $id="$val";
-		 } 
-	     if ($record =~ /\<device/o) {
-	        if (index($record,'user_agent') > -1 ) {
-	           $ua=lc(substr($record,index($record,'user_agent') + 12,index($record,'"',index($record,'user_agent')+ 13)- index($record,'user_agent') - 12));
-	        }	        
-	        if (index($record,'id') > -1 ) {
-	           $id=substr($record,index($record,'id') + 4,index($record,'"',index($record,'id')+ 5)- index($record,'id') - 4);	
-	        }	        
-	        if (index($record,'fall_back') > -1 ) {
-	           $fb=substr($record,index($record,'fall_back') + 11,index($record,'"',index($record,'fall_back')+ 12)- index($record,'fall_back') - 11);	           
-	        }
-	        if (($fb) && ($id)) {	     	   
-					$Array_fb{"$id"}=$fb;
-				 }
-				 if (($ua) && ($id)) {
-			             $PatchArray_id{$ua}=$id;
-			             $Array_id{$ua}=$id;
-
-				 }				 
-		 }
-		 if ($record =~ /\<capability/o) { 
-			($null,$name,$null2,$value,$null3,$fb)=split(/\"/, $record);
-			if ($listall eq "true") {
-				$Capability{$name}=$name;
-			}
-			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
-			   $Array_DDRcapability{"$val|$name"}=$value;
-			}
-		 }
-		 if ($record =~ /\/last_updated>/o) {
-		     $WURFLPatchVersion=substr($record,0,index($record,"</last_updated>"));
-		 }
-		 
 		 return $id;
 
 }
@@ -688,18 +552,17 @@ sub handler {
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
     if ($id eq ""){
                   if ($user_agent) {
-	  			    if ($mobile==0) {
-						foreach my $pair (%MobileArray) {
-							if ($user_agent =~ m/$pair/i) {
+	  			   if ($mobile==0) {
+				   		foreach my $pair (%MobileArray) {		
+				    			if ($user_agent =~ m/$pair/i) {
 								$mobile=1;
-							}
+				    		}
 						}
-						
 						if ($mobile==0) {
 							$user_agent=$CommonLib->botDetection($user_agent);    
 							$id=IdentifyPCUAMethod($user_agent);
-						}			            
-					}
+						} 
+				    }
 				        if (!$id) {$id="";};
 					if ($id eq "") { 
 							$id=IdentifyUAMethod($user_agent);
@@ -776,7 +639,6 @@ sub handler {
 	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => $amf_device_ismobile);
 	$f->subprocess_env("AMF_VER" => $VERSION);
 	$f->subprocess_env("AMF_WURFLVER" => $WURFLVersion);
-	$f->subprocess_env("AMF_PATCHFILEVER" => $WURFLPatchVersion);
 	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {
 	    $f->subprocess_env("AMF_MOBILE_BROWSER" => $x_operamini_ua);

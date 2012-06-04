@@ -32,7 +32,7 @@ package Apache2::AMFLiteDetectionFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.52";
+  $VERSION= "3.53";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %MobileArray;#=$CommonLib->getMobileArray;
   my %MobileTabletArray;
@@ -42,10 +42,10 @@ package Apache2::AMFLiteDetectionFilter;
   my $configMobileFile;
   my $forcetablet='true';
   my $configTabletFile;
-  my $checkVersion='false';
+  my $checkVersion='true';
   my $mobilenable="false";
   
-  my $url="http://www.apachemobilefilter.org/param/litemobiledetection.config";
+  my $urlmobile="http://www.apachemobilefilter.org/param/litemobiledetection.config";
   my $urlTablet="http://www.apachemobilefilter.org/param/litetabletdetection.config";
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
@@ -75,7 +75,7 @@ package Apache2::AMFLiteDetectionFilter;
 		$CommonLib->printLog("AMF installed is the last version");
 	}
   } else {
-	$CommonLib->printLog("AMFCheckVersione is false, AMF don't check the last version.");
+	$CommonLib->printLog("AMFCheckVersion is false, AMF don't check the last version.");
   }
   if ($ENV{AMFMobileHome}) {
 	  $configMobileFile="$ENV{AMFMobileHome}/amflitedetection.config";
@@ -107,30 +107,31 @@ package Apache2::AMFLiteDetectionFilter;
     }
     if ($downloadparamurl eq 'true') {
         &readMobileParamFromUrl;	
+        &readTabletParamFromUrl;
     } else {
 	&readMobileParamFromFile;		
+        &readTabletParamFromFile;
     }
     if ($ENV{ForceTabletAsFullBrowser}) {
 		if ($ENV{ForceTabletAsFullBrowser} eq 'true') {
+			$CommonLib->printLog("AMFMobileHome not exist. Please set the variable AMFMobileHome into httpd.conf");
 			$forcetablet="true";
-			&readTabletParamFromUrl;
 		} else {
 			$forcetablet="false";
 		}
      }
-                if ($ENV{FullBrowserMobileAccessKey}) {
+     if ($ENV{FullBrowserMobileAccessKey}) {
                           $mobilenable="$ENV{FullBrowserMobileAccessKey}";
                           $CommonLib->printLog("FullBrowserMobileAccessKey is: $ENV{FullBrowserMobileAccessKey}");
                           $CommonLib->printLog("For access the device to fullbrowser set the link: <url>?$mobilenable=true");
-                }
-
+     }
 sub readMobileParamFromUrl {
 		$CommonLib->printLog("Read data from apachemobilefilter.org");
-		my $content = get ($url);
+		my $content = get ($urlmobile);
 		if ($content) {
 			$CommonLib->printLog("Download OK");
 			$content =~ s/\n//g;
-			my @dummyMobileKeys = split(/,/, $content);
+			my @dummyMobileKeys = split(/,/, lc($content));
 			foreach my $dummy (@dummyMobileKeys) {
 				$MobileArray{$dummy}='mobile';
 			}
@@ -144,7 +145,7 @@ sub readMobileParamFromUrl {
 		}
 }
 sub readMobileParamFromFile {
-		$CommonLib->printLog("Read data from $configMobileFile");
+		$CommonLib->printLog("Read for mobile data from $configMobileFile");
 		my $content="";
 		if (open (IN,$configMobileFile)) {
 			while (<IN>) {
@@ -156,7 +157,7 @@ sub readMobileParamFromFile {
 			ModPerl::Util::exit();
 		}
                 $content =~ s/\n//g;
-		my @dummyMobileKeys = split(/,/, $content);
+		my @dummyMobileKeys = split(/,/, lc($content));
 		foreach my $dummy (@dummyMobileKeys) {
 			$MobileArray{$dummy}='mobile';
 		}
@@ -167,7 +168,7 @@ sub readTabletParamFromUrl {
 		if ($content) {
 			$CommonLib->printLog("Download OK");
 			$content =~ s/\n//g;
-			my @dummyMobileKeys = split(/,/, $content);
+			my @dummyMobileKeys = split(/,/, lc($content));
 			foreach my $dummy (@dummyMobileKeys) {
 				$MobileTabletArray{$dummy}='mobile';
 			}
@@ -193,7 +194,7 @@ sub readTabletParamFromFile {
 			ModPerl::Util::exit();
 		}
                 $content =~ s/\n//g;
-		my @dummyMobileKeys = split(/,/, $content);
+		my @dummyMobileKeys = split(/,/, lc($content));
 		foreach my $dummy (@dummyMobileKeys) {
 			$MobileTabletArray{$dummy}='mobile';
 		}
@@ -291,9 +292,6 @@ sub handler {
 		}	
 	}
 	my $amf_device_istablet=&isTablet($user_agent);
-	if ($forcetablet eq "true") {
-		$f->subprocess_env("AMF_DEVICE_IS_TABLET" => $amf_device_istablet);
-	}
         if ($amfFull ne "") {
             $f->subprocess_env("AMF_FORCE_TO_DESKTOP" => 'true');
             $f->pnotes("amf_force_to_desktop" => 'true');
@@ -302,6 +300,7 @@ sub handler {
 	$f->pnotes("amf_device_ismobile" => $amf_device_ismobile);
 	$f->subprocess_env("AMF_ID" => "amf_lite_detection");
 	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => $amf_device_ismobile);
+	$f->subprocess_env("AMF_DEVICE_IS_TABLET" => $amf_device_istablet);
 	$f->subprocess_env("AMF_VER" => $VERSION);
 	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {

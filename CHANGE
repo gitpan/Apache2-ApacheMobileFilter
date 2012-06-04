@@ -1,3 +1,9 @@
+ApacheMobileFilter 3.53
+Deprecate webPatchFile
+Parameter LoadWebPatch is deprecated
+Parameter PatchWurflNetDownload is deprecated
+Parameter PatchWurflUrl is deprecated
+
 ApacheMobileFilter 3.52
 Fix minor for AMFImageRendering
 
