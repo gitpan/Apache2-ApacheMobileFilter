@@ -32,7 +32,7 @@ package Apache2::AMFDetectRightFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.53";
+  $VERSION= "3.54";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;

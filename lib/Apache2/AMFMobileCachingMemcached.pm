@@ -28,7 +28,7 @@ package Apache2::AMFMobileCachingMemcached;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "3.53";
+  $VERSION= "3.54";
   #
   # Define the global environment
   #

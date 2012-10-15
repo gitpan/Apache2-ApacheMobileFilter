@@ -32,7 +32,7 @@ package Apache2::AMFLiteDetectionFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.53";
+  $VERSION= "3.54";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %MobileArray;#=$CommonLib->getMobileArray;
   my %MobileTabletArray;
@@ -172,7 +172,7 @@ sub readTabletParamFromUrl {
 			foreach my $dummy (@dummyMobileKeys) {
 				$MobileTabletArray{$dummy}='mobile';
 			}
-			 open (MYFILE, ">$configMobileFile") || die ("Cannot Open File: $configMobileFile");
+			 open (MYFILE, ">$configTabletFile") || die ("Cannot Open File: $configMobileFile");
 			    print MYFILE $content;
 			 close (MYFILE);
 		 } else {
