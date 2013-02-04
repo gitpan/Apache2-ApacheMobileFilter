@@ -16,15 +16,14 @@ package Apache2::AMF51DegreesFilterMemcached;
   
   use Apache2::RequestRec ();
   use Apache2::RequestUtil ();
-  use Apache2::SubRequest ();
-  use Apache2::Log;
-  use Apache2::Filter (); 
   use APR::Table (); 
   use LWP::Simple;
-  use Apache2::Const -compile => qw(OK REDIRECT DECLINED);
-  use IO::Uncompress::Gunzip qw(gunzip $GunzipError) ;  
+  use Apache2::Const -compile => qw(DECLINED);
   use constant BUFF_LEN => 1024;
   use Cache::Memcached;
+  use Digest::MD5 qw(md5_hex);
+  use IO::Uncompress::Gunzip qw(gunzip $GunzipError) ;  
+
 
 
   #
@@ -33,14 +32,8 @@ package Apache2::AMF51DegreesFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "3.54";
+  $VERSION= "4.00";
   my %Capability;
-  my %Array_fb;
-  my %Array_id;
-  my %Array_fullua_id;
-  my %Array_DDRcapability;
-
-  my %MobileArray=$CommonLib->getMobileArray;
   my %PCArray=$CommonLib->getPCArray;
   my $mobileversionurl="none";
   my $fullbrowserurl="none";
@@ -60,16 +53,6 @@ package Apache2::AMF51DegreesFilterMemcached;
   my $mobilenable="false";
   
   #details
-  my %PCDetails;
-  $PCDetails{'google_chrome'}='Chrome|Google';
-  $PCDetails{'google_chrome_0'}='Chrome|Google';
-  $PCDetails{'google_chrome_1'}='Chrome|Google';
-  $PCDetails{'google_chrome_2'}='Chrome|Google';
-  $PCDetails{'google_chrome_3'}='Chrome|Google';
-  $PCDetails{'msie'}="Microsoft Explorer|Microsoft";
-  $PCDetails{'safari'}='Safari|Apple';
-  $PCDetails{'opera'}='Opera|Opera Software';
-  $PCDetails{'konqueror'}='Konqueror|Mozilla';
   
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
@@ -119,22 +102,23 @@ package Apache2::AMF51DegreesFilterMemcached;
   # Check if AMFMobileHome and CacheDirectoryStore is setting in apache httpd.conf file for example:
   # PerlSetEnv AMFMobileHome <apache_directory>/MobileFilter
   # 
-  my @Server;
+  my $memd = new Cache::Memcached {
+    'debug' => 0,
+    'compress_threshold' => 10_000,
+    'enable_compress' => 1,
+    'namespace' => "degrees",
+  };
   if ($ENV{ServerMemCached}) {
 	$serverMemCache=$ENV{ServerMemCached};
-	@Server = split(/,/, $ENV{ServerMemCached});
+	my @Server = split(/,/, $ENV{ServerMemCached});
+        $memd->set_servers(\@Server);
 	$CommonLib->printLog("ServerMemCached is: $serverMemCache");
+        undef @Server;
    } else {
 	  $CommonLib->printLog("ServerMemCached is not setted. Please set the variable ServerMemCached into httpd.conf, example  \"PerlSetEnv ServerMemCached 10.10.10.10.:11211\"");
 	  ModPerl::Util::exit();      
   }
   
-  my $memd = new Cache::Memcached {
-    'debug' => 0,
-    'compress_threshold' => 10_000,
-    'enable_compress' => 1,
-  };
-  $memd->set_servers(\@Server);
   if ($ENV{AMFMobileHome}) {
 	  &loadConfigFile("$ENV{AMFMobileHome}/51Degrees.xml");
   }  else {
@@ -187,19 +171,11 @@ sub loadConfigFile {
 				      $Capability{$dummy}=$dummy;
 				      $CommonLib->printLog("CapabilityList is: $dummy");
 				}
-			 } else {
+			 
+                  } else {
 				$listall="true";
 				$CommonLib->printLog('CapabilityList not setted so the default value is "all"');
-			 }	
-	      	 if ($ENV{AMFMobileKeys}) {
-				my @dummyMobileKeys = split(/,/, $ENV{AMFMobileKeys});
-				foreach $dummy (@dummyMobileKeys) {
-				      $MobileArray{$dummy}='mobile';
-				}
-				      $CommonLib->printLog("AMFMobileKeys is: $ENV{AMFMobileKeys}");
-		} 	
-	             
-
+		  }		
 		 if ($ENV{AMFProductionMode}) {
 			$cookiecachesystem=$ENV{AMFProductionMode};
 			$CommonLib->printLog("AMFProductionMode is: $cookiecachesystem");
@@ -245,14 +221,14 @@ sub loadConfigFile {
 	        if ($content_type eq 'application/octet-stream') {
 	              $CommonLib->printLog("The file is a zip file.");
 	              $CommonLib->printLog ("Start downloading");
-				  my @dummypairs = split(/\//, $download51Degreesurl);
-				  my ($ext_zip) = $download51Degreesurl =~ /\.(\w+)$/;
-				  my $filezip=$dummypairs[-1];
-				  my $tmp_dir=$ENV{AMFMobileHome};
-				  $filezip="$tmp_dir/$filezip";
-				  my $status = getstore ($download51Degreesurl,$filezip);
-				  my $output="$tmp_dir/51Degrees.xml";
-                                  gunzip $filezip => $output 
+			my @dummypairs = split(/\//, $download51Degreesurl);
+			my ($ext_zip) = $download51Degreesurl =~ /\.(\w+)$/;
+			my $filezip=$dummypairs[-1];
+			my $tmp_dir=$ENV{AMFMobileHome};
+			$filezip="$tmp_dir/$filezip";
+			my $status = getstore ($download51Degreesurl,$filezip);
+			my $output="$tmp_dir/51Degrees.xml";
+                        gunzip $filezip => $output 
                                           or die "gzip failed: $GunzipError\n";
 			$CommonLib->printLog("Finish downloading 51Degrees from $download51Degreesurl");
                 } else {
@@ -261,40 +237,56 @@ sub loadConfigFile {
             }
 			if (-e "$file51Degrees") {
 					$CommonLib->printLog("Start loading  51Degrees.xml");
-					if (open (IN,"$file51Degrees")) {
-						      my $filesize= -s $file51Degrees;
-                                                      read (IN,my $content,$filesize);
+                                        my $fileMD5=$CommonLib->getMD5($file51Degrees);
+                                              if ($memd->get("MD5") ne $fileMD5) {
+                                                $CommonLib->printLog("It's a new file, please wait few minutes to load data.");
+                                                if (open (IN,"$file51Degrees")) {
+                                                            my $filesize= -s $file51Degrees;
+                                                            read (IN,my $content,$filesize);
+                                                            close IN;
+                                                            if ($content =~ /\<validation/o) {
+                                                                  $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'<validation>') - index($content,'<version>') - 9);
+                                                            } else {
+                                                                  $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'</version>') - index($content,'<version>') - 9);
+                                                            }
+                                                            $content =~ s/\n//g;
+                                                            $content =~ s/>/>\n/g;
+                                                            my @rows = split(/\n/, $content);
+                                                            my $numberRow=scalar(@rows);
+                                                            my $progress=0;
+
+                                                            foreach my $row (@rows){
+                                                                  $r_id=parse51DegreesFile($row,$r_id);
+                                                                    $progress++;
+                                                                    my $perc=int(($progress/$numberRow)*100);
+                                                                    print "Percent loaded: ".$perc."%\r";
+                                                            } 
+                                                              @rows=();
                                                       close IN;
-                                                      if ($content =~ /\<validation/o) {
-                                                            $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'<validation>') - index($content,'<version>') - 9);
-                                                      } else {
-                                                            $DegreesVersion=substr($content,index($content,'<version>') + 9 ,index($content,'</version>') - index($content,'<version>') - 9);
-                                                      }
-                                                      $content =~ s/\n//g;
-                                                      $content =~ s/>/>\n/g;
-                                                      my @rows = split(/\n/, $content); 
-                                                      foreach my $row (@rows){
-                                                            $r_id=parse51DegreesFile($row,$r_id);
-                                                      }
-						close IN;
-					} else {
-					    $CommonLib->printLog("Error open file:$file51Degrees");
-					    ModPerl::Util::exit();
-					}
+                                                } else {
+                                                  $CommonLib->printLog("Error open file:$file51Degrees");
+                                                  ModPerl::Util::exit();
+                                                }
+                                                $memd->set("MD5",$fileMD5);                              
+                                                recordData();
+                                        } else {
+                        			$CommonLib->printLog("The file is loaded before");                                          
+                                                retrieveData();
+                                        }
 			} else {
 			  $CommonLib->printLog("File $file51Degrees not found");
 			  ModPerl::Util::exit();
 			}
 		close IN;
-		my $arrLen = scalar %Array_fb;
-		($arrLen,$dummy)= split(/\//, $arrLen);
-		if ($arrLen == 0) {
-		     $CommonLib->printLog("Error the file probably is not a 51Degrees file, control the url or path");
-		     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
-		     #ModPerl::Util::exit();
-		}
+		#my $arrLen = scalar %Array_fb;
+		#($arrLen,$dummy)= split(/\//, $arrLen);
+		#if ($arrLen == 0) {
+		#     $CommonLib->printLog("Error the file probably is not a 51Degrees file, control the url or path");
+		#     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
+		#     #ModPerl::Util::exit();
+		#}
         $CommonLib->printLog("51Degrees version: $DegreesVersion");
-        $CommonLib->printLog("This version of 51Degrees has $arrLen UserAgent");
+        #$CommonLib->printLog("This version of 51Degrees has $arrLen UserAgent");
         $CommonLib->printLog("End loading  51Degrees.xml");
 	if ($personal51Degreesurl ne 'unknown') {
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
@@ -304,8 +296,7 @@ sub loadConfigFile {
 						my $filesize= -s $personal51Degreesurl;
 						my $string_file;
 						read (IN,$string_file,$filesize);
-						close IN;
-                                                
+						close IN;      
 						$string_file =~ s/\n//g;
 						$string_file =~ s/>/>\n/g;
 						my @arrayFile=split(/\n/, $string_file);
@@ -326,6 +317,23 @@ sub loadConfigFile {
 	}
 	
 }
+sub recordData {
+        my $capabilityRow="";
+        foreach my $cap (keys %Capability) {
+            $capabilityRow=$capabilityRow.$cap.",";
+        }
+        $capabilityRow=substr($capabilityRow,0,length($capabilityRow) - 1);
+        $memd->set("Capability",$capabilityRow);
+        $memd->set("DegreesVersion",$DegreesVersion);
+}
+sub retrieveData {
+        my $capabilityRow="";
+        my @rows = split(/\,/, $memd->get("Capability"));
+        foreach my $cap (@rows) {
+              $Capability{$cap}=$cap;
+        }
+        $DegreesVersion=$memd->get("DegreesVersion");
+}
 sub FallBack {
   my ($idToFind) = @_;
   my $dummy_id;
@@ -338,14 +346,14 @@ sub FallBack {
         $dummy_id=$idToFind;
         $LOOP=0;
    		while ($LOOP<2) {   		    
-   		    $dummy="$dummy_id|$capability";
-        	if ($Array_DDRcapability{$dummy}) {        	  
+   		    $dummy="$dummy_id-$capability";
+        	if ($memd->get($dummy)) {        	  
         	   $LOOP=2;
-        	   $dummy2="$dummy_id|$capability";
-        	   $ArrayCapFoundToPass{$capability}=$Array_DDRcapability{$dummy2};
+        	   $dummy2="$dummy_id-$capability";
+        	   $ArrayCapFoundToPass{$capability}=$memd->get($dummy2);
         	} else {
-        	      if ($Array_fb{$dummy_id}) {
-	        	  		$dummy_id=$Array_fb{$dummy_id};
+        	      if ($memd->get("fb_$dummy_id")) {
+	        	  		$dummy_id=$memd->get("fb_$dummy_id");
         	      } else {
         	         $dummy_id="generic_web_browser";
         	      }
@@ -373,9 +381,10 @@ sub IdentifyUAMethod {
   foreach $pair (reverse sort { $a <=> $b }  keys	 %ArrayUAType)
   {
       my $dummy=$ArrayUAType{$pair};
-      if ($Array_id{$dummy}) {
+      $dummy=md5_hex($dummy);
+      if ($memd->get("Id_$dummy")) {
          if (!$id_find) {
-           $id_find=$Array_id{$dummy};
+           $id_find=$memd->get("Id_$dummy");
          }
       }
   }
@@ -453,7 +462,8 @@ sub parse51DegreesFile {
                    }
                 }
 	        if (($fb) && ($id)) {	     	   
-					$Array_fb{"$id"}=$fb;
+					#$Array_fb{"$id"}=$fb;
+                                        $memd->set("fb_$id",$fb);
 				 }
 				 if (($field[5]) && ($id)) {
 				         my %ParseUA=$CommonLib->GetMultipleUa($ua,$deepSearch);
@@ -462,10 +472,15 @@ sub parse51DegreesFile {
 				         my $contaUA=0;
 				         my $Array_fullua_id=$ua;
 				         foreach $pair (reverse sort { $a <=> $b }  keys %ParseUA) {
-						 	    my $dummy=$ParseUA{$pair};
-							    if ($Array_id{$dummy}) {} else {
-								$Array_id{$dummy}=$id;
-							    }
+						my $dummy=$ParseUA{$pair};
+                                                $dummy = md5_hex($dummy);
+                                                if ($dummy) {
+                                                      #if ($Array_id{$dummy}) {} else {
+                                                      if (!$memd->get("Id_$dummy")) {
+                                                            #$Array_id{$dummy}=$id;
+                                                            $memd->set("Id_$dummy",$id);
+                                                      }
+                                                }
 				                $contaUA=$contaUA-1;
 					  }
 				 }
@@ -476,8 +491,8 @@ sub parse51DegreesFile {
 			if ($listall eq "true") {                             
 			      $Capability{$name}=$name;
 			}
-			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
-			   $Array_DDRcapability{"$val|$name"}=$value;
+			if (($id) && ($Capability{$name}) && ($name) && ($value)) {
+                              $memd->set("$val-$name",$value);
 			}
 		 }
 		 return $id;
@@ -491,21 +506,15 @@ sub handler {
     my $x_operamini_phone_ua=$f->headers_in->{'X-OperaMini-Phone-Ua'}|| '';
     my $x_operamini_ua=$f->headers_in->{'X-OperaMini-Ua'}|| '';
     my $query_string=$f->args;
-    my $docroot = $f->document_root();
     my $id="";
-    my $location="none";
-    my $width_toSearch;
-    my $type_redirect="internal";
-    my $return_value;
-    my $dummy="";
-    my $variabile2="";
-    my %ArrayCapFound;
     my $controlCookie;
-    my $query_img="";
+    my %ArrayCapFound;
+    my %ArrayQuery;
+
+
     $ArrayCapFound{is_transcoder}='false';
     $ArrayCapFound{'IsMobile'}='true';
 
-    my %ArrayQuery;
     my $var;
     my $version="";
     my $realPCbrowser='none';
@@ -556,7 +565,6 @@ sub handler {
         if ($user_agent =~ m/c4_acer_mozilla/i ) {
 		$user_agent=substr($user_agent,index($user_agent,'mozilla'));
 	}
-        
     $user_agent=$CommonLib->CleanUa($user_agent);
     ($user_agent,$version)=$CommonLib->androidDetection($user_agent);
     if ($id eq ""){
@@ -575,7 +583,7 @@ sub handler {
 								my $count=0;
 								while($count<$lengthId) {								
 									my $idToCheck=$id."_sub".substr($version,0,length($version)-$count);
-									if ($Array_fb{$idToCheck}) {
+									if ($memd->get("fb_$idToCheck")) {
 										$id=$idToCheck;
 										$count=$lengthId;
 									}
@@ -596,10 +604,8 @@ sub handler {
 	      	     my $var=$memd->get("D51_$id");
 		         if ($var) {
 					my @pairs = split(/&/, $var);
-					my $param_tofound;
-					my $string_tofound;
-					foreach $param_tofound (@pairs) {      	       
-						($string_tofound,$dummy)=split(/=/, $param_tofound);
+					foreach my $param_tofound (@pairs) {      	       
+						my ($string_tofound,$dummy)=split(/=/, $param_tofound);
 						$ArrayCapFound{$string_tofound}=$dummy;
 						my $upper2=uc($string_tofound);
 						$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
@@ -607,19 +613,19 @@ sub handler {
 					}
 					$id=$ArrayCapFound{id};								   
 			} else {
-
+                                    my $rowCapability;
                                     %ArrayCapFound=FallBack($id);
 					foreach $capability2 (sort keys %ArrayCapFound) {
-						$variabile2="$variabile2$capability2=$ArrayCapFound{$capability2}&";
+						$rowCapability="$rowCapability$capability2=$ArrayCapFound{$capability2}&";
 						my $upper=uc($capability2);
 						$f->subprocess_env("AMF_$upper" => $ArrayCapFound{$capability2});
 						$f->pnotes("$capability2" => $ArrayCapFound{$capability2});
 					}
                                     
-                                    $variabile2="id=$id&$variabile2";
+                                    $rowCapability="id=$id&$rowCapability";
 				    $f->subprocess_env("AMF_ID" => $id);
                                     $f->pnotes('id' => $id);
-				    $memd->set("D51_$id",$variabile2);
+				    $memd->set("D51_$id",$rowCapability);
 			}
 			if ($cookiecachesystem eq "true") {
 						$f->err_headers_out->set('Set-Cookie' => "amf=$id; path=/;");	
@@ -648,6 +654,9 @@ sub handler {
 	    $f->subprocess_env("AMF_IS_TRANCODER" => 'true');		
 	    $f->pnotes("is_transcoder" => 'true');
 	}
+      %ArrayCapFound=();
+      %ArrayQuery=();
+
 	return Apache2::Const::DECLINED;
 }
 1; 

@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Apache2-ApacheMobileFilter
-version:            3.54
+version:            4.00
 abstract:           ~
 author:
     - Idel Fuschini (idel@idelfuschini.it)
@@ -21,6 +21,7 @@ requires:
     Cache::FileBackend:   0
     Cache::Memcached:     1.27
     CGI::Cookie:          0
+    Digest::MD5:          0
     File::Copy:           0
     Image::Resize:        0
     Image::Scale:         0

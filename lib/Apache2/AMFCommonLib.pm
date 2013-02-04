@@ -9,12 +9,10 @@
 
 package Apache2::AMFCommonLib;
   use strict; 
-  use warnings; 
+  use warnings;
   use vars qw($VERSION);
-  use LWP::Simple;
-  use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
-  use CGI;
-  $VERSION= "3.54";
+  $VERSION= "4.00";
+
 
 sub new {
   my $package = shift;
@@ -59,7 +57,17 @@ sub getPCArray {
   $PCArray{'konqueror'}='konqueror';
   return %PCArray;
 }
-
+sub getMD5 {
+    my $self = shift;	
+    my $file;
+    if (@_) {
+	    $file = shift;
+    }
+    open(FILE, $file) or die "Can't open '$file': $!";
+    binmode(FILE);
+    my $returnMD5=Digest::MD5->new->addfile(*FILE)->hexdigest;
+    return $returnMD5;
+}
 sub Data {
     my $_sec;
 	my $_min;
@@ -115,9 +123,12 @@ sub CleanUa {
 	  $UserAgent=substr($UserAgent,index($UserAgent,'(') + 1,length($UserAgent) -  index($UserAgent,'(') -2);
 	}
 
-	if ( $UserAgent =~ m/windows nt/i ) {
+	if ( $UserAgent =~ m/windows nt/i) {
 	    my $first=substr($UserAgent,0,index($UserAgent,'windows nt') + 12);
-	    my $second=substr($UserAgent,index($UserAgent,'windows nt') + 14);
+	    my $second="";
+	    if (length($UserAgent) > index($UserAgent,'windows nt') + 14) {
+	      $second=substr($UserAgent,index($UserAgent,'windows nt') + 14);
+	    }
 	    $UserAgent=$first.$second;
 	}
   	my @arrayFile=split(/\ /, $UserAgent);
@@ -262,38 +273,6 @@ sub readCookie_fullB {
     return $id_return;
 }
 
-sub extValueTag {
-   my $self = shift;
-   my ($tag,$string);
-   if (@_) {
-		    $tag = shift;
-		    $string = shift;
-   }	
-   #my ($tag,$string) = @_;
-   my $a_tag="\<$tag";
-   my $b_tag="\<\/$tag\>";
-   my $finish=index($string,"\>") + 1;
-   my $x=$finish;
-   my $y=index($string,$b_tag);
-   my $return_tag=substr($string,$x,$y - $x);  
-   return $return_tag;
-}
-sub printLogInternal {
-	my ($info) = @_;
-	my $data=Data();
-	print "$data - $info\n";
-} 
-
-sub extValueTagInternal {
-   my ($tag,$string) = @_;
-   my $a_tag="\<$tag";
-   my $b_tag="\<\/$tag\>";
-   my $finish=index($string,"\>") + 1;
-   my $x=$finish;
-   my $y=index($string,$b_tag);
-   my $return_tag=substr($string,$x,$y - $x);  
-   return $return_tag;
-}
 1;
 
 

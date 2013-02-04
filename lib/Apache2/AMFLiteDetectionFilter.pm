@@ -32,21 +32,25 @@ package Apache2::AMFLiteDetectionFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.54";
+  $VERSION= "4.00";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %MobileArray;#=$CommonLib->getMobileArray;
   my %MobileTabletArray;
+  my %MobileTouchArray;
   my $cookiecachesystem="false";
   my $restmode='false';
   my $downloadparamurl='true';
   my $configMobileFile;
   my $forcetablet='true';
   my $configTabletFile;
+  my $configTouchFile;
   my $checkVersion='true';
   my $mobilenable="false";
   
   my $urlmobile="http://www.apachemobilefilter.org/param/litemobiledetection.config";
   my $urlTablet="http://www.apachemobilefilter.org/param/litetabletdetection.config";
+  my $urlTouch="http://www.apachemobilefilter.org/param/litetouchdetection.config";
+  my $urlBot="http://www.apachemobilefilter.org/param/litebotdetection.config";
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("------- support http://groups.google.com/group/amf-device-detection -------");
@@ -80,6 +84,7 @@ package Apache2::AMFLiteDetectionFilter;
   if ($ENV{AMFMobileHome}) {
 	  $configMobileFile="$ENV{AMFMobileHome}/amflitedetection.config";
 	  $configTabletFile="$ENV{AMFMobileHome}/amflitedetection_tablet.config";
+	  $configTouchFile="$ENV{AMFMobileHome}/amflitedetection_touch.config";
    }  else {
 	  $CommonLib->printLog("AMFMobileHome not exist. Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
@@ -108,9 +113,11 @@ package Apache2::AMFLiteDetectionFilter;
     if ($downloadparamurl eq 'true') {
         &readMobileParamFromUrl;	
         &readTabletParamFromUrl;
+        &readTouchParamFromUrl;
     } else {
 	&readMobileParamFromFile;		
         &readTabletParamFromFile;
+        &readTouchParamFromFile;
     }
     if ($ENV{ForceTabletAsFullBrowser}) {
 		if ($ENV{ForceTabletAsFullBrowser} eq 'true') {
@@ -199,6 +206,43 @@ sub readTabletParamFromFile {
 			$MobileTabletArray{$dummy}='mobile';
 		}
 }
+sub readTouchParamFromUrl {
+		$CommonLib->printLog("Read data for touch detection from apachemobilefilter.org");
+		my $content = get ($urlTouch);
+		if ($content) {
+			$CommonLib->printLog("Download OK");
+			$content =~ s/\n//g;
+			my @dummyMobileKeys = split(/,/, lc($content));
+			foreach my $dummy (@dummyMobileKeys) {
+				$MobileTouchArray{$dummy}='mobile';
+			}
+			 open (MYFILE, ">$configTouchFile") || die ("Cannot Open File: $configMobileFile");
+			    print MYFILE $content;
+			 close (MYFILE);
+		 } else {
+			$CommonLib->printLog("Download error from apachemobilefilter.org");
+			$CommonLib->printLog("Try download previews version");
+			&readTouchParamFromFile;	
+		}
+}
+sub readTouchParamFromFile {
+		$CommonLib->printLog("Read data from $configTouchFile");
+		my $content="";
+		if (open (IN,$configTouchFile)) {
+			while (<IN>) {
+				$content=$content.$_;				 
+			}
+			close IN;
+		} else {
+			$CommonLib->printLog("Error open file:$configTouchFile");
+			ModPerl::Util::exit();
+		}
+                $content =~ s/\n//g;
+		my @dummyMobileKeys = split(/,/, lc($content));
+		foreach my $dummy (@dummyMobileKeys) {
+			$MobileTouchArray{$dummy}='mobile';
+		}
+}
 
 sub isMobile {
   my ($UserAgent) = @_;
@@ -226,6 +270,20 @@ sub isTablet {
   }
   return $isTabletValue;
 }
+sub isTouch {
+  my ($UserAgent) = @_;
+  my $ind=0;
+  my $isTouchValue='false';
+  my $pair;
+  my $length=0;
+  foreach $pair (sort keys %MobileTouchArray) {
+	if ($UserAgent =~ m/$pair/) {
+		$isTouchValue='true';
+	}
+  }
+  return $isTouchValue;
+}
+
 sub handler {
     my $f = shift;  
     my $capability2;
@@ -239,6 +297,7 @@ sub handler {
     my $id="";
     my $location="none";
     my $isTablet="false";
+    my $amf_device_istouch="false";
     my $width_toSearch;
     my $type_redirect="internal";
     my $return_value;
@@ -279,6 +338,9 @@ sub handler {
 				}
     			}
     		  }
+          if (($ArrayQuery{amf})  && $restmode eq 'true') {
+    		$user_agent=lc($ArrayQuery{amf});
+    	  }
           if ($ArrayQuery{$mobilenable}) {
                 $f->err_headers_out->set('Set-Cookie' => "amfFull=false; path=/;");
                 $amfFull='ok';
@@ -287,6 +349,9 @@ sub handler {
     }
 	if ($amf_device_ismobile eq "") {
 		$amf_device_ismobile = &isMobile($user_agent);
+		if ($amf_device_ismobile eq 'true') {
+			$amf_device_istouch = &isTouch($user_agent);
+		}
 		if ($cookiecachesystem eq "true") {
 			$f->err_headers_out->set('Set-Cookie' => "amfID=$id; path=/;");	
 		}	
@@ -298,9 +363,11 @@ sub handler {
         }
 	$f->pnotes('is_tablet' => $amf_device_istablet);
 	$f->pnotes("amf_device_ismobile" => $amf_device_ismobile);
+	$f->pnotes("is_touch" => $amf_device_istouch);
 	$f->subprocess_env("AMF_ID" => "amf_lite_detection");
 	$f->subprocess_env("AMF_DEVICE_IS_MOBILE" => $amf_device_ismobile);
 	$f->subprocess_env("AMF_DEVICE_IS_TABLET" => $amf_device_istablet);
+	$f->subprocess_env("AMF_DEVICE_IS_TOUCH" => $amf_device_istouch);
 	$f->subprocess_env("AMF_VER" => $VERSION);
 	$f->headers_out->set("AMF-Ver"=> $VERSION);
 	if ($x_operamini_ua) {

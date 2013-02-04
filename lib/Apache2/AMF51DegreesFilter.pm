@@ -9,9 +9,10 @@
 
 
 package Apache2::AMF51DegreesFilter; 
-  
   use strict; 
   use warnings; 
+  use threads;
+  use threads::shared;
   use Apache2::AMFCommonLib ();  
   
   use Apache2::RequestRec ();
@@ -32,14 +33,16 @@ package Apache2::AMF51DegreesFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.54";
+  $VERSION= "4.00";
   my $CommonLib = new Apache2::AMFCommonLib ();
- 
-  my %Capability;
-  my %Array_fb;
-  my %Array_id;
-  my %Array_fullua_id;
-  my %Array_DDRcapability;
+  
+  # this is the environment........
+  
+  my %Capability ;
+  my %Array_fb ;
+  my %Array_id ;
+  my %Array_fullua_id ;
+  my %Array_DDRcapability ;
 
   my %MobileArray=$CommonLib->getMobileArray;
   my %PCArray=$CommonLib->getPCArray;

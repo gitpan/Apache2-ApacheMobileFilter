@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "3.54";
+  $VERSION= "4.00";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -60,8 +60,8 @@ package Apache2::AMFWURFLFilter;
   my $deepSearch=0;
   my $checkVersion='false';
   my $mobilenable="false";
-
-
+  
+  
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("------- support http://groups.google.com/group/amf-device-detection -------");

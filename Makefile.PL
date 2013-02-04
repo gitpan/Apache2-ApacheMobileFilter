@@ -6,7 +6,6 @@ use ExtUtils::MakeMaker;
 Apache Mobile Filter (idel@idelfuschini.it)
 Documentation: http://wiki.apachemobilefilter.org
 DemoSite: http://www.apachemobilefilter.org
-Support: http://amfticket.idelfuschini.it
 
 To try quickly the AMF add on httpd.conf this few rows:
 
@@ -49,7 +48,8 @@ WriteMakefile(
                      'IO::Uncompress::Gunzip' => 0,
                      'Cache::Memcached'  => "1.27",
 		     'Cache::FileBackend' => 0,
-                     'LWP::Protocol::https' => 0
+                     'LWP::Protocol::https' => 0,
+                     'Digest::MD5' => 0
                      },
     AUTHOR     	=> 'Idel Fuschini (idel@idelfuschini.it)' 
    
