@@ -32,7 +32,7 @@ package Apache2::AMF51DegreesFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "4.00";
+  $VERSION= "4.00a";
   my %Capability;
   my %PCArray=$CommonLib->getPCArray;
   my $mobileversionurl="none";

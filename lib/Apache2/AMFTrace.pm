@@ -26,7 +26,7 @@ package Apache2::AMFTrace;
   use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "4.00";
+  $VERSION= "4.00a";
   #
   # Define the global environment
   #

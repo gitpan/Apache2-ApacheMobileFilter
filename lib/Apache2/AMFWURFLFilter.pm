@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "4.00";
+  $VERSION= "4.00a";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -258,8 +258,14 @@ sub loadConfigFile {
 				my @rows = split(/\n/, $content);
 				my $row;
 				my $count=0;
+                                my $numberRow=scalar(@rows);
+                                my $progress=0;                                                      
+
 				foreach $row (@rows){
 					$r_id=parseWURFLFile($row,$r_id);
+                                        my $perc=int(($progress/$numberRow)*100);
+                                        print "Percent loaded: ".$perc."%\r";
+                                        $progress++;
 				}
 			}
 			$CommonLib->printLog("Finish downloading WURFL from $downloadwurflurl");
@@ -275,8 +281,13 @@ sub loadConfigFile {
 						$string_file =~ s/\n//g;
 						$string_file =~ s/>/>\n/g;
 						my @arrayFile=split(/\n/, $string_file);
+                                                my $numberRow=scalar(@arrayFile);
+                                                my $progress=0;                                                      
 						foreach my $line (@arrayFile) {
-							$r_id=parseWURFLFile($line,$r_id);
+						      $r_id=parseWURFLFile($line,$r_id);
+                                                      my $perc=int(($progress/$numberRow)*100);
+                                                      print "Percent loaded: ".$perc."%\r";
+                                                      $progress++;
 						}
 					} else {
 					    $CommonLib->printLog("Error open file:$fileWurfl");

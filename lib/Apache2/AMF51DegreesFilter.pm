@@ -33,7 +33,7 @@ package Apache2::AMF51DegreesFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "4.00";
+  $VERSION= "4.00a";
   my $CommonLib = new Apache2::AMFCommonLib ();
   
   # this is the environment........
@@ -285,9 +285,15 @@ sub loadConfigFile {
                                                       }
                                                       $content =~ s/\n//g;
                                                       $content =~ s/>/>\n/g;
-                                                      my @rows = split(/\n/, $content); 
+                                                      my @rows = split(/\n/, $content);
+                                                      my $numberRow=scalar(@rows);
+                                                      my $progress=0;                                                      
                                                       foreach my $row (@rows){
                                                             $r_id=parse51DegreesFile($row,$r_id);
+                                                            $progress++;
+                                                            my $perc=int(($progress/$numberRow)*100);
+                                                            print "Percent loaded: ".$perc."%\r";
+
                                                       }
 					} else {
 					    $CommonLib->printLog("Error open file:$file51Degrees");
@@ -344,8 +350,14 @@ sub loadConfigFile {
 						$string_file =~ s/\n//g;
 						$string_file =~ s/>/>\n/g;
 						my @arrayFile=split(/\n/, $string_file);
+                                                my $progress=0;
+                                                my $numberRow=scalar(@arrayFile);
 						foreach my $line (@arrayFile) {
-							$r_id=parse51DegreesFile($line,$r_id);
+                                                $r_id=parse51DegreesFile($line,$r_id);
+                                                 $progress++;
+                                                 my $perc=int(($progress/$numberRow)*100);
+                                                print "Percent loaded: ".$perc."%\r";
+
 						}
 					} else {
 					    $CommonLib->printLog("Error open file:$personal51Degreesurl");
