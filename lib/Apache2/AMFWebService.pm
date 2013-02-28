@@ -14,7 +14,7 @@
   use Apache2::AMFCommonLib ();
   
   use Apache2::Filter ();
-  use Apache2::RequestRec ();
+  use Apache2::RequestIO ();
   use APR::Table ();
   use Cache::FileBackend;
   
@@ -22,7 +22,7 @@
   
   use constant BUFF_LEN => 1024;
   use vars qw($VERSION);
-  $VERSION= "4.00a";
+  $VERSION= "4.01";
   #
   # Define the global environment
   #

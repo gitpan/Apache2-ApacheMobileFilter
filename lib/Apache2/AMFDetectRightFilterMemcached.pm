@@ -35,7 +35,7 @@ package Apache2::AMFDetectRightFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "4.00a";
+  $VERSION= "4.01";
   my %Capability;
 #  my %Array_fb;
 #  my %Array_id;

@@ -1,4 +1,4 @@
-#file:Apache2/AMFWURFLFilter.pm; 
+#file:Apache2/AMFLiteDetectionFilter.pm; 
 #-------------------------------- 
 
 #
@@ -32,7 +32,7 @@ package Apache2::AMFLiteDetectionFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "4.00a";
+  $VERSION= "4.01";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %MobileArray;#=$CommonLib->getMobileArray;
   my %MobileTabletArray;
@@ -51,6 +51,7 @@ package Apache2::AMFLiteDetectionFilter;
   my $urlTablet="http://www.apachemobilefilter.org/param/litetabletdetection.config";
   my $urlTouch="http://www.apachemobilefilter.org/param/litetouchdetection.config";
   my $urlBot="http://www.apachemobilefilter.org/param/litebotdetection.config";
+  my $bo;
   $CommonLib->printLog("---------------------------------------------------------------------------"); 
   $CommonLib->printLog("-------                 APACHE MOBILE FILTER V$VERSION                  -------");
   $CommonLib->printLog("------- support http://groups.google.com/group/amf-device-detection -------");
@@ -253,6 +254,7 @@ sub isMobile {
   foreach $pair (sort keys %MobileArray) {
 	if ($UserAgent =~ m/$pair/) {
 		$isMobileValue='true';
+		$bo=$pair;
 	}
   }
   return $isMobileValue;
@@ -349,6 +351,9 @@ sub handler {
     }
 	if ($amf_device_ismobile eq "") {
 		$amf_device_ismobile = &isMobile($user_agent);
+		$f->subprocess_env("PRE_PRE_UA" => $user_agent);
+		$f->subprocess_env("PRE_PRE" => $amf_device_ismobile);
+		$f->subprocess_env("PRE_PRE_BO" => $bo);
 		if ($amf_device_ismobile eq 'true') {
 			$amf_device_istouch = &isTouch($user_agent);
 		}
