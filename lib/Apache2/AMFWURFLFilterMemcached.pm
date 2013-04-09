@@ -30,8 +30,12 @@ package Apache2::AMFWURFLFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "4.01";
+  $VERSION= "4.02";
   my %Capability;
+  my %Array_fb;
+  my %Array_id;
+  my %Array_fullua_id;
+  my %Array_DDRcapability;
   
   my %MobileArray=$CommonLib->getMobileArray;
   my %PCArray=$CommonLib->getPCArray;
@@ -109,7 +113,7 @@ my $memd = new Cache::Memcached {
     'compress_threshold' => 10_000,
     'enable_compress' => 1,
     'namespace' => "wurfl",
-  };
+};
   if ($ENV{ServerMemCached}) {
 	$serverMemCache=$ENV{ServerMemCached};
 	my @Server = split(/,/, $ENV{ServerMemCached});
@@ -134,8 +138,13 @@ my $memd = new Cache::Memcached {
 
 sub loadConfigFile {
 	my ($fileWurfl) = @_;
+	my $null="";
+	my $null2="";
+	my $null3="";  
+	my $val;
 	     my $capability;
 	     my $r_id;
+	     my $dummy;
 	      	#The filter
 	      	$CommonLib->printLog("Start read configuration from httpd.conf");
 	
@@ -154,7 +163,7 @@ sub loadConfigFile {
 			 }	
 	      	 if ($ENV{CapabilityList}) {
 				my @dummycapability = split(/,/, $ENV{CapabilityList});
-				foreach my $dummy (@dummycapability) {
+				foreach $dummy (@dummycapability) {
 				      if ($dummy eq "all") {
 				         $listall="true";
 				      }
@@ -167,7 +176,7 @@ sub loadConfigFile {
 			 }	
 	      	 if ($ENV{AMFMobileKeys}) {
 				my @dummyMobileKeys = split(/,/, $ENV{AMFMobileKeys});
-				foreach my $dummy (@dummyMobileKeys) {
+				foreach $dummy (@dummyMobileKeys) {
 				      $MobileArray{$dummy}='mobile';
 				}
 				      $CommonLib->printLog("AMFMobileKeys is: $ENV{AMFMobileKeys}");
@@ -230,92 +239,72 @@ sub loadConfigFile {
 					#
 					# call parseWURFLFile
 					#
-                                   my $fileMD5=$CommonLib->getMD5($fileWurfl);
-                                   if ($memd->get("MD5") ne $fileMD5) {
-                                          $CommonLib->printLog("It's a new file, please wait few minutes to load data.");
-                                          callparseWURFLFile($output);
-                                          $memd->set("MD5",$fileMD5);
-                                          recordData();
-                                    } else {
-                  			  $CommonLib->printLog("The file is loaded before");                                          
-                                          retrieveData();
-                                    }
+					callparseWURFLFile($output);
 
 			} else {
 				$CommonLib->printLog("The file is a xml file.");
 			        my $content = get ($downloadwurflurl);
-                                my $fileMD5=md5_hex($content);
-                                if ($memd->get("MD5") ne $fileMD5) {
-                                          $CommonLib->printLog("It's a new file, please wait few minutes to load data.");
-                                          $content =~ s/\n//g;
-                                          $content =~ s/>/>\n/g;
-          
-                                          my @rows = split(/\n/, $content);
-                                          my $numberRow=scalar(@rows);
-                                          my $progress=0;
-                                          foreach my $row (@rows){
-                                                $r_id=parseWURFLFile($row,$r_id);
-                                                $progress++;
-                                                my $perc=int(($progress/$numberRow)*100);
-                                                print "Percent loaded: ".$perc."%\r";
-                                          } 
-                                          @rows=();
-                                          recordData();
-                              } else {
-                  			  $CommonLib->printLog("The file is loaded before");                                          
-                                          retrieveData();
-                                    }
+                                $content =~ s/\n//g;
+				$content =~ s/>/>\n/g;
 
+				my @rows = split(/\n/, $content);
+				my $row;
+				my $count=0;
+                                my $numberRow=scalar(@rows);
+                                my $progress=0;
+				foreach my $row (@rows){
+					$r_id=parseWURFLFile($row,$r_id);
+                                        $progress++;
+                                        my $perc=int(($progress/$numberRow)*100);
+                                        print "Percent loaded: ".$perc."%\r";
+ 				}
 			}
 			$CommonLib->printLog("Finish downloading WURFL from $downloadwurflurl");
 
 	    } else {
 			if (-e "$fileWurfl") {
 					$CommonLib->printLog("Start loading  WURFL.xml");
-                                        my $fileMD5=$CommonLib->getMD5($fileWurfl);
-                                        if ($memd->get("MD5") ne $fileMD5) {
-                                          $CommonLib->printLog("It's a new file, please wait few minutes to load data.");
-                                          if (open (IN,"$fileWurfl")) {
-                                                  my $filesize= -s $fileWurfl;
-                                                  my $string_file;
-                                                  read (IN,$string_file,$filesize);
-                                                  close IN;
-                                                  $string_file =~ s/\n//g;
-                                                  $string_file =~ s/>/>\n/g;
-                                                  my @rows=split(/\n/, $string_file);
+					if (open (IN,"$fileWurfl")) {
+						my $filesize= -s $fileWurfl;
+						my $string_file;
+						read (IN,$string_file,$filesize);
+						close IN;
+						$string_file =~ s/\n//g;
+						$string_file =~ s/>/>\n/g;
+						my @rows=split(/\n/, $string_file);
                                                 my $numberRow=scalar(@rows);
                                                 my $progress=0;
-                                                foreach my $row (@rows){
-                                                      $r_id=parseWURFLFile($row,$r_id);
+                                                foreach my $line (@rows) {
+							$r_id=parseWURFLFile($line,$r_id);
                                                       $progress++;
                                                       my $perc=int(($progress/$numberRow)*100);
                                                       print "Percent loaded: ".$perc."%\r";
-                                                } 
-                                                @rows=();
-                                          } else {
-                                              $CommonLib->printLog("Error open file:$fileWurfl");
-                                              ModPerl::Util::exit();
-                                          }
-                                          $memd->set("MD5",$fileMD5);
-                                          recordData();
-                                        } else {
-                  			  $CommonLib->printLog("The file is loaded before");                                          
-                                          retrieveData();
-                                        }
+						}
+					} else {
+					    $CommonLib->printLog("Error open file:$fileWurfl");
+					    ModPerl::Util::exit();
+					}
 			} else {
 			  $CommonLib->printLog("File $fileWurfl not found");
 			  ModPerl::Util::exit();
 			}
 		}
 		close IN;
+		my $arrLen = scalar %Array_fb;
+		($arrLen,$dummy)= split(/\//, $arrLen);
+		if ($arrLen == 0) {
+		     $CommonLib->printLog("Error the file probably is not a wurfl file, control the url or path");
+		     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
+		     #ModPerl::Util::exit();
+		}
         $CommonLib->printLog("WURFL version: $WURFLVersion");
+        $CommonLib->printLog("This version of WURFL has $arrLen UserAgent");
         $CommonLib->printLog("End loading  WURFL.xml");
 	if ($personalwurflurl ne 'unknown') {
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
 		if (-e "$personalwurflurl") {
 					$CommonLib->printLog("Start loading  $ENV{PersonalWurflFileName}");
 					if (open (IN,"$personalwurflurl")) {
-                                                $CommonLib->printLog("Start loading  $ENV{PersonalWurflFileName}");
 						my $filesize= -s $personalwurflurl;
 						my $string_file;
 						read (IN,$string_file,$filesize);
@@ -341,41 +330,26 @@ sub loadConfigFile {
 	}
 	
 }
-sub recordData {
-        my $capabilityRow="";
-        foreach my $cap (keys %Capability) {
-            $capabilityRow=$capabilityRow.$cap.",";
-        }
-        $capabilityRow=substr($capabilityRow,0,length($capabilityRow) - 1);
-        $memd->set("Capability",$capabilityRow);
-        $memd->set("WURFLVersion",$WURFLVersion);
-}
-sub retrieveData {
-        my $capabilityRow="";
-        my @rows = split(/\,/, $memd->get("Capability"));
-        foreach my $cap (@rows) {
-              $Capability{$cap}=$cap;
-        }
-        $WURFLVersion=$memd->get("WURFLVersion");
-}
-
 sub FallBack {
   my ($idToFind) = @_;
+  my $dummy_id;
+  my $dummy;
+  my $dummy2;
   my $LOOP;
   my %ArrayCapFoundToPass;
   my $capability;
-      foreach $capability (sort keys %Capability) {
-        my $dummy_id=$idToFind;
+   foreach $capability (sort keys %Capability) {
+        $dummy_id=$idToFind;
         $LOOP=0;
    		while ($LOOP<2) {   		    
-   		    my $dummy="$dummy_id-$capability";
-        	if ($memd->get($dummy)) {        	  
+   		    $dummy="$dummy_id|$capability";
+        	if ($Array_DDRcapability{$dummy}) {        	  
         	   $LOOP=2;
-        	   my $dummy2="$dummy_id-$capability";
-        	   $ArrayCapFoundToPass{$capability}=$memd->get($dummy2);
+        	   $dummy2="$dummy_id|$capability";
+        	   $ArrayCapFoundToPass{$capability}=$Array_DDRcapability{$dummy2};
         	} else {
-                      if ($memd->get("fb_$dummy_id")) {
-	        	$dummy_id=$memd->get("fb_$dummy_id");
+        	      if ($Array_fb{$dummy_id}) {
+	        	  		$dummy_id=$Array_fb{$dummy_id};
         	      } else {
         	         $dummy_id="root";
         	      }
@@ -385,7 +359,7 @@ sub FallBack {
         	}   
    		}
    		
-      }
+}
    return %ArrayCapFoundToPass;
 }
 sub IdentifyUAMethod {
@@ -403,10 +377,9 @@ sub IdentifyUAMethod {
   foreach $pair (reverse sort { $a <=> $b }  keys	 %ArrayUAType)
   {
       my $dummy=$ArrayUAType{$pair};
-      $dummy = md5_hex($dummy); 
-      if ($memd->get("Id_$dummy")) {
+      if ($Array_id{$dummy}) {
          if (!$id_find) {
-           $id_find=$memd->get("Id_$dummy");
+           $id_find=$Array_id{$dummy};
          }
       }
   }
@@ -440,16 +413,10 @@ sub callparseWURFLFile {
 		close IN;
 		$string_file =~ s/\n//g;
 		$string_file =~ s/>/>\n/g;
-		my @rows=split(/\n/, $string_file);
-                my $numberRow=scalar(@rows);
-                my $progress=0;
-                foreach my $row (@rows){
-                  $r_id=parseWURFLFile($row,$r_id);
-                  $progress++;
-                  my $perc=int(($progress/$numberRow)*100);
-                  print "Percent loaded: ".$perc."%\r";
-                } 
-                @rows=();
+		my @arrayFile=split(/\n/, $string_file);
+		foreach my $line (@arrayFile) {
+			$r_id=parseWURFLFile($line,$r_id);
+		}
 		close IN;			  
 	} else {
 			$CommonLib->printLog("Error open file:$output");
@@ -486,25 +453,20 @@ sub parseWURFLFile {
 	        if (index($record,'fall_back') > 0 ) {
 	           $fb=substr($record,index($record,'fall_back') + 11,index($record,'"',index($record,'fall_back')+ 12)- index($record,'fall_back') - 11);
 	        }
-	        if (($fb) && ($id)) {
-                                    #$Array_fb{"$id"}=$fb;
-                                    $memd->set("fb_$id",$fb);
+	        if (($fb) && ($id)) {	     	   
+					$Array_fb{"$id"}=$fb;
 				 }
 				 if (($ua) && ($id)) {
 				         my %ParseUA=$CommonLib->GetMultipleUa($ua,$deepSearch);
 				         my $pair;
 				         my $arrUaLen = scalar %ParseUA;
 				         my $contaUA=0;
+				         my $Array_fullua_id=$ua;
 				         foreach $pair (reverse sort { $a <=> $b }  keys %ParseUA) {
 						 	my $dummy=$ParseUA{$pair};
-                                                        $dummy = md5_hex($dummy);
-                                                        if ($dummy) {
-                                                            #if ($Array_id{$dummy}) {} else {
-                                                            if (!$memd->get("Id_$dummy")) {
-                                                                #$Array_id{$dummy}=$id;
-                                                                $memd->set("Id_$dummy",$id);
-                                                            }
-                                                        }
+							if ($Array_id{$dummy}) {} else {
+						            $Array_id{$dummy}=$id;
+							}
 				                $contaUA=$contaUA-1;
 					 }
 				 }
@@ -515,9 +477,8 @@ sub parseWURFLFile {
 			if ($listall eq "true") {
 				$Capability{$name}=$name;
 			}
-			if (($id) && ($Capability{$name}) && ($name) && ($value)) {
-			   #$Array_DDRcapability{"$val|$name"}=$value;
-                           $memd->set("$val-$name",$value);
+			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
+			   $Array_DDRcapability{"$val|$name"}=$value;
 			}
 		 }
 		 if ($record =~ /\/ver>/o) {
@@ -536,12 +497,20 @@ sub handler {
     my $x_operamini_phone_ua=$f->headers_in->{'X-OperaMini-Phone-Ua'}|| '';
     my $x_operamini_ua=$f->headers_in->{'X-OperaMini-Ua'}|| '';
     my $query_string=$f->args;
+    my $docroot = $f->document_root();
     my $id="";
     my $location="none";
+    my $width_toSearch;
+    my $type_redirect="internal";
+    my $return_value;
+	my $dummy="";
+	my $variabile2="";
+	my %ArrayCapFound;
+	my $controlCookie;
+	my $query_img="";
+	$ArrayCapFound{is_transcoder}='false';
     my %ArrayQuery;
-    my %ArrayCapFound;
-    my $controlCookie;
-    $ArrayCapFound{is_transcoder}='false';
+    my $var;
     my $mobile=0;
     my $version="";
     if ($user_agent eq "") {
@@ -558,7 +527,7 @@ sub handler {
     my $amfFull=$CommonLib->readCookie_fullB($cookie);
     if ($query_string) {
     		  my @vars = split(/&/, $query_string); 	  
-    		  foreach my $var (sort @vars){
+    		  foreach $var (sort @vars){
     			if ($var) {
     				my ($v,$i) = split(/=/, $var);
     				$v =~ tr/+/ /;
@@ -618,7 +587,7 @@ sub handler {
 								my $count=0;
 								while($count<$lengthId) {								
 									my $idToCheck=$id."_sub".substr($version,0,length($version)-$count);
-									if ($memd->set("fb_$idToCheck")) {
+									if ($Array_fb{$idToCheck}) {
 										$id=$idToCheck;
 										$count=$lengthId;
 									}
@@ -636,8 +605,10 @@ sub handler {
 	      	     my $var=$memd->get("WURFL_$id");
 		         if ($var) {
 					my @pairs = split(/&/, $var);
-					foreach my $param_tofound (@pairs) {      	       
-						my ($string_tofound,$dummy)=split(/=/, $param_tofound);
+					my $param_tofound;
+					my $string_tofound;
+					foreach $param_tofound (@pairs) {      	       
+						($string_tofound,$dummy)=split(/=/, $param_tofound);
 						$ArrayCapFound{$string_tofound}=$dummy;
 						my $upper2=uc($string_tofound);
 						$f->subprocess_env("AMF_$upper2" => $ArrayCapFound{$string_tofound});
@@ -645,18 +616,17 @@ sub handler {
 					}
 					$id=$ArrayCapFound{id};								   
 			} else {
-                                        my $rowCapability;
 					%ArrayCapFound=FallBack($id);
 					foreach $capability2 (sort keys %ArrayCapFound) {
-						$rowCapability="$rowCapability$capability2=$ArrayCapFound{$capability2}&";
+						$variabile2="$variabile2$capability2=$ArrayCapFound{$capability2}&";
 						my $upper=uc($capability2);
 						$f->subprocess_env("AMF_$upper" => $ArrayCapFound{$capability2});
 						$f->pnotes("$capability2" => $ArrayCapFound{$capability2});
 					}
-					$rowCapability="id=$id&$rowCapability";
+					$variabile2="id=$id&$variabile2";
 					$f->subprocess_env("AMF_ID" => $id);
 					$f->pnotes('id' => $id);
-					$memd->set("WURFL_$id",$rowCapability);
+					$memd->set("WURFL_$id",$variabile2);
 			}
 			if ($cookiecachesystem eq "true") {
 						$f->err_headers_out->set('Set-Cookie' => "amfID=$id; path=/;");	
@@ -686,9 +656,6 @@ sub handler {
 	    $f->subprocess_env("AMF_IS_TRANCODER" => 'true');		
 	    $f->pnotes("is_transcoder" => 'true');
 	}
-      %ArrayQuery=();
-      %ArrayCapFound=();
-
 	return Apache2::Const::DECLINED;
 }
 1; 

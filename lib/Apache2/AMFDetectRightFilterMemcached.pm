@@ -35,11 +35,12 @@ package Apache2::AMFDetectRightFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "4.01";
+  $VERSION= "4.02";
   my %Capability;
-#  my %Array_fb;
-#  my %Array_id;
-#  my %Array_DDRcapability;
+ my %Array_fb;
+  my %Array_id;
+  my %Array_fullua_id;
+  my %Array_DDRcapability;
 
   my %MobileArray=$CommonLib->getMobileArray;
   my %PCArray=$CommonLib->getPCArray;
@@ -256,17 +257,13 @@ sub loadConfigFile {
 	    } else {
 			if (-e "$fileDetectRight") {
 					$CommonLib->printLog("Start loading  DetectRightAMF.xml");
-                                        my $fileMD5=$CommonLib->getMD5($fileDetectRight);
-                                        if ($memd->get("MD5") ne $fileMD5) {
-                                                $CommonLib->printLog("It's a new file and big, please wait several minutes to load data.");
-
-                                                if (open (IN,"$fileDetectRight")) {
-                                                              my $filesize= -s $fileDetectRight;
-                                                              read (IN,my $string_file,$filesize);
-                                                              close IN;
-                                                              $string_file =~ s/\n//g;
-                                                              $string_file =~ s/>/>\n/g;
-                                                              my @rows = split(/\n/, $string_file);
+					if (open (IN,"$fileDetectRight")) {
+                                         	      my $filesize= -s $fileDetectRight;
+                                                      read (IN,my $string_file,$filesize);
+                                                      close IN;
+                                                      $string_file =~ s/\n//g;
+                                                      $string_file =~ s/>/>\n/g;
+                                                      my @rows = split(/\n/, $string_file); 
                                                               my $numberRow=scalar(@rows);
                                                               my $progress=0;
                                                               foreach my $row (@rows){
@@ -274,34 +271,27 @@ sub loadConfigFile {
                                                                     $progress++;
                                                                     my $perc=int(($progress/$numberRow)*100);
                                                                     print "Percent loaded: ".$perc."%\r";
-                                                              } 
-                                                              @rows=();
-                                                        close IN;
-                                                } else {
-                                                    $CommonLib->printLog("Error open file:$fileDetectRight");
-                                                    ModPerl::Util::exit();
-                                                }
-                                                $memd->set("MD5",$fileMD5);                              
-                                                recordData();
-                                        } else {
-                        			$CommonLib->printLog("The file is loaded before");                                          
-                                                retrieveData();
-                                        }
+                                                              }
+						close IN;
+					} else {
+					    $CommonLib->printLog("Error open file:$fileDetectRight");
+					    ModPerl::Util::exit();
+					}
 			} else {
 			  $CommonLib->printLog("File $fileDetectRight not found");
 			  ModPerl::Util::exit();
 			}
 		}
 		close IN;
-		#my $arrLen = scalar %Array_fb;
-		#($arrLen,$dummy)= split(/\//, $arrLen);
-		#if ($arrLen == 0) {
-		#     $CommonLib->printLog("Error the file probably is not a DetectRight file, control the url or path");
-		#     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
-		#     #ModPerl::Util::exit();
-		#}
+		my $arrLen = scalar %Array_fb;
+		($arrLen,$dummy)= split(/\//, $arrLen);
+		if ($arrLen == 0) {
+		     $CommonLib->printLog("Error the file probably is not a DetectRight file, control the url or path");
+		     $CommonLib->printLog("Control also if the file is compress file, and DownloadZipFile parameter is seted false");
+		     #ModPerl::Util::exit();
+		}
         $CommonLib->printLog("DetectRight version: $DetectRightVersion");
-        #$CommonLib->printLog("This version of DetectRight has $arrLen UserAgent");
+        $CommonLib->printLog("This version of DetectRight has $arrLen UserAgent");
         $CommonLib->printLog("End loading  DetectRightAMF.xml");
 	if ($personalDetectRighturl ne 'unknown') {
 		$CommonLib->printLog("---------------------------------------------------------------------------"); 
@@ -315,7 +305,6 @@ sub loadConfigFile {
 						$string_file =~ s/\n//g;
 						$string_file =~ s/>/>\n/g;
 						my @arrayFile=split(/\n/, $string_file);
-
 						foreach my $line (@arrayFile) {
 						#print "$line\n";
 							$r_id=parseDetectRightFile($line,$r_id);
@@ -334,23 +323,6 @@ sub loadConfigFile {
 	}
 	
 }
-sub recordData {
-        my $capabilityRow="";
-        foreach my $cap (keys %Capability) {
-            $capabilityRow=$capabilityRow.$cap.",";
-        }
-        $capabilityRow=substr($capabilityRow,0,length($capabilityRow) - 1);
-        $memd->set("Capability",$capabilityRow);
-        $memd->set("DRVersion",$DetectRightVersion);
-}
-sub retrieveData {
-        my $capabilityRow="";
-        my @rows = split(/\,/, $memd->get("Capability"));
-        foreach my $cap (@rows) {
-              $Capability{$cap}=$cap;
-        }
-        $DetectRightVersion=$memd->get("DRVersion");
-}
 sub FallBack {
   my ($idToFind) = @_;
   my $dummy_id;
@@ -363,14 +335,14 @@ sub FallBack {
         $dummy_id=$idToFind;
         $LOOP=0;
    		while ($LOOP<2) {   		    
-   		    $dummy="$dummy_id-$capability";
-        	if ($memd->get($dummy)) {        	  
+   		    $dummy="$dummy_id|$capability";
+        	if ($Array_DDRcapability{$dummy}) {        	  
         	   $LOOP=2;
-        	   $dummy2="$dummy_id-$capability";
-        	   $ArrayCapFoundToPass{$capability}=$memd->get($dummy2);
+        	   $dummy2="$dummy_id|$capability";
+        	   $ArrayCapFoundToPass{$capability}=$Array_DDRcapability{$dummy2};
         	} else {
-        	      if ($memd->get("fb_$dummy_id")) {
-	        	  		$dummy_id=$memd->get("fb_$dummy_id");
+        	      if ($Array_fb{$dummy_id}) {
+	        	  		$dummy_id=$Array_fb{$dummy_id};
         	      } else {
         	         $dummy_id="root";
         	      }
@@ -398,10 +370,9 @@ sub IdentifyUAMethod {
   foreach $pair (reverse sort { $a <=> $b }  keys	 %ArrayUAType)
   {
       my $dummy=$ArrayUAType{$pair};
-      $dummy=md5_hex($dummy);
-      if ($memd->get("Id_$dummy")) {
+      if ($Array_id{$dummy}) {
          if (!$id_find) {
-           $id_find=$memd->get("Id_$dummy");
+           $id_find=$Array_id{$dummy};
          }
       }
   }
@@ -472,20 +443,20 @@ sub parseDetectRightFile {
 	           $fb=substr($record,index($record,'fall_back') + 11,index($record,'"',index($record,'fall_back')+ 12)- index($record,'fall_back') - 11);
 	        }
 	        if (($fb) && ($id)) {	     	   
-					$memd->set("fb_$id",$fb);
+					$Array_fb{"$id"}=$fb;
 				 }
 				 if (($ua) && ($id)) {
 				         my %ParseUA=$CommonLib->GetMultipleUa($ua,$deepSearch);
 				         my $pair;
 				         my $arrUaLen = scalar %ParseUA;
+				         my $contaUA=0;
+				         my $Array_fullua_id=$ua;
 				         foreach $pair (reverse sort { $a <=> $b }  keys %ParseUA) {
-						my $dummy=$ParseUA{$pair};
-                                                $dummy = md5_hex($dummy);
-                                                if ($dummy) {
-                                                      if (!$memd->get("Id_$dummy")) {
-                                                            $memd->set("Id_$dummy",$id);
-                                                      }
-                                                }
+						 	my $dummy=$ParseUA{$pair};
+							if ($Array_id{$dummy}) {} else {
+						            $Array_id{$dummy}=$id;
+							}
+				                $contaUA=$contaUA-1;
 					 }
 				 }
 				 
@@ -496,7 +467,7 @@ sub parseDetectRightFile {
 				$Capability{$name}=$name;
 			}
 			if (($id) && ($Capability{$name}) && ($name) && ($value)) {			   
-			   $memd->set("$val-$name",$value);
+			   $Array_DDRcapability{"$val|$name"}=$value;
 			}
 		 }
 		 if ($record =~ /\/ver>/o) {
@@ -613,7 +584,7 @@ sub handler {
 								my $count=0;
 								while($count<$lengthId) {								
 									my $idToCheck=$id."_sub".substr($version,0,length($version)-$count);
-									if ($memd->get("fb_$idToCheck")) {
+									if ($Array_fb{$idToCheck}) {
 										$id=$idToCheck;
 										$count=$lengthId;
 									}

@@ -32,7 +32,7 @@ package Apache2::AMFLiteDetectionFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "4.01";
+  $VERSION= "4.02";
   my $CommonLib = new Apache2::AMFCommonLib ();
   my %MobileArray;#=$CommonLib->getMobileArray;
   my %MobileTabletArray;
@@ -312,6 +312,8 @@ sub handler {
     my %ArrayQuery;
     my $var;
     my $mobile=0;
+    my $amf_device_istablet='false';
+    my $amf_device_ismobile='';
     my $version="";
     if ($user_agent eq "") {
 	$user_agent="no useragent found";
@@ -323,7 +325,10 @@ sub handler {
        $user_agent=lc($x_operamini_phone_ua);
     }
     my $cookie = $f->headers_in->{Cookie} || '';
-    my $amf_device_ismobile=$CommonLib->readCookie($cookie);
+    if ($CommonLib->readCookie($cookie) eq 'true' || $CommonLib->readCookie($cookie) eq 'false') {
+	$amf_device_ismobile=$CommonLib->readCookie($cookie);
+	
+    }
     my $amfFull=$CommonLib->readCookie_fullB($cookie);
     if ($query_string) {
     		  my @vars = split(/&/, $query_string); 	  
@@ -351,17 +356,14 @@ sub handler {
     }
 	if ($amf_device_ismobile eq "") {
 		$amf_device_ismobile = &isMobile($user_agent);
-		$f->subprocess_env("PRE_PRE_UA" => $user_agent);
-		$f->subprocess_env("PRE_PRE" => $amf_device_ismobile);
-		$f->subprocess_env("PRE_PRE_BO" => $bo);
 		if ($amf_device_ismobile eq 'true') {
 			$amf_device_istouch = &isTouch($user_agent);
+			$amf_device_istablet=&isTablet($user_agent);
 		}
 		if ($cookiecachesystem eq "true") {
 			$f->err_headers_out->set('Set-Cookie' => "amfID=$id; path=/;");	
 		}	
 	}
-	my $amf_device_istablet=&isTablet($user_agent);
         if ($amfFull ne "") {
             $f->subprocess_env("AMF_FORCE_TO_DESKTOP" => 'true');
             $f->pnotes("amf_force_to_desktop" => 'true');
@@ -394,7 +396,7 @@ Apache2::AMFLiteDetectionFilter - The module detects in lite mode the mobile dev
 
 =head1 DESCRIPTION
 
-Module for device detection, parse the user agent and decide if the device is mobile or not.
+Module for device detection, parse the user agent and decide if the device is mobile, touch or tablet.
 
 =head1 AMF PROJECT SITE
 

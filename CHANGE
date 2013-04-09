@@ -1,6 +1,8 @@
+ApacheMobileFilter 4.02
+Fixed serious bug (thanks to clotilde).
+
 ApacheMobileFilter 4.01
 Fixed serious bug in AMFWebService (thanks to juan).
-
 
 ApacheMobileFilter 4.00
 Added new capability for LiteDetection now it's possible to detect if device is touch
