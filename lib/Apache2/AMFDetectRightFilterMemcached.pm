@@ -35,7 +35,7 @@ package Apache2::AMFDetectRightFilterMemcached;
 
   use vars qw($VERSION);
   my $CommonLib = new Apache2::AMFCommonLib ();
-  $VERSION= "4.02";
+  $VERSION= "4.03";
   my %Capability;
  my %Array_fb;
   my %Array_id;
@@ -87,7 +87,7 @@ package Apache2::AMFDetectRightFilterMemcached;
 		$CommonLib->printLog("AMF installed is the last version");
 	}
   } else {
-	$CommonLib->printLog("AMFCheckVersione is false, AMF don't check the last version.");
+	$CommonLib->printLog("AMFCheckVersion is false, AMF don't check the last version.");
   }
   if ($ENV{ResizeImageDirectory}) {
 	  $Capability{'max_image_width'}="max_image_width";

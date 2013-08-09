@@ -32,7 +32,7 @@ package Apache2::AMFWURFLFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "4.02";
+  $VERSION= "4.03";
   my $CommonLib = new Apache2::AMFCommonLib ();
  
   my %Capability;
@@ -92,7 +92,7 @@ package Apache2::AMFWURFLFilter;
 		$CommonLib->printLog("AMF installed is the last version");
 	}
   } else {
-	$CommonLib->printLog("AMFCheckVersione is false, AMF don't check the last version.");
+	$CommonLib->printLog("AMFCheckVersion is false, AMF don't check the last version.");
   }
   if ($ENV{ResizeImageDirectory}) {
 	  $Capability{'max_image_width'}="max_image_width";
@@ -142,6 +142,7 @@ package Apache2::AMFWURFLFilter;
 	  $CommonLib->printLog("AMFMobileHome not exist. Please set the variable AMFMobileHome into httpd.conf");
 	  ModPerl::Util::exit();
   }
+
 sub loadConfigFile {
 	my ($fileWurfl) = @_;
 	my $null="";
@@ -338,7 +339,6 @@ sub loadConfigFile {
 						$string_file =~ s/>/>\n/g;
 						my @arrayFile=split(/\n/, $string_file);
 						foreach my $line (@arrayFile) {
-						#print "$line\n";
 							$r_id=parseWURFLFile($line,$r_id);
 						}
 					} else {
@@ -506,7 +506,7 @@ sub IdentifyPCUAMethod {
 	}
   }
   if ($id_find eq "") {
-	if ($UserAgent =~ m/safari/) {
+	if ($UserAgent =~ m/safari/ && !($UserAgent =~ m/kftt/)) {
 		$id_find='safari';
 	}      
   }

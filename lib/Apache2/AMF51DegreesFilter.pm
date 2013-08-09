@@ -33,7 +33,7 @@ package Apache2::AMF51DegreesFilter;
   # 
 
   use vars qw($VERSION);
-  $VERSION= "4.02";
+  $VERSION= "4.03";
   my $CommonLib = new Apache2::AMFCommonLib ();
   
   # this is the environment........
@@ -102,7 +102,7 @@ package Apache2::AMF51DegreesFilter;
 		$CommonLib->printLog("AMF installed is the last version");
 	}
   } else {
-	$CommonLib->printLog("AMFCheckVersione is false, AMF don't check the last version.");
+	$CommonLib->printLog("AMFCheckVersion is false, AMF don't check the last version.");
   }
   if ($ENV{ResizeImageDirectory}) {
 	  $Capability{'max_image_width'}="max_image_width";

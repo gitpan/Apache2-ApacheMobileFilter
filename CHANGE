@@ -1,5 +1,9 @@
+ApacheMobileFilter 4.03
+Fixed bug (thanks to Juan) ref. https://groups.google.com/forum/#!topic/amf-device-detection/QQgYOTJb2Fs.
+Fixed bug (thanks to Juan) ref. https://groups.google.com/forum/#!topic/amf-device-detection/ZOOSFL6JS4Y.
+
 ApacheMobileFilter 4.02
-Fixed serious bug (thanks to clotilde).
+Fixed serious bug (thanks to Maarten).
 
 ApacheMobileFilter 4.01
 Fixed serious bug in AMFWebService (thanks to juan).

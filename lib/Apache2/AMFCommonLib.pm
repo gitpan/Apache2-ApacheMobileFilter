@@ -11,7 +11,7 @@ package Apache2::AMFCommonLib;
   use strict; 
   use warnings;
   use vars qw($VERSION);
-  $VERSION= "4.02";
+  $VERSION= "4.03";
 
 
 sub new {
@@ -32,7 +32,7 @@ sub getPCArray {
   my %PCArray;
   $PCArray{'chrome'}='google_chrome';
   my $i=0;
-  while ($i < 21) {
+  while ($i < 28) {
     $PCArray{"chrome/$i"}="google_chrome_$i";
     $i++;
   }
@@ -191,28 +191,46 @@ sub androidDetection {
 	if (@_) {
 	    $ua = shift;
 	}
+	#print "$ua----------\n";
 	my $version='nc';
 	my $os='nc';
 	if (index($ua,'android') > -1 ) {
-	       my $string_to_parse=substr($ua,index($ua,'(') + 1,index($ua,')'));
-	       my ($dummy1,$dummy2,$vers,$lan,$dummy5)=split(/\;/,$string_to_parse);
-	        if ($lan) {
-			my $before=substr($ua,0,index($ua,$lan));
-			my $after=substr($ua,index($ua,$lan) + length($lan));
-			$ua=$before." xx-xx".$after;
-		}
-	        if ($vers) {
-			my $before=substr($ua,0,index($ua,$vers));
-			my $after=substr($ua,index($ua,$vers) + length($vers));
-			$vers=substr($vers,index($vers,'android'));
-			($os,$version)=split(/ /,$vers);
-			if ($version) {
-			  if (index($version,'.') > -1) {
-			    $version =~ s/\.//g;
+	       #my $string_to_parse=substr($ua,index($ua,'(') + 1,index($ua,')'));
+	       my @param=split(/\;/,$ua);
+	       #my ($dummy1,$dummy2,$vers,$lan,$dummy5)=split(/\;/,$string_to_parse);
+	       my $element=scalar @param;
+	       my $count=0;
+	       my $count_add=0;
+	       my @param_ua;
+	       if ($element > 0) {
+	       while ($count<$element) {
+		  if (index($param[$count],'-')>-1 && length($param[$count])==6) {
+		  } elsif (length($param[$count])==2) {
+		  } elsif (index($param[$count],'android')>-1) {
+			  ($os,$version)=split(/ /,$param[$count]);
+			  if ($version) {
+			    if (index($version,'.') > -1) {
+			      $version =~ s/\.//g;
+			    }
 			  }
-			}
-			$ua=$before."android xx".$after;
+			  $param_ua[$count_add]="android xx";
+			  $count_add++;
+		  } else {
+		     $param_ua[$count_add]=$param[$count];
+		     $count_add++;
+		  }
+		  $count++;
+	      }
+	       	$count=0;
+		$element=scalar @param_ua;
+		$ua = "";
+		while ($count < $element) {
+		  $ua=$ua." ".$param_ua[$count];
+		  $count++;
 		}
+		$ua=substr($ua,1);
+               }
+              #print $ua."\n";
 	}
 	return ($ua,$version);
 
